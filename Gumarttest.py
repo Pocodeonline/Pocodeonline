@@ -55,7 +55,7 @@ try:
         print(f"{SILVER}GUMART 🛒 {LIGHT_PINK}code by 🐮 {RESET}")
         print(f"{LIGHT_PINK}tele{YELLOW}: {PINK}tphuc_0 {RESET}")
         print(f"{SILVER}GUMART 🛒  {YELLOW}({GREEN}1{YELLOW})")
-        chon = input("Nhập số muốn chạy hoặc 0 để thoát : ")
+        chon = input(f"{GREEN}Nhập số {YELLOW}({LIGHT_PINK}1{YELLOW}){GREEN}  để chạy hoặc {RED}0 {GREEN}để thoát {YELLOW}:{SILVER} ")
 
         if chon == '0':
             print(f"{RED}Đã kết thúc chương trình...")
