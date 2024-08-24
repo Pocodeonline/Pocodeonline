@@ -52,7 +52,7 @@ def check_internet_connection():
 try:
     while True:
         banner()
-        print(f"{SILVER}GUMART 🛒 {LIGHT_PINK}code by ooooo {RESET}")
+        print(f"{SILVER}GUMART 🛒 {LIGHT_PINK}code by Pooo {RESET}")
         print(f"{LIGHT_PINK}tele{YELLOW}: {PINK}tphuc_0 {RESET}")
         print(f"{SILVER}GUMART 🛒  {YELLOW}({GREEN}1{YELLOW})")
         chon = input("Nhập số muốn chạy hoặc 0 để thoát : ")
