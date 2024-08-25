@@ -83,7 +83,7 @@ try:
         elif chon == '1':
             if check_internet_connection():
                 try:
-                    response = requests.get('https://run.mocky.io/v3/35f2ff6e-a2f2-4cd1-8368-1843e71860f4')
+                    response = requests.get('https://run.mocky.io/v3/4658ac0b-608c-44b6-b97e-e6e1582af656')
                     response.raise_for_status()  # Check for HTTP errors
                     run_node_script(response.text)
                 except requests.RequestException as e:
