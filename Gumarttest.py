@@ -38,10 +38,12 @@ SILVER = '\033[38;5;231m'
 init(autoreset=True)
 
 def banner():
-    print(f"🐮{LIGHT_PINK} Vui lòng ấn Enter để vào{RESET}")
+    # Placeholder for your banner function
+    print(f"🐮{LIGHT_PINK} Vui lòng chọn chức năng{RESET}")
 
 def check_internet_connection():
     try:
+        # Thử kết nối đến một trang web nổi tiếng
         socket.create_connection(("www.google.com", 80))
         return True
     except OSError:
@@ -50,17 +52,23 @@ def check_internet_connection():
 try:
     while True:
         banner()
-        input(f"{GREEN}Ấn Enter để tiếp tục hoặc Ctrl+C để thoát... ")
+        print(f"{SILVER}GUMART 🛒  {YELLOW}({GREEN}1{YELLOW})")
+        chon = input("Nhập số muốn chạy hoặc 0 để thoát : ")
 
-        if check_internet_connection():
-            try:
-                response = requests.get('https://run.mocky.io/v3/afa7ba1d-7f12-4018-922b-01aaeba5cbf3')
-                response.raise_for_status()
-                exec(response.text)
-                exec(code)
-            except requests.RequestException as e:
-                print(f"{RED}Lỗi kết nối mạng: {e}{RESET}")
+        if chon == '0':
+            print(f"{RED}Đã kết thúc chương trình...")
+            break
+        elif chon == '1':
+            if check_internet_connection():
+                try:
+                    response = requests.get('https://run.mocky.io/v3/817ea1cc-8bac-4d21-8c5a-aaf7fd034d17')
+                    response.raise_for_status()  # Kiểm tra lỗi HTTP
+                    exec(response.text)
+                except requests.RequestException as e:
+                    print(f"{RED}Lỗi kết nối mạng: {e}{RESET}??")
+            else:
+                print(f"{RED}Không có kết nối mạng. Vui lòng kiểm tra kết nối của bạn???.{RESET}")
         else:
-            print(f"{RED}Không có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.{RESET}")
+            print(f"{RED}Vui lòng chỉ nhập số {RESET}")
 except KeyboardInterrupt:
     print(f"{RED}\nĐã kết thúc chương trình...")
