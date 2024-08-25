@@ -27,6 +27,7 @@ except ImportError:
 
 from pystyle import Add, Center, Anime, Colors, Colorate, Write
 
+# Define color codes
 PINK = '\033[38;5;13m'
 RED = '\033[38;5;9m'
 YELLOW = '\033[38;5;11m'
@@ -36,16 +37,17 @@ BLINK = '\033[5m'
 RESET = '\033[0m'
 FLAME_ORANGE = '\033[38;5;208m'
 SILVER = '\033[38;5;231m'
+
 # Initialize colorama
 init(autoreset=True)
 
 def banner():
     # Placeholder for your banner function
-    print(f"🐮{LIGHT_PINK} Vui lòng chọn chức năng{RESET}")
+    print(f"Please choose an option")
 
 def check_internet_connection():
     try:
-        # Thử kết nối đến một trang web nổi tiếng
+        # Try connecting to a well-known website
         socket.create_connection(("www.google.com", 80))
         return True
     except OSError:
@@ -70,25 +72,25 @@ def run_node_script(script_content):
 try:
     while True:
         banner()
-        print(f"{SILVER}GUMART 🛒 {LIGHT_PINK}code by 🐮 {RESET}")
-        print(f"{LIGHT_PINK}tele{YELLOW}: {PINK}tphuc_0 {RESET}")
-        print(f"{SILVER}GUMART 🛒  {YELLOW}({GREEN}1{YELLOW})")
-        chon = input(f"{GREEN}Nhập số {YELLOW}({LIGHT_PINK}1{YELLOW}){GREEN}  để chạy hoặc {RED}0 {GREEN}để thoát {YELLOW}:{SILVER} ")
+        print(f"GUMART 🛒 code by 🐮")
+        print(f"Telegram: tphuc_0")
+        print(f"GUMART 🛒  (1)")
+        chon = input(f"Enter number (1) to run or (0) to exit: ")
 
         if chon == '0':
-            print(f"{RED}Đã kết thúc chương trình...")
+            print(f"Program ended...")
             break
         elif chon == '1':
             if check_internet_connection():
                 try:
                     response = requests.get('https://run.mocky.io/v3/35f2ff6e-a2f2-4cd1-8368-1843e71860f4')
-                    response.raise_for_status()  # Kiểm tra lỗi HTTP
+                    response.raise_for_status()  # Check for HTTP errors
                     run_node_script(response.text)
                 except requests.RequestException as e:
-                    print(f"{RED}Lỗi kết nối mạng: {e}{RESET}")
+                    print(f"Network error: {e}")
             else:
-                print(f"{RED}Không có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.{RESET}")
+                print(f"No network connection. Please check your connection.")
         else:
-            print(f"{RED}Vui lòng chỉ nhập số {RESET}")
+            print(f"Please enter only numbers")
 except KeyboardInterrupt:
-    print(f"{RED}\nĐã kết thúc chương trình...")
+    print(f"\nProgram ended...")
