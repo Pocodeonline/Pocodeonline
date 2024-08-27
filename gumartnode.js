@@ -116,82 +116,77 @@ async function processAccount(context, accountUrl, accountNumber) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
-    const concurrencyLimit = 10; // Limit concurrent processes to 4 browsers
+    const concurrencyLimit = 10; // Limit concurrent processes to 10 browsers
 
     let successCount = 0;
     let failureCount = 0;
-    let activeBrowsers = 0;
     let accountIndex = 0;
     let proxyIndex = 0;
-    let originalNumAccounts = numAccounts;
+    const activeBrowsers = new Set(); // To keep track of active browser promises
 
-    while (true) {
-        while (accountIndex < numAccounts || activeBrowsers > 0) {
-            if (activeBrowsers < concurrencyLimit && accountIndex < numAccounts) {
-                const proxy = proxies[proxyIndex % proxies.length];
-                const accountUrl = links[accountIndex];
-                activeBrowsers++;
-                proxyIndex++;
+    const processBatch = async () => {
+        const promises = [];
 
-                const browser = await chromium.launch({
-                    headless: false,
-                    args: [
-                        '--no-sandbox',
-                        '--disable-dev-shm-usage',
-                        '--headless',
-                        '--disable-gpu',
-                        `--proxy-server=${proxy.server}`
-                    ]
-                });
-                const context = await browser.newContext({
-                    httpCredentials: {
-                        username: proxy.username,
-                        password: proxy.password
-                    }
-                });
-                // Process the account with the created context
-                processAccount(context, accountUrl, accountIndex + 1)
-                    .then(result => {
-                        if (result.success) {
-                            successCount++;
-                        } else {
-                            failureCount++;
-                        }
-                    })
-                    .catch(() => failureCount++)
-                    .finally(async () => {
-                        activeBrowsers--;
-                        await browser.close();
-                    });
-                accountIndex++;
-            }
+        while (accountIndex < numAccounts && promises.length < concurrencyLimit) {
+            const proxy = proxies[proxyIndex % proxies.length];
+            const accountUrl = links[accountIndex];
+            proxyIndex++;
 
-            // Wait for remaining active browsers if any
-            if (activeBrowsers > 0) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            } else if (accountIndex >= numAccounts && activeBrowsers === 0) {
-                // Wait before starting the next batch of accounts
-                console.log(`Nghỉ ngơi ${restTime} giây trước khi chạy tiếp...`);
-                for (let remaining = restTime; remaining > 0; remaining--) {
-                    process.stdout.write(`Nghỉ ngơi ${remaining} giây trước khi chạy tiếp...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    process.stdout.write('\r');
+            const browser = await chromium.launch({
+                headless: false,
+                args: [
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--headless',
+                    '--disable-gpu',
+                    `--proxy-server=${proxy.server}`
+                ]
+            });
+            const context = await browser.newContext({
+                httpCredentials: {
+                    username: proxy.username,
+                    password: proxy.password
                 }
-                console.log('Nghỉ ngơi xong!');
+            });
 
-                // Reset indexes and active browsers for next iteration
-                accountIndex = 0;
-                activeBrowsers = 0;
-                // Use the original number of accounts for the next iteration
-                numAccounts = originalNumAccounts;
-            }
+            // Add the process to the list of active browsers
+            const processPromise = processAccount(context, accountUrl, accountIndex + 1)
+                .then(result => {
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        failureCount++;
+                    }
+                })
+                .catch(() => failureCount++)
+                .finally(async () => {
+                    await browser.close();
+                });
+
+            promises.push(processPromise);
+            accountIndex++;
         }
 
-        // Optionally, exit the loop if no more accounts or you want to stop after the first run
-        console.log(`${GREEN}Tổng số tài khoản thành công: ${successCount}`);
-        console.log(`${RED}Tổng số tài khoản lỗi: ${failureCount}`);
-        break;
+        await Promise.all(promises);
+    };
+
+    while (accountIndex < numAccounts) {
+        await processBatch();
+
+        // Wait before starting the next batch of accounts
+        if (accountIndex < numAccounts) {
+            console.log(`Nghỉ ngơi ${restTime} giây trước khi chạy tiếp...`);
+            for (let remaining = restTime; remaining > 0; remaining--) {
+                process.stdout.write(`Nghỉ ngơi ${remaining} giây trước khi chạy tiếp...`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                process.stdout.write('\r');
+            }
+            console.log('Nghỉ ngơi xong!');
+        }
     }
+
+    console.log(`${GREEN}Tổng số tài khoản thành công: ${successCount}`);
+    console.log(`${RED}Tổng số tài khoản lỗi: ${failureCount}`);
 }
 
 (async () => {
