@@ -84,33 +84,30 @@ async function processAccount(context, accountUrl, accountNumber) {
     const page = await context.newPage();
     let success = false;
     try {
-        console.log(🐮 Đang chạy tài khoản ${accountNumber});
+        console.log(`🐮 Đang chạy tài khoản ${accountNumber}`);
         await page.goto(accountUrl);
 
-        // Check for page load
+        // Check for page load by waiting for an element using CSS Selector
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
-        console.log(Đã Vào Giao diện ${await page.title()} Acc ${accountNumber});
+        console.log(`Đã Vào Giao diện ${await page.title()} Acc ${accountNumber}`);
         await page.waitForTimeout(400);
 
-        // Click the claim button using XPath
-        const claimButtonXPath = '/html/body/div[1]/div/div/section/div[6]/div/div/div/div[3]/button/p';
-        const [claimButton] = await page.$x(claimButtonXPath);
-        if (claimButton) {
-            await claimButton.click();
-        } else {
-            throw new Error('Claim button không tìm thấy');
-        }
+        // Click the claim button using CSS Selector
+        const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button > p';
+        await page.waitForSelector(claimButtonSelector); // Ensure the button is present
+        await page.click(claimButtonSelector);
+
         // Wait for points element and extract text
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
-        const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
+        const points = await pointsElement.evaluate(el => el.innerText);
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
         console.log(`Đã làm xong acc ${accountNumber} ✅`);
         success = true;
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi.`);
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
         await logFailedAccount(accountNumber);
     } finally {
         await page.close();
