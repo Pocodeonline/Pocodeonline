@@ -96,7 +96,7 @@ async function processAccount(context, accountUrl, accountNumber) {
         await page.waitForTimeout(400);
 
         // Wait for the second element (img) to be visible and clickable using CSS Selector
-        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > img';
+        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
         await page.waitForSelector(imgSelector, { visible: true, timeout: 10000 });
 
         // Click the image element
