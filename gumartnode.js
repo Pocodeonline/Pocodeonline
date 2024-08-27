@@ -87,13 +87,20 @@ async function processAccount(context, accountUrl, accountNumber) {
         console.log(`Đã Vào Giao diện ${await page.title()} Acc ${accountNumber}`);
         await page.waitForTimeout(400);
 
-        // Wait for the claim button to be visible and clickable using CSS Selector
+        // Wait for the first claim button to be visible and clickable using CSS Selector
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
         await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 10000 });
 
-        // Click the claim button
+        // Click the first claim button
         await page.click(claimButtonSelector);
+        await page.waitForTimeout(400);
 
+        // Wait for the second element (img) to be visible and clickable using CSS Selector
+        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > img';
+        await page.waitForSelector(imgSelector, { visible: true, timeout: 10000 });
+
+        // Click the image element
+        await page.click(imgSelector);
         await page.waitForTimeout(400);
 
         // Get points information
