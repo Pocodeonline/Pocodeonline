@@ -141,7 +141,7 @@ async function processAccount(context, accountUrl, accountNumber) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
-    const concurrencyLimit = 5; // Limit concurrent processes to 4 browsers
+    const concurrencyLimit = 15; // Limit concurrent processes to 4 browsers
 
     let successCount = 0;
     let failureCount = 0;
