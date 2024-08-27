@@ -109,7 +109,7 @@ async function processAccount(context, accountUrl, accountNumber) {
         const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
-        console.log(`Đã làm xong acc ${accountNumber} ✅`);
+        console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
         success = true;
     } catch (e) {
         console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
