@@ -74,12 +74,6 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function logFailedAccount(accountNumber) {
-    const logStream = fs.createWriteStream(ERROR_LOG_PATH, { flags: 'a' });
-    logStream.write(`Account ${accountNumber} failed\n`);
-    logStream.end();
-}
-
 async function processAccount(context, accountUrl, accountNumber) {
     const page = await context.newPage();
     let success = false;
@@ -93,10 +87,21 @@ async function processAccount(context, accountUrl, accountNumber) {
         console.log(`Đã Vào Giao diện ${await page.title()} Acc ${accountNumber}`);
         await page.waitForTimeout(400);
 
-        // Click the claim button
+        // Wait for the claim button to be visible and clickable
         const claimButtonXpath = '/html/body/div[1]/div/div/section/div[6]/div/div/div/div[3]/button/p';
-        await page.click(`xpath=${claimButtonXpath}`);
+        await page.waitForXPath(claimButtonXpath, { visible: true, timeout: 10000 });
+
+        // Click the claim button
+        const claimButtonElement = await page.$x(claimButtonXpath);
+        if (claimButtonElement.length > 0) {
+            await claimButtonElement[0].click();
+        } else {
+            throw new Error('Nút claim không tìm thấy.');
+        }
+
         await page.waitForTimeout(400);
+        
+        // Get points information
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
