@@ -104,10 +104,10 @@ async function processAccount(context, accountUrl, accountNumber) {
         const points = await pointsElement.evaluate(el => el.innerText);
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
-        console.log(`Đã làm xong acc ${accountNumber} ✅`);
+        console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
         success = true;
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
+        console.log(`Tài khoản số ${accountNumber} lỗi`);
         await logFailedAccount(accountNumber);
     } finally {
         await page.close();
@@ -116,7 +116,7 @@ async function processAccount(context, accountUrl, accountNumber) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
-    const concurrencyLimit = 8; // Limit concurrent processes to 4 browsers
+    const concurrencyLimit = 10; // Limit concurrent processes to 4 browsers
 
     let successCount = 0;
     let failureCount = 0;
