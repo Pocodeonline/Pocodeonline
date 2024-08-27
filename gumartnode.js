@@ -121,78 +121,71 @@ async function processAccount(context, accountUrl, accountNumber) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
-    const concurrencyLimit = 4; // Giới hạn số lượng trình duyệt chạy đồng thời
-    let originalNumAccounts = numAccounts;
+    const concurrencyLimit = 4; // Limit concurrent processes to 3 browsers
 
-    while (true) {
-        let successCount = 0;
-        let failureCount = 0;
-        let activeBrowsers = 0;
-        let accountIndex = 0;
-        let proxyIndex = 0;
+    let successCount = 0;
+    let failureCount = 0;
+    let activeBrowsers = 0;
+    let accountIndex = 0;
+    let proxyIndex = 0;
 
-        while (accountIndex < numAccounts || activeBrowsers > 0) {
-            if (activeBrowsers < concurrencyLimit && accountIndex < numAccounts) {
-                const proxy = proxies[proxyIndex % proxies.length];
-                const accountUrl = links[accountIndex];
-                activeBrowsers++;
-                proxyIndex++;
+    while (accountIndex < numAccounts || activeBrowsers > 0) {
+        if (activeBrowsers < concurrencyLimit && accountIndex < numAccounts) {
+            const proxy = proxies[proxyIndex % proxies.length];
+            const accountUrl = links[accountIndex];
+            activeBrowsers++;
+            proxyIndex++;
 
-                const browser = await chromium.launch({
-                    headless: false,
-                    args: [
-                        '--no-sandbox',
-                        '--headless',
-                        '--disable-dev-shm-usage',
-                        '--disable-gpu',
-                        `--proxy-server=${proxy.server}`
-                    ]
-                });
-                const context = await browser.newContext({
-                    httpCredentials: {
-                        username: proxy.username,
-                        password: proxy.password
+            const browser = await chromium.launch({
+                headless: false,
+                args: [
+                    '--no-sandbox',
+                    '--headless',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    `--proxy-server=${proxy.server}`
+                ]
+            });
+            const context = await browser.newContext({
+                httpCredentials: {
+                    username: proxy.username,
+                    password: proxy.password
+                }
+            });
+            // Process the account with the created context
+            processAccount(context, accountUrl, accountIndex + 1)
+                .then(result => {
+                    if (result.success) {
+                        successCount++;
+                    } else {
+                        failureCount++;
                     }
+                })
+                .catch(() => failureCount++)
+                .finally(async () => {
+                    activeBrowsers--;
+                    await browser.close();
                 });
-
-                // Xử lý tài khoản với context được tạo ra
-                processAccount(context, accountUrl, accountIndex + 1)
-                    .then(result => {
-                        if (result.success) {
-                            successCount++;
-                        } else {
-                            failureCount++;
-                        }
-                    })
-                    .catch(() => failureCount++)
-                    .finally(async () => {
-                        activeBrowsers--;
-                        await browser.close();
-                    });
-                accountIndex++;
-            }
-
-            // Đợi khi có trình duyệt đang hoạt động
-            if (activeBrowsers > 0) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
+            accountIndex++;
         }
 
-        // In kết quả và chờ thời gian nghỉ ngơi
-        console.log(`${GREEN}Tổng số tài khoản thành công: ${successCount}`);
-        console.log(`${RED}Tổng số tài khoản lỗi: ${failureCount}`);
-
-        // Đợi thời gian nghỉ ngơi
-        for (let remaining = restTime; remaining > 0; remaining--) {
-            process.stdout.write(`${YELLOW}Nghỉ ngơi ${remaining} giây...`);
+        // Wait for remaining active browsers if any
+        if (activeBrowsers > 0) {
             await new Promise(resolve => setTimeout(resolve, 1000));
-            process.stdout.write('\r');
+        } else if (accountIndex < numAccounts) {
+            // Wait before starting the next batch of accounts
+            console.log(`Nghỉ ngơi ${restTime} giây trước khi chạy tiếp...`);
+            for (let remaining = restTime; remaining > 0; remaining--) {
+                process.stdout.write(`Nghỉ ngơi ${remaining} giây trước khi chạy tiếp...`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                process.stdout.write('\r');
+            }
+            console.log('Nghỉ ngơi xong!');
         }
-        console.log('Nghỉ ngơi xong!');
-
-        // Reset lại số lượng tài khoản để tiếp tục chạy lại
-        numAccounts = originalNumAccounts;
     }
+
+    console.log(`${GREEN}Tổng số tài khoản thành công: ${successCount}`);
+    console.log(`${RED}Tổng số tài khoản lỗi: ${failureCount}`);
 }
 
 (async () => {
