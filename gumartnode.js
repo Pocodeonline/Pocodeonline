@@ -116,7 +116,7 @@ async function processAccount(context, accountUrl, accountNumber) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
-    const concurrencyLimit = 2; // Limit concurrent processes to 4 browsers
+    const concurrencyLimit = 8; // Limit concurrent processes to 4 browsers
 
     let successCount = 0;
     let failureCount = 0;
@@ -138,6 +138,7 @@ async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
                     args: [
                         '--no-sandbox',
                         '--disable-dev-shm-usage',
+                        '--headless',
                         '--disable-gpu',
                         `--proxy-server=${proxy.server}`
                     ]
