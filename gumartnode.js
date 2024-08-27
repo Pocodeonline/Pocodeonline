@@ -169,23 +169,21 @@ async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
             accountIndex++;
         }
 
-        // Wait for remaining active browsers if any
-        if (activeBrowsers > 0) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        } else if (accountIndex < numAccounts) {
-            // Wait before starting the next batch of accounts
-            console.log(`Nghỉ ngơi ${restTime} giây trước khi chạy tiếp...`);
-            for (let remaining = restTime; remaining > 0; remaining--) {
-                process.stdout.write(`Nghỉ ngơi ${remaining} giây trước khi chạy tiếp...`);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                process.stdout.write('\r');
-            }
-            console.log('Nghỉ ngơi xong!');
-        }
-    }
+        // In kết quả và chờ thời gian nghỉ ngơi
+        console.log(`${GREEN}Tổng số tài khoản thành công: ${successCount}`);
+        console.log(`${RED}Tổng số tài khoản lỗi: ${failureCount}`);
 
-    console.log(`${GREEN}Tổng số tài khoản thành công: ${successCount}`);
-    console.log(`${RED}Tổng số tài khoản lỗi: ${failureCount}`);
+        // Đợi thời gian nghỉ ngơi
+        for (let remaining = restTime; remaining > 0; remaining--) {
+            process.stdout.write(`${YELLOW}Nghỉ ngơi ${remaining} giây...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            process.stdout.write('\r');
+        }
+        console.log('Nghỉ ngơi xong!');
+
+        // Reset lại số lượng tài khoản để tiếp tục chạy lại
+        numAccounts = originalNumAccounts;
+    }
 }
 
 (async () => {
