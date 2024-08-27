@@ -88,7 +88,7 @@ async function processAccount(context, accountUrl, accountNumber) {
         await page.waitForTimeout(400);
 
         // Wait for the claim button to be visible and clickable
-        const claimButtonXpath = '/html/body/div[1]/div/div/section/div[6]/div/div/div/div[3]/button/p';
+        const claimButtonXpath = '//*[@id="__nuxt"]/div/div/section/div[6]/div/div/div/div[3]/button';
         await page.waitForXPath(claimButtonXpath, { visible: true, timeout: 10000 });
 
         // Click the claim button
