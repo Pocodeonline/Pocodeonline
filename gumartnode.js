@@ -74,12 +74,6 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function logFailedAccount(accountNumber) {
-    const logStream = fs.createWriteStream(ERROR_LOG_PATH, { flags: 'a' });
-    logStream.write(`Account ${accountNumber} failed\n`);
-    logStream.end();
-}
-
 async function processAccount(context, accountUrl, accountNumber) {
     const page = await context.newPage();
     let success = false;
@@ -93,10 +87,15 @@ async function processAccount(context, accountUrl, accountNumber) {
         console.log(`Đã Vào Giao diện ${await page.title()} Acc ${accountNumber}`);
         await page.waitForTimeout(400);
 
-        // Click the claim button using CSS Selector
-        const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button > p';
-        await page.waitForSelector(claimButtonSelector); // Ensure the button is present
-        await page.click(claimButtonSelector);
+        // Click the claim button using XPath
+        const claimButtonXPath = '/html/body/div[1]/div/div/section/div[6]/div/div/div/div[3]/button/p';
+        await page.waitForXPath(claimButtonXPath); // Ensure the button is present
+        const [claimButton] = await page.$x(claimButtonXPath); // Get the element using XPath
+        if (claimButton) {
+            await claimButton.click();
+        } else {
+            console.log(`Claim button không tìm thấy cho tài khoản ${accountNumber}`);
+        }
 
         // Wait for points element and extract text
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
