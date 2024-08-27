@@ -88,38 +88,10 @@ async function processAccount(context, accountUrl, accountNumber) {
         await page.goto(accountUrl);
 
         // Check for page load
-        const pageLoadedSelector = '#__nuxt > div > div > section > div > div > div.flex.gap-1.mb-4 > p';
+        const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
         console.log(`Đã Vào Giao diện ${await page.title()} Acc ${accountNumber}`);
         await page.waitForTimeout(400);
-
-        // Click to start
-        const startButtonSelector = '#__nuxt > div > div > section > div > button > p';
-        await page.waitForSelector(startButtonSelector, { timeout: 2000 });
-        await page.click(startButtonSelector);
-        await page.waitForTimeout(300);
-
-        // Wait for Capital Starting
-        let capitalStarted = false;
-        for (let attempt = 0; attempt < 5; attempt++) {
-            try {
-                const capitalStartedSelector = '#__nuxt > div > div > section > div.flex.flex-col.h-full.justify-between.gap-4.pt-4 > div:nth-child(3) > div > p.text-\\[1\\.5rem\\].text-\\[\\#FFF\\].font-bold';
-                await page.waitForSelector(capitalStartedSelector, { timeout: 2000 });
-                const capitalButtonSelector = '#__nuxt > div > div > section > div.flex.flex-col.h-full.justify-between.gap-4.pt-4 > div:nth-child(3) > button > p';
-                await page.click(capitalButtonSelector);
-                capitalStarted = true;
-                break;
-            } catch (e) {
-                if (attempt === 4) {
-                    await page.reload();
-                    console.log('Không tìm thấy Capital. Tự động tải lại trang.');
-                }
-            }
-        }
-
-        if (!capitalStarted) return { success: false };
-
-        await page.waitForTimeout(300);
 
         // Click the claim button
         const claimButtonXpath = '/html/body/div[1]/div/div/section/div[5]/div/div/div/div[3]/button/p';
