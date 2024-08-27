@@ -141,7 +141,7 @@ async function processAccount(context, accountUrl, accountNumber) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
-    const concurrencyLimit = 4; // Limit concurrent processes to 4 browsers
+    const concurrencyLimit = 2; // Limit concurrent processes to 4 browsers
 
     let successCount = 0;
     let failureCount = 0;
@@ -237,7 +237,7 @@ async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
             }
 
             const links = await readAccounts(filePath);
-            console.log(`${SILVER}GUMART 🛒 ${LIGHT_PINK}code by Po${RESET}`);
+            console.log(`${SILVER}GUMART 🛒 ${LIGHT_PINK}code by 🐮${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
             console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản `);
 
