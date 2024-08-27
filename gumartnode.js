@@ -84,8 +84,14 @@ async function processAccount(context, accountUrl, accountNumber) {
     const page = await context.newPage();
     let success = false;
     try {
-        console.log(`🐮 Đang chạy tài khoản ${accountNumber}`);
+        console.log(🐮 Đang chạy tài khoản ${accountNumber});
         await page.goto(accountUrl);
+
+        // Check for page load
+        const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
+        await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
+        console.log(Đã Vào Giao diện ${await page.title()} Acc ${accountNumber});
+        await page.waitForTimeout(400);
 
         // Click the claim button using XPath
         const claimButtonXPath = '/html/body/div[1]/div/div/section/div[6]/div/div/div/div[3]/button/p';
@@ -95,9 +101,6 @@ async function processAccount(context, accountUrl, accountNumber) {
         } else {
             throw new Error('Claim button không tìm thấy');
         }
-        // Click the claim button
-        const claimButtonXpath = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button > p';
-        await page.click(`xpath=${claimButtonXpath}`);
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
