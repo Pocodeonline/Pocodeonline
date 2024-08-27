@@ -94,9 +94,10 @@ async function processAccount(context, accountUrl, accountNumber) {
         await page.waitForTimeout(400);
 
         // Click the claim button using CSS Selector
-        const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button > p';
+        const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
         await page.waitForSelector(claimButtonSelector); // Ensure the button is present
         await page.click(claimButtonSelector);
+        await page.waitForTimeout(400);
 
         // Wait for points element and extract text
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
