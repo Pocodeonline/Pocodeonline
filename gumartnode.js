@@ -89,7 +89,7 @@ async function processAccount(context, accountUrl, accountNumber) {
 
         // Check for page load
         const pageLoadedSelector = '#__nuxt > div > div > section > div > div > div.flex.gap-1.mb-4 > p';
-        await page.waitForSelector(pageLoadedSelector, { timeout: 10000 });
+        await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
         console.log(`Đã Vào Giao diện ${await page.title()} Acc ${accountNumber}`);
         await page.waitForTimeout(400);
 
