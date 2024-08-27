@@ -101,6 +101,7 @@ async function processAccount(context, accountUrl, accountNumber) {
         } else {
             throw new Error('Claim button không tìm thấy');
         }
+        // Wait for points element and extract text
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
