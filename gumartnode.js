@@ -112,7 +112,7 @@ async function processAccount(context, accountUrl, accountNumber) {
         console.log(`Đã làm xong acc ${accountNumber} ✅`);
         success = true;
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
         await logFailedAccount(accountNumber);
     } finally {
         await page.close();
@@ -121,52 +121,61 @@ async function processAccount(context, accountUrl, accountNumber) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, restTime, proxies) {
-    const concurrencyLimit = 4; // Limit concurrent processes to 3 browsers
+    const concurrencyLimit = 4; // Giới hạn số lượng trình duyệt chạy đồng thời
+    let originalNumAccounts = numAccounts;
 
-    let successCount = 0;
-    let failureCount = 0;
-    let activeBrowsers = 0;
-    let accountIndex = 0;
-    let proxyIndex = 0;
+    while (true) {
+        let successCount = 0;
+        let failureCount = 0;
+        let activeBrowsers = 0;
+        let accountIndex = 0;
+        let proxyIndex = 0;
 
-    while (accountIndex < numAccounts || activeBrowsers > 0) {
-        if (activeBrowsers < concurrencyLimit && accountIndex < numAccounts) {
-            const proxy = proxies[proxyIndex % proxies.length];
-            const accountUrl = links[accountIndex];
-            activeBrowsers++;
-            proxyIndex++;
+        while (accountIndex < numAccounts || activeBrowsers > 0) {
+            if (activeBrowsers < concurrencyLimit && accountIndex < numAccounts) {
+                const proxy = proxies[proxyIndex % proxies.length];
+                const accountUrl = links[accountIndex];
+                activeBrowsers++;
+                proxyIndex++;
 
-            const browser = await chromium.launch({
-                headless: false,
-                args: [
-                    '--no-sandbox',
-                    '--headless',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    `--proxy-server=${proxy.server}`
-                ]
-            });
-            const context = await browser.newContext({
-                httpCredentials: {
-                    username: proxy.username,
-                    password: proxy.password
-                }
-            });
-            // Process the account with the created context
-            processAccount(context, accountUrl, accountIndex + 1)
-                .then(result => {
-                    if (result.success) {
-                        successCount++;
-                    } else {
-                        failureCount++;
-                    }
-                })
-                .catch(() => failureCount++)
-                .finally(async () => {
-                    activeBrowsers--;
-                    await browser.close();
+                const browser = await chromium.launch({
+                    headless: false,
+                    args: [
+                        '--no-sandbox',
+                        '--headless',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        `--proxy-server=${proxy.server}`
+                    ]
                 });
-            accountIndex++;
+                const context = await browser.newContext({
+                    httpCredentials: {
+                        username: proxy.username,
+                        password: proxy.password
+                    }
+                });
+
+                // Xử lý tài khoản với context được tạo ra
+                processAccount(context, accountUrl, accountIndex + 1)
+                    .then(result => {
+                        if (result.success) {
+                            successCount++;
+                        } else {
+                            failureCount++;
+                        }
+                    })
+                    .catch(() => failureCount++)
+                    .finally(async () => {
+                        activeBrowsers--;
+                        await browser.close();
+                    });
+                accountIndex++;
+            }
+
+            // Đợi khi có trình duyệt đang hoạt động
+            if (activeBrowsers > 0) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         }
 
         // In kết quả và chờ thời gian nghỉ ngơi
