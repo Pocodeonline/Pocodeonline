@@ -94,8 +94,9 @@ async function processAccount(context, accountUrl, accountNumber) {
         await page.waitForTimeout(400);
 
         // Click the claim button
-        const claimButtonXpath = '/html/body/div[1]/div/div/section/div[6]/div/div/div/div[3]/button';
+        const claimButtonXpath = '/html/body/div[1]/div/div/section/div[6]/div/div/div/div[3]/button/p';
         await page.click(`xpath=${claimButtonXpath}`);
+        await page.waitForTimeout(400);
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
