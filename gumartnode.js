@@ -78,7 +78,7 @@ async function processAccount(context, accountUrl, accountNumber) {
     const page = await context.newPage();
     let success = false;
     try {
-        console.log(`🐮 Đang chạy tài khoản ${accountNumber}`);
+        console.log(` Đang chạy tài khoản ${accountNumber}`);
         await page.goto(accountUrl);
 
         // Check for page load
