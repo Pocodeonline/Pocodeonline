@@ -35,12 +35,6 @@ async function readProxies(filePath) {
     return proxies;
 }
 
-async function countNonEmptyLines(filePath) {
-    if (!fs.existsSync(filePath)) return 0;
-    const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
-    return lines.filter(line => line.trim()).length;
-}
-
 async function readAccounts(filePath) {
     const fileStream = fs.createReadStream(filePath);
     const rl = readline.createInterface({
@@ -106,7 +100,6 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         }
 
         if (!imgElementFound) {
-
             const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
             const timeElement = await page.waitForSelector(timeSelector);
             const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
@@ -132,41 +125,29 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
     return { success };
 }
 
-async function runPlaywrightInstances(links, numAccounts, proxies) {
-    const concurrencyLimit = 10; // Number of browsers to run concurrently
+async function runPlaywrightInstances(links, proxies) {
     const totalProxies = proxies.length;
-    let proxyIndex = 0; // To track the current proxy being used
+    let proxyIndex = 0;
 
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
-    let accountsProcessed = 0; // Track the number of accounts processed
-    let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
+    for (const [index, accountUrl] of links.entries()) {
+        const proxy = proxies[proxyIndex % totalProxies];
+        proxyIndex++;
 
-    while (remainingLinks.length > 0) {
-        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
-        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
-
-        // Determine the proxies for this batch
-        const batchProxies = [];
-        for (let i = 0; i < batchSize; i++) {
-            batchProxies.push(proxies[proxyIndex % totalProxies]);
-            proxyIndex++;
-        }
-
-        // Launch and handle each browser with its corresponding proxy
-        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
-            const proxy = batchProxies[index]; // Use the proxy for this specific account
+        (async () => {
             const browser = await chromium.launch({
                 headless: false,
                 args: [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
-                    '--headless',            
+                    '--headless',
                     `--proxy-server=${proxy.server}`
                 ]
             });
+
             const context = await browser.newContext({
                 httpCredentials: {
                     username: proxy.username,
@@ -175,25 +156,23 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
             });
 
             try {
-                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
+                const result = await processAccount(context, accountUrl, index + 1, proxy);
                 if (result.success) {
                     totalSuccessCount++;
                 } else {
                     totalFailureCount++;
                 }
             } catch (e) {
-                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
+                console.log(`Tài khoản số ${index + 1} gặp lỗi`);
                 totalFailureCount++;
             } finally {
                 await browser.close();
             }
-        });
-
-        await Promise.all(browserPromises);
-        accountsProcessed += batchSize; // Update number of processed accounts
+        })();
     }
 
-    // Final report
+    // Wait for all instances to complete
+    await new Promise(resolve => setTimeout(resolve, 30000)); // Adjust if necessary
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
     console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
 }
@@ -222,16 +201,15 @@ async function countdownTimer(seconds) {
         }
 
         while (true) {
-            const nonEmptyLines = await countNonEmptyLines(filePath);
-            if (nonEmptyLines === 0) {
+            const links = await readAccounts(filePath);
+            if (links.length === 0) {
                 console.log(`${RED}File không chứa tài khoản nào.`);
                 break;
             }
 
-            const links = await readAccounts(filePath);
             console.log(`${SILVER}GUMART 🛒 ${LIGHT_PINK}code by 🐮${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
-            console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản `);
+            console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${links.length}${GREEN} tài khoản `);
 
             const userInput = await new Promise(resolve => {
                 const rl = readline.createInterface({
@@ -287,10 +265,9 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
-            // Run the Playwright instances and get the number of accounts processed
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`\x1b[38;5;231mChạy lần \x1b[38;5;10m${i + 1}`);
-                await runPlaywrightInstances(links, numAccounts, proxies);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies);
 
                 if (i < repeatCount) { // Only rest if more repeats are needed
                     await countdownTimer(restTime); // Display countdown timer
