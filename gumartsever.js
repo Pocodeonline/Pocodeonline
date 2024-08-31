@@ -96,12 +96,12 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         await page.click(claimButtonSelector);
 
         const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
-        let imgElementFound = false;
+        let imgElementFound = true;
 
         try {
             await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
             await page.click(imgSelector);
-            imgElementFound = true;
+            imgElementFound = false;
         } catch (error) {
         }
 
