@@ -133,6 +133,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, proxies) {
+    const concurrencyLimit = 10; // Number of browsers to run concurrently
     const totalProxies = proxies.length;
     let proxyIndex = 0; // To track the current proxy being used
 
@@ -142,53 +143,57 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let accountsProcessed = 0; // Track the number of accounts processed
     let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-    // Function to process a single account
-    async function processAccountForLink(accountUrl) {
-        const proxy = proxies[proxyIndex % totalProxies];
-        proxyIndex++;
+    while (remainingLinks.length > 0) {
+        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
+        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
 
-        const browser = await chromium.launch({
-            headless: false,
-            args: [
-                '--no-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--headless',
-                `--proxy-server=${proxy.server}`
-            ]
-        });
-        const context = await browser.newContext({
-            httpCredentials: {
-                username: proxy.username,
-                password: proxy.password
-            }
-        });
-
-        try {
-            const result = await processAccount(context, accountUrl, accountsProcessed + 1, proxy);
-            if (result.success) {
-                totalSuccessCount++;
-            } else {
-                totalFailureCount++;
-            }
-        } catch (e) {
-            console.log(`Tài khoản gặp lỗi`);
-            totalFailureCount++;
-        } finally {
-            await browser.close();
+        // Determine the proxies for this batch
+        const batchProxies = [];
+        for (let i = 0; i < batchSize; i++) {
+            batchProxies.push(proxies[proxyIndex % totalProxies]);
+            proxyIndex++;
         }
 
-        accountsProcessed++;
+        // Launch and handle each browser with its corresponding proxy
+        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
+            const proxy = batchProxies[index]; // Use the proxy for this specific account
+            const browser = await chromium.launch({
+                headless: false,
+                args: [
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--headless',            
+                    `--proxy-server=${proxy.server}`
+                ]
+            });
+            const context = await browser.newContext({
+                httpCredentials: {
+                    username: proxy.username,
+                    password: proxy.password
+                }
+            });
+
+            try {
+                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
+                if (result.success) {
+                    totalSuccessCount++;
+                } else {
+                    totalFailureCount++;
+                }
+            } catch (e) {
+                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
+                totalFailureCount++;
+            } finally {
+                await browser.close();
+            }
+        });
+
+        await Promise.all(browserPromises);
+        accountsProcessed += batchSize; // Update number of processed accounts
     }
 
-    // Process accounts
-    for (const accountUrl of remainingLinks) {
-        processAccountForLink(accountUrl);
-        // Add a small delay to avoid overwhelming the system
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    // Wait for all accounts to be processed
+    // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
     console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
 }
