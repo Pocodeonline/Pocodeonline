@@ -12,6 +12,7 @@ const RESET = '\x1b[0m';
 
 const ERROR_LOG_PATH = 'failed_accounts.txt';
 const PROXIES_FILE_PATH = 'proxies.txt'; // Path to the proxies file
+const MAX_CONCURRENT_INSTANCES = 10; // Maximum number of concurrent browser instances
 
 async function readProxies(filePath) {
     const fileStream = fs.createReadStream(filePath);
@@ -131,48 +132,55 @@ async function runPlaywrightInstances(links, proxies) {
 
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
+    let activeInstances = 0;
+    const queue = [...links];
 
-    for (const [index, accountUrl] of links.entries()) {
-        const proxy = proxies[proxyIndex % totalProxies];
-        proxyIndex++;
+    while (queue.length > 0) {
+        if (activeInstances < MAX_CONCURRENT_INSTANCES) {
+            const accountUrl = queue.shift();
+            const proxy = proxies[proxyIndex % totalProxies];
+            proxyIndex++;
 
-        (async () => {
-            const browser = await chromium.launch({
-                headless: false,
-                args: [
-                    '--no-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--headless',
-                    `--proxy-server=${proxy.server}`
-                ]
-            });
+            activeInstances++;
+            (async () => {
+                const browser = await chromium.launch({
+                    headless: false,
+                    args: [
+                        '--no-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        `--proxy-server=${proxy.server}`
+                    ]
+                });
 
-            const context = await browser.newContext({
-                httpCredentials: {
-                    username: proxy.username,
-                    password: proxy.password
-                }
-            });
+                const context = await browser.newContext({
+                    httpCredentials: {
+                        username: proxy.username,
+                        password: proxy.password
+                    }
+                });
 
-            try {
-                const result = await processAccount(context, accountUrl, index + 1, proxy);
-                if (result.success) {
-                    totalSuccessCount++;
-                } else {
+                try {
+                    const result = await processAccount(context, accountUrl, queue.length, proxy);
+                    if (result.success) {
+                        totalSuccessCount++;
+                    } else {
+                        totalFailureCount++;
+                    }
+                } catch (e) {
                     totalFailureCount++;
+                } finally {
+                    await context.close();
+                    await browser.close();
+                    activeInstances--;
                 }
-            } catch (e) {
-                console.log(`Tài khoản số ${index + 1} gặp lỗi`);
-                totalFailureCount++;
-            } finally {
-                await browser.close();
-            }
-        })();
+            })();
+        }
+
+        // Wait for some time before checking the queue again
+        await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    // Wait for all instances to complete
-    await new Promise(resolve => setTimeout(resolve, 30000)); // Adjust if necessary
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
     console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
 }
