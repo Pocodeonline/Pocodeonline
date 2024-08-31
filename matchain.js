@@ -2,6 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
 const path = require('path');
+const { expect } = require('@playwright/test');
 
 // Color constants
 const COLORS = {
@@ -13,6 +14,7 @@ const COLORS = {
     LIGHT_PINK: '\x1b[38;5;207m',
     RESET: '\x1b[0m',
     FLAME_ORANGE: '\x1b[38;5;208m',
+
 };
 
 // File paths
@@ -98,7 +100,7 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(context, accountUrl, accountNumber) {
+async function processAccount(context, accountUrl, accountNumber,) {
     const page = await context.newPage();
     let success = false;
 
@@ -113,14 +115,14 @@ async function processAccount(context, accountUrl, accountNumber) {
         try {
             await Promise.race([
                 page.waitForSelector(skipButtonSelector, { timeout: 8000 }).then(() => skipButtonFound = true),
-                new Promise(resolve => setTimeout(resolve, 8000)) // Timeout of 8 seconds
+                new Promise(resolve => setTimeout(resolve, 8000)) // Timeout of 5 seconds
             ]);
 
             if (skipButtonFound) {
                 const skipButton = await page.waitForSelector(skipButtonSelector);
                 await skipButton.click();
             } else {
-                console.log(`${COLORS.RED}Không tìm thấy nút bỏ qua trong vòng 8 giây ở acc ${accountNumber}`);
+                console.log(`${COLORS.RED}Không tìm thấy nút bỏ qua trong vòng 5 giây ở acc ${accountNumber}`);
             }
         } catch (err) {
             console.log(`${COLORS.RED}Lỗi khi kiểm tra nút bỏ qua ở acc ${accountNumber}`);
@@ -226,8 +228,7 @@ async function promptUser() {
     return new Promise((resolve) => {
         rl.question(`${COLORS.GREEN}Nhập số lượng tài khoản muốn 🐮 chạy \x1b[38;5;11m(\x1b[38;5;10mhoặc \x1b[38;5;11m'\x1b[38;5;10mall\x1b[38;5;11m'\x1b[38;5;10m để chạy tất cả\x1b[38;5;11m, \x1b[38;5;10mhoặc \x1b[38;5;9m0 \x1b[38;5;10mđể thoát\x1b[38;5;11m): `, (input) => {
             rl.close();
-            // Trim input to remove any extra spaces
-            resolve(input.trim());
+            resolve(input);
         });
     });
 }
