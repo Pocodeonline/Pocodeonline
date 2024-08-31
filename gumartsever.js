@@ -143,26 +143,22 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let accountsProcessed = 0; // Track the number of accounts processed
     let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-    while (remainingLinks.length > 0) {
-        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
-        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
+    const runningInstances = []; // Array to keep track of running instances
 
-        // Determine the proxies for this batch
-        const batchProxies = [];
-        for (let i = 0; i < batchSize; i++) {
-            batchProxies.push(proxies[proxyIndex % totalProxies]);
+    while (remainingLinks.length > 0 || runningInstances.length > 0) {
+        // Launch up to concurrencyLimit browsers
+        while (remainingLinks.length > 0 && runningInstances.length < concurrencyLimit) {
+            const accountUrl = remainingLinks.shift();
+            const proxy = proxies[proxyIndex % totalProxies];
             proxyIndex++;
-        }
 
-        // Launch and handle each browser with its corresponding proxy
-        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
-            const proxy = batchProxies[index]; // Use the proxy for this specific account
             const browser = await chromium.launch({
                 headless: false,
                 args: [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
+
                     `--proxy-server=${proxy.server}`
                 ]
             });
@@ -173,23 +169,31 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
                 }
             });
 
-            try {
-                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
-                if (result.success) {
-                    totalSuccessCount++;
-                } else {
+            const instancePromise = processAccount(context, accountUrl, accountsProcessed + 1, proxy)
+                .then(result => {
+                    if (result.success) {
+                        totalSuccessCount++;
+                    } else {
+                        totalFailureCount++;
+                    }
+                })
+                .catch(error => {
+                    console.error(`Lỗi trong tài khoản ${accountsProcessed + 1}: ${error.message}`);
                     totalFailureCount++;
-                }
-            } catch (e) {
-                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
-                totalFailureCount++;
-            } finally {
-                await browser.close();
-            }
-        });
+                })
+                .finally(() => {
+                    browser.close();
+                    runningInstances.splice(runningInstances.indexOf(instancePromise), 1);
+                });
 
-        await Promise.all(browserPromises);
-        accountsProcessed += batchSize; // Update number of processed accounts
+            runningInstances.push(instancePromise);
+            accountsProcessed++;
+        }
+
+        if (remainingLinks.length > 0) {
+            // Wait for at least one instance to finish before launching more
+            await Promise.race(runningInstances);
+        }
     }
 
     // Final report
