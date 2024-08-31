@@ -105,12 +105,12 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(context, accountUrl, accountNumber,) {
+async function processAccount(context, accountUrl, accountNumber, proxy) {
     const page = await context.newPage();
     let success = false;
 
     try {
-        console.log(`\x1b[38;5;207m🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
+        console.log(`${COLORS.GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
         await page.goto(accountUrl);
 
         // Handle optional skip button
@@ -120,14 +120,14 @@ async function processAccount(context, accountUrl, accountNumber,) {
         try {
             await Promise.race([
                 page.waitForSelector(skipButtonSelector, { timeout: 8000 }).then(() => skipButtonFound = true),
-                new Promise(resolve => setTimeout(resolve, 8000)) // Timeout of 5 seconds
+                new Promise(resolve => setTimeout(resolve, 8000)) // Timeout of 8 seconds
             ]);
 
             if (skipButtonFound) {
                 const skipButton = await page.waitForSelector(skipButtonSelector);
                 await skipButton.click();
             } else {
-                console.log(`${COLORS.RED}Không tìm thấy nút bỏ qua trong vòng 5 giây ở acc ${accountNumber}`);
+                console.log(`${COLORS.RED}Không tìm thấy nút bỏ qua trong vòng 8 giây ở acc ${accountNumber}`);
             }
         } catch (err) {
             console.log(`${COLORS.RED}Lỗi khi kiểm tra nút bỏ qua ở acc ${accountNumber}`);
@@ -149,7 +149,7 @@ async function processAccount(context, accountUrl, accountNumber,) {
             }
             if (randomNumber === '0.0000') {
                 console.log(`${COLORS.CYAN}Chờ để số điểm cập nhật ở acc ${accountNumber}...`);
-                await page.waitForTimeout(8000); // Thêm thời gian chờ để cập nhật số điểm
+                await page.waitForTimeout(4000); // Thêm thời gian chờ để cập nhật số điểm
             }
         } while (randomNumber === '0.0000');
 
@@ -157,7 +157,8 @@ async function processAccount(context, accountUrl, accountNumber,) {
         const currentBalance = await page.textContent(currentBalanceSelector);
         console.log(`${COLORS.GREEN}Số điểm đã đào của acc ${accountNumber}\x1b[38;5;11m: ${randomNumber}`);
         console.log(`${COLORS.GREEN}Số dư hiện tại của acc ${accountNumber}\x1b[38;5;11m: ${currentBalance}`);
-        await page.waitForTimeout(1500)
+        await page.waitForTimeout(1500);
+        
         // Check if claim button exists
         const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
         let claimButtonExists = false;
@@ -183,27 +184,27 @@ async function processAccount(context, accountUrl, accountNumber,) {
             console.log(`${COLORS.GREEN}Claim thành công ${randomNumber} acc ${accountNumber}`);
             await page.click(claimProcessedSelector);
             console.log(`${COLORS.GREEN}Đang cho acc đào tiếp ${accountNumber}`);
-            await page.waitForTimeout(800)
+            await page.waitForTimeout(800);
 
             // Print remaining time
             const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
-            const countdownHours = await page.textContent(countdownHoursSelector,{ timeout: 30000 });
+            const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
             console.log(`${COLORS.GREEN}Thời gian còn lại của acc ${accountNumber}: ${countdownHours}`);
-            await page.waitForTimeout(800)
+            await page.waitForTimeout(800);
+
             // Click on specific element
             const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div";
             await page.waitForSelector(clickItemSelector);
             await page.click(clickItemSelector);
             console.log(`${COLORS.GREEN}Đang mua x2...${accountNumber}`);
-            await page.waitForTimeout(400);
-
+            await page.waitForTimeout(1000);
 
             // Click on specific element
             const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
             await page.waitForSelector(clickx2Selector);
             await page.click(clickx2Selector);
             console.log(`${COLORS.GREEN}Đã mua x2${accountNumber}`);
-            await page.waitForTimeout(3000);
+            await page.waitForTimeout(2000);
 
             // Wait for final element and get its text
             const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
@@ -242,10 +243,9 @@ async function promptUser() {
 async function runChromeInstances() {
     const proxyList = await readProxies(PROXIES_FILE_PATH);
     const accounts = await readAccounts('matchain.txt');
-    
 
     if (accounts.length === 0) {
-        console.log(`${COLORS.RED}Không tìm thấy tài khoản nào trong accounts.txt`);
+        console.log(`${COLORS.RED}Không tìm thấy tài khoản nào trong matchain.txt`);
         return;
     }
 
@@ -299,16 +299,17 @@ async function runChromeInstances() {
 
     async function processNext() {
         if (index >= numToProcess) return;
-    
-        const proxy = proxyList[index % proxyList.length];
+
+        const proxyIndex = Math.floor(index / (numToProcess / proxyList.length)) % proxyList.length;
+        const proxy = proxyList[proxyIndex];
         const accountUrl = pendingAccounts[index];
         const accountNumber = index + 1;
         index += 1;
-    
+
         const proxyServer = proxy.server;
         const proxyUsername = proxy.username;
         const proxyPassword = proxy.password;
-    
+
         try {
             const browser = await chromium.launch({
                 headless: true,
@@ -318,19 +319,19 @@ async function runChromeInstances() {
                     password: proxyPassword
                 }
             });
-    
+
             const context = await browser.newContext();
-            const success = await processAccount(context, accountUrl, accountNumber);
+            const success = await processAccount(context, accountUrl, accountNumber, proxy);
             if (success) {
                 await writeDoneAccounts([accountUrl], doneFilePath);
                 await removeDoneAccount('matchain.txt', accountUrl); // Xóa tài khoản từ accounts.txt
             }
-    
+
             await browser.close();
         } catch (error) {
             console.error(`${COLORS.RED}Lỗi khi khởi động trình duyệt với proxy ${proxyServer}: ${error}`);
         }
-    
+
         // Schedule the next instance
         setTimeout(processNext, 1000); // Adjust delay if needed
     }
