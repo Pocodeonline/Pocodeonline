@@ -149,7 +149,7 @@ async function processAccount(context, accountUrl, accountNumber,) {
             }
             if (randomNumber === '0.0000') {
                 console.log(`${COLORS.CYAN}Chờ để số điểm cập nhật ở acc ${accountNumber}...`);
-                await page.waitForTimeout(4000); // Thêm thời gian chờ để cập nhật số điểm
+                await page.waitForTimeout(8000); // Thêm thời gian chờ để cập nhật số điểm
             }
         } while (randomNumber === '0.0000');
 
@@ -195,7 +195,7 @@ async function processAccount(context, accountUrl, accountNumber,) {
             await page.waitForSelector(clickItemSelector);
             await page.click(clickItemSelector);
             console.log(`${COLORS.GREEN}Đang mua x2...${accountNumber}`);
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(400);
 
 
             // Click on specific element
@@ -203,7 +203,7 @@ async function processAccount(context, accountUrl, accountNumber,) {
             await page.waitForSelector(clickx2Selector);
             await page.click(clickx2Selector);
             console.log(`${COLORS.GREEN}Đã mua x2${accountNumber}`);
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(3000);
 
             // Wait for final element and get its text
             const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
