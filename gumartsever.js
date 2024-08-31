@@ -158,7 +158,7 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
         const browserPromises = batchAccounts.map(async (accountUrl, index) => {
             const proxy = batchProxies[index]; // Use the proxy for this specific account
             const browser = await chromium.launch({
-                headless: false,
+                headless: true,
                 args: [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
