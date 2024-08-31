@@ -31,8 +31,13 @@ async function readProxies(filePath) {
     const proxies = [];
     for await (const line of rl) {
         if (line.trim()) {
-            const [server, username, password] = line.split('|');
-            proxies.push({ server, username, password });
+            const parts = line.split(':');
+            if (parts.length === 4) {
+                const [ip, port, username, password] = parts;
+                proxies.push({ server: `${ip}:${port}`, username, password });
+            } else {
+                console.error(`Proxy format error: ${line}`);
+            }
         }
     }
     return proxies;
@@ -105,7 +110,7 @@ async function processAccount(context, accountUrl, accountNumber,) {
     let success = false;
 
     try {
-        console.log(`${COLORS.GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber}`);
+        console.log(`\x1b[38;5;207m🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
         await page.goto(accountUrl);
 
         // Handle optional skip button
