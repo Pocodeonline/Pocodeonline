@@ -113,8 +113,6 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
             console.log(`\x1b[38;5;9mX2 Của Acc \x1b[38;5;11m${accountNumber} Còn ${time} Mới Mua Được...`);
         }
 
-        await page.waitForTimeout(400);
-
         // Get points information
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
@@ -133,7 +131,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, proxies) {
-    const concurrencyLimit = 10; // Number of browsers to run concurrently
+    const concurrencyLimit = 6; // Number of browsers to run concurrently
     const totalProxies = proxies.length;
     let proxyIndex = 0; // To track the current proxy being used
 
