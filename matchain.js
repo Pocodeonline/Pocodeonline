@@ -236,7 +236,6 @@ async function promptUser() {
 async function runChromeInstances() {
     const proxyList = await readProxies(PROXIES_FILE_PATH);
     const accounts = await readAccounts('matchain.txt');
-    
 
     if (accounts.length === 0) {
         console.log(`${COLORS.RED}Không tìm thấy tài khoản nào trong accounts.txt`);
@@ -254,8 +253,8 @@ async function runChromeInstances() {
     // Ensure the done file exists and is read as a string
     let doneAccounts = [];
     if (fs.existsSync(doneFilePath)) {
-        const doneFileContent = await fs.promises.readFile(doneFilePath);
-        doneAccounts = doneFileContent.toString().split('\n').filter(line => line.trim());
+        const doneFileContent = await fs.promises.readFile(doneFilePath, 'utf-8');
+        doneAccounts = doneFileContent.split('\n').filter(line => line.trim());
     }
 
     const pendingAccounts = accounts.filter(account => !doneAccounts.includes(account.trim()));
@@ -288,6 +287,8 @@ async function runChromeInstances() {
         }
         numToProcess = Math.min(numToProcess, pendingAccounts.length);
     }
+
+    console.log(`Sẽ xử lý ${numToProcess} tài khoản.`); // Debug line
 
     let index = 0;
 
@@ -334,9 +335,3 @@ async function runChromeInstances() {
         processNext();
     }
 }
-
-// Run the script
-(async () => {
-    await printCustomLogo(true);
-    await runChromeInstances();
-})();
