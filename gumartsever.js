@@ -92,14 +92,14 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         console.log(`\x1b[38;5;10mĐã Vào Giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
+        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 400 });
         await page.click(claimButtonSelector);
 
         const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
         let imgElementFound = false;
 
         try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 1500 });
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
             await page.click(imgSelector);
             imgElementFound = true;
         } catch (error) {
