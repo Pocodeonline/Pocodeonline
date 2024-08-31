@@ -133,7 +133,6 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, proxies) {
-    const concurrencyLimit = 10; // Number of browsers to run concurrently
     const totalProxies = proxies.length;
     let proxyIndex = 0; // To track the current proxy being used
 
@@ -143,19 +142,10 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let accountsProcessed = 0; // Track the number of accounts processed
     let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-    // Create an array of promises to handle the concurrency
-    const processingPromises = [];
-
-    // Function to process the next account
-    async function processNextAccount() {
-        if (remainingLinks.length === 0) return; // No more accounts to process
-
-        // Determine the proxy for this account
+    // Function to process a single account
+    async function processAccountForLink(accountUrl) {
         const proxy = proxies[proxyIndex % totalProxies];
         proxyIndex++;
-
-        // Get the next account URL
-        const accountUrl = remainingLinks.shift(); // Remove and get the next account URL
 
         const browser = await chromium.launch({
             headless: false,
@@ -189,20 +179,16 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
         }
 
         accountsProcessed++;
-
-        // Process the next account immediately
-        processNextAccount();
     }
 
-    // Start processing accounts
-    for (let i = 0; i < concurrencyLimit && remainingLinks.length > 0; i++) {
-        processingPromises.push(processNextAccount());
+    // Process accounts
+    for (const accountUrl of remainingLinks) {
+        processAccountForLink(accountUrl);
+        // Add a small delay to avoid overwhelming the system
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    // Wait for all processing promises to complete
-    await Promise.all(processingPromises);
-
-    // Final report
+    // Wait for all accounts to be processed
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
     console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
 }
