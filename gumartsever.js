@@ -79,25 +79,8 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(accountUrl, accountNumber, proxy) {
-    const browser = await chromium.launch({
-        headless: false,
-        args: [
-            '--no-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--headless',            
-            `--proxy-server=${proxy.server}`
-        ]
-    });
-    const context = await browser.newContext({
-        httpCredentials: {
-            username: proxy.username,
-            password: proxy.password
-        }
-    });
+async function processAccount(context, accountUrl, accountNumber, proxy) {
     const page = await context.newPage();
-
     let success = false;
     try {
         console.log(`\x1b[38;5;207m🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
@@ -145,7 +128,6 @@ async function processAccount(accountUrl, accountNumber, proxy) {
         await logFailedAccount(accountNumber);
     } finally {
         await page.close();
-        await browser.close();
     }
     return { success };
 }
@@ -161,38 +143,54 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let accountsProcessed = 0; // Track the number of accounts processed
     let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-    // Queue to manage running instances
-    const queue = [];
+    while (remainingLinks.length > 0) {
+        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
+        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
 
-    while (remainingLinks.length > 0 || queue.length > 0) {
-        // Add new tasks to the queue if there are remaining links and free slots
-        while (queue.length < concurrencyLimit && remainingLinks.length > 0) {
-            const accountUrl = remainingLinks.shift();
-            const proxy = proxies[proxyIndex % totalProxies];
+        // Determine the proxies for this batch
+        const batchProxies = [];
+        for (let i = 0; i < batchSize; i++) {
+            batchProxies.push(proxies[proxyIndex % totalProxies]);
             proxyIndex++;
-
-            const task = processAccount(accountUrl, accountsProcessed + 1, proxy)
-                .then(result => {
-                    if (result.success) {
-                        totalSuccessCount++;
-                    } else {
-                        totalFailureCount++;
-                    }
-                    accountsProcessed++;
-                })
-                .catch(e => {
-                    console.log(`Tài khoản số ${accountsProcessed + 1} gặp lỗi`);
-                    totalFailureCount++;
-                });
-
-            queue.push(task);
         }
 
-        // Wait for any task to complete
-        await Promise.race(queue);
+        // Launch and handle each browser with its corresponding proxy
+        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
+            const proxy = batchProxies[index]; // Use the proxy for this specific account
+            const browser = await chromium.launch({
+                headless: false,
+                args: [
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--headless',            
+                    `--proxy-server=${proxy.server}`
+                ]
+            });
+            const context = await browser.newContext({
+                httpCredentials: {
+                    username: proxy.username,
+                    password: proxy.password
+                }
+            });
 
-        // Remove the completed task from the queue
-        queue.shift();
+            try {
+                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
+                if (result.success) {
+                    totalSuccessCount++;
+                } else {
+                    totalFailureCount++;
+                }
+            } catch (e) {
+                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
+                totalFailureCount++;
+            } finally {
+                await browser.close();
+            }
+        });
+
+        await Promise.all(browserPromises);
+        accountsProcessed += batchSize; // Update number of processed accounts
     }
 
     // Final report
