@@ -153,7 +153,7 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
             proxyIndex++;
 
             const browser = await chromium.launch({
-                headless: false,
+                headless: true,
                 args: [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
