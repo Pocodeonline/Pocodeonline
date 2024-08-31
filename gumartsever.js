@@ -92,16 +92,16 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         console.log(`\x1b[38;5;10mĐã Vào Giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1200 });
+        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 400 });
         await page.click(claimButtonSelector);
 
-        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
-        let imgElementFound = true;
+        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
+        let imgElementFound = false;
 
         try {
             await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
             await page.click(imgSelector);
-            imgElementFound = false;
+            imgElementFound = true;
         } catch (error) {
         }
 
@@ -110,6 +110,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
             const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
             const timeElement = await page.waitForSelector(timeSelector);
             const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
+            // Skip this step and proceed to get points information
             console.log(`\x1b[38;5;9mX2 Của Acc \x1b[38;5;11m${accountNumber} Còn ${time} Mới Mua Được...`);
         }
 
@@ -143,17 +144,22 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let accountsProcessed = 0; // Track the number of accounts processed
     let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-    const runningInstances = []; // Array to keep track of running instances
+    while (remainingLinks.length > 0) {
+        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
+        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
 
-    while (remainingLinks.length > 0 || runningInstances.length > 0) {
-        // Launch up to concurrencyLimit browsers
-        while (remainingLinks.length > 0 && runningInstances.length < concurrencyLimit) {
-            const accountUrl = remainingLinks.shift();
-            const proxy = proxies[proxyIndex % totalProxies];
+        // Determine the proxies for this batch
+        const batchProxies = [];
+        for (let i = 0; i < batchSize; i++) {
+            batchProxies.push(proxies[proxyIndex % totalProxies]);
             proxyIndex++;
+        }
 
+        // Launch and handle each browser with its corresponding proxy
+        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
+            const proxy = batchProxies[index]; // Use the proxy for this specific account
             const browser = await chromium.launch({
-                headless: true,
+                headless: false,
                 args: [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
@@ -168,33 +174,23 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
                 }
             });
 
-            const instancePromise = processAccount(context, accountUrl, accountsProcessed + 1, proxy)
-                .then(result => {
-                    if (result.success) {
-                        totalSuccessCount++;
-                    } else {
-                        totalFailureCount++;
-                    }
-                })
-                .catch(error => {
-                    console.error(`Lỗi trong tài khoản ${accountsProcessed + 1}: ${error.message}`);
+            try {
+                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
+                if (result.success) {
+                    totalSuccessCount++;
+                } else {
                     totalFailureCount++;
-                })
-                .finally(() => {
-                    browser.close();
-                });
+                }
+            } catch (e) {
+                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
+                totalFailureCount++;
+            } finally {
+                await browser.close();
+            }
+        });
 
-            runningInstances.push(instancePromise);
-            accountsProcessed++;
-        }
-
-        if (remainingLinks.length > 0 || runningInstances.length > 0) {
-            // Wait for at least one instance to finish before launching more
-            await Promise.race(runningInstances);
-
-            // Remove finished instances from the runningInstances list
-            runningInstances = runningInstances.filter(p => p !== Promise.race(runningInstances));
-        }
+        await Promise.all(browserPromises);
+        accountsProcessed += batchSize; // Update number of processed accounts
     }
 
     // Final report
