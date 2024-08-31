@@ -239,7 +239,6 @@ async function promptUser() {
     });
 }
 
-
 async function runChromeInstances() {
     const proxyList = await readProxies(PROXIES_FILE_PATH);
     const accounts = await readAccounts('matchain.txt');
@@ -300,8 +299,7 @@ async function runChromeInstances() {
     async function processNext() {
         if (index >= numToProcess) return;
 
-        const proxyIndex = Math.floor(index / (numToProcess / proxyList.length)) % proxyList.length;
-        const proxy = proxyList[proxyIndex];
+        const proxy = proxyList[index % proxyList.length]; // Wrap around proxies if less than accounts
         const accountUrl = pendingAccounts[index];
         const accountNumber = index + 1;
         index += 1;
