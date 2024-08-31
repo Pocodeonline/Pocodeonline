@@ -157,6 +157,7 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
                 args: [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
+                    '--headless',
                     '--disable-gpu',
 
                     `--proxy-server=${proxy.server}`
