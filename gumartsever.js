@@ -94,15 +94,6 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1200 });
         await page.click(claimButtonSelector);
 
-        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
-        await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
-        await page.click(imgSelector);
-
-        const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
-        const timeElement = await page.waitForSelector(timeSelector);
-        const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
-        console.log(`\x1b[38;5;9mX2 Của Acc \x1b[38;5;11m${accountNumber} Còn ${time} Mới Mua Được...`);
-
         // Get points information
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
