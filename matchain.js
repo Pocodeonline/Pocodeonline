@@ -299,7 +299,8 @@ async function runChromeInstances() {
     async function processNext() {
         if (index >= numToProcess) return;
 
-        const proxy = proxyList[index % proxyList.length]; // Wrap around proxies if less than accounts
+        // Ensure we don't run out of proxies by using modulo to wrap around
+        const proxy = proxyList[index % proxyList.length];
         const accountUrl = pendingAccounts[index];
         const accountNumber = index + 1;
         index += 1;
@@ -345,3 +346,4 @@ async function runChromeInstances() {
     await printCustomLogo(true);
     await runChromeInstances();
 })();
+
