@@ -95,12 +95,8 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
         await page.click(claimButtonSelector);
 
-        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
+        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
         let imgElementFound = false;
-
-        const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
-        const timeElement = await page.waitForSelector(timeSelector);
-        const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
 
         try {
             await page.waitForSelector(imgSelector, { visible: true, timeout: 1500 });
@@ -110,6 +106,10 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         }
 
         if (!imgElementFound) {
+
+            const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
+            const timeElement = await page.waitForSelector(timeSelector);
+            const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
             // Skip this step and proceed to get points information
             console.log(`\x1b[38;5;9mX2 Của Acc \x1b[38;5;11m${accountNumber} Còn ${time} Mới Mua Được...`);
         }
@@ -164,7 +164,6 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
-                    '--headless',
                     `--proxy-server=${proxy.server}`
                 ]
             });
