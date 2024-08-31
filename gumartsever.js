@@ -140,23 +140,18 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
-    let accountsProcessed = 0; // Track the number of accounts processed
-    let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
+    const accountsToProcess = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-    while (remainingLinks.length > 0) {
-        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
-        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
+    // Queue for managing accounts and proxies
+    const accountQueue = [...accountsToProcess];
+    const proxyQueue = proxies.slice();
 
-        // Determine the proxies for this batch
-        const batchProxies = [];
-        for (let i = 0; i < batchSize; i++) {
-            batchProxies.push(proxies[proxyIndex % totalProxies]);
-            proxyIndex++;
-        }
+    // Function to process a single account with a given browser and proxy
+    async function processAccountWithBrowser(proxy) {
+        while (accountQueue.length > 0) {
+            const accountUrl = accountQueue.shift(); // Get the next account URL
+            const accountNumber = accountsToProcess.length - accountQueue.length; // Account number
 
-        // Launch and handle each browser with its corresponding proxy
-        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
-            const proxy = batchProxies[index]; // Use the proxy for this specific account
             const browser = await chromium.launch({
                 headless: true,
                 args: [
@@ -167,6 +162,7 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
                     `--proxy-server=${proxy.server}`
                 ]
             });
+
             const context = await browser.newContext({
                 httpCredentials: {
                     username: proxy.username,
@@ -175,23 +171,31 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
             });
 
             try {
-                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
+                const result = await processAccount(context, accountUrl, accountNumber, proxy);
                 if (result.success) {
                     totalSuccessCount++;
                 } else {
                     totalFailureCount++;
                 }
             } catch (e) {
-                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
+                console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
                 totalFailureCount++;
             } finally {
                 await browser.close();
             }
-        });
-
-        await Promise.all(browserPromises);
-        accountsProcessed += batchSize; // Update number of processed accounts
+        }
     }
+
+    // Launch the initial set of browsers
+    const initialBrowsers = [];
+    for (let i = 0; i < concurrencyLimit && proxyQueue.length > 0; i++) {
+        const proxy = proxyQueue[proxyIndex % totalProxies];
+        proxyIndex++;
+        initialBrowsers.push(processAccountWithBrowser(proxy));
+    }
+
+    // Wait for all initial browsers to complete
+    await Promise.all(initialBrowsers);
 
     // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
