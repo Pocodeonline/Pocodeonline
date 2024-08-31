@@ -139,9 +139,13 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let accountsProcessed = 0; // Track the number of accounts processed
     let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
+    // Launch the browser with a global proxy configuration
     const browser = await chromium.launch({
         headless: false,
-        args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
+        args: ['--no-sandbox', '--disable-dev-shm-usage'],
+        proxy: {
+            server: 'http://global-proxy-placeholder.com' // Placeholder for global proxy
+        }
     });
 
     try {
