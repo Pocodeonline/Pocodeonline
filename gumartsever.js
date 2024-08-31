@@ -94,7 +94,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1200 });
         await page.click(claimButtonSelector);
 
-        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > img';
+        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
         await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
         await page.click(imgSelector);
 
