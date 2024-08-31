@@ -81,6 +81,7 @@ async function printCustomLogo(blink = false) {
 
 async function processAccount(context, accountUrl, accountNumber, proxy) {
     const page = await context.newPage();
+    let success = false;
     try {
         console.log(`\x1b[38;5;207m🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
         await page.goto(accountUrl);
@@ -94,6 +95,26 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1200 });
         await page.click(claimButtonSelector);
 
+        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
+        let imgElementFound = true;
+
+        try {
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
+            await page.click(imgSelector);
+            imgElementFound = false;
+        } catch (error) {
+        }
+
+        if (!imgElementFound) {
+
+            const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
+            const timeElement = await page.waitForSelector(timeSelector);
+            const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
+            console.log(`\x1b[38;5;9mX2 Của Acc \x1b[38;5;11m${accountNumber} Còn ${time} Mới Mua Được...`);
+        }
+
+        await page.waitForTimeout(400);
+
         // Get points information
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
@@ -101,18 +122,18 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
-        return { success: true };
+        success = true;
     } catch (e) {
-        console.error(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
         await logFailedAccount(accountNumber);
-        return { success: false };
     } finally {
         await page.close();
     }
+    return { success };
 }
 
 async function runPlaywrightInstances(links, numAccounts, proxies) {
-    const concurrencyLimit = 6; // Number of browsers to run concurrently
+    const concurrencyLimit = 10; // Number of browsers to run concurrently
     const totalProxies = proxies.length;
     let proxyIndex = 0; // To track the current proxy being used
 
@@ -122,65 +143,59 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
     let accountsProcessed = 0; // Track the number of accounts processed
     let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-    // Launch the browser with a global proxy configuration
-    const browser = await chromium.launch({
-        headless: false,
-        args: ['--no-sandbox', '--disable-dev-shm-usage'],
-        proxy: {
-            server: 'http://global-proxy-placeholder.com' // Placeholder for global proxy
+    while (remainingLinks.length > 0) {
+        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
+        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
+
+        // Determine the proxies for this batch
+        const batchProxies = [];
+        for (let i = 0; i < batchSize; i++) {
+            batchProxies.push(proxies[proxyIndex % totalProxies]);
+            proxyIndex++;
         }
-    });
 
-    try {
-        while (remainingLinks.length > 0) {
-            const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
-            const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
-
-            // Determine the proxies for this batch
-            const batchProxies = [];
-            for (let i = 0; i < batchSize; i++) {
-                batchProxies.push(proxies[proxyIndex % totalProxies]);
-                proxyIndex++;
-            }
-
-            // Launch and handle each browser context with its corresponding proxy
-            const contextPromises = batchAccounts.map(async (accountUrl, index) => {
-                const proxy = batchProxies[index]; // Use the proxy for this specific account
-                const context = await browser.newContext({
-                    httpCredentials: {
-                        username: proxy.username,
-                        password: proxy.password
-                    },
-                    proxy: {
-                        server: proxy.server
-                    }
-                });
-
-                try {
-                    const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
-                    if (result.success) {
-                        totalSuccessCount++;
-                    } else {
-                        totalFailureCount++;
-                    }
-                } catch (e) {
-                    console.error(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi: ${e.message}`);
-                    totalFailureCount++;
-                } finally {
-                    await context.close();
+        // Launch and handle each browser with its corresponding proxy
+        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
+            const proxy = batchProxies[index]; // Use the proxy for this specific account
+            const browser = await chromium.launch({
+                headless: false,
+                args: [
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--headless',            
+                    `--proxy-server=${proxy.server}`
+                ]
+            });
+            const context = await browser.newContext({
+                httpCredentials: {
+                    username: proxy.username,
+                    password: proxy.password
                 }
             });
 
-            await Promise.all(contextPromises);
-            accountsProcessed += batchSize; // Update number of processed accounts
-        }
+            try {
+                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
+                if (result.success) {
+                    totalSuccessCount++;
+                } else {
+                    totalFailureCount++;
+                }
+            } catch (e) {
+                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
+                totalFailureCount++;
+            } finally {
+                await browser.close();
+            }
+        });
 
-        // Final report
-        console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
-        console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
-    } finally {
-        await browser.close();
+        await Promise.all(browserPromises);
+        accountsProcessed += batchSize; // Update number of processed accounts
     }
+
+    // Final report
+    console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
+    console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
 }
 
 async function logFailedAccount(accountNumber) {
@@ -285,6 +300,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.error(`Lỗi: ${e.message}`);
+        console.log(`Lỗi: ${e.message}`);
     }
 })();
