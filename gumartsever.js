@@ -157,9 +157,7 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
                 args: [
                     '--no-sandbox',
                     '--disable-dev-shm-usage',
-                    '--headless',
                     '--disable-gpu',
-
                     `--proxy-server=${proxy.server}`
                 ]
             });
@@ -184,16 +182,18 @@ async function runPlaywrightInstances(links, numAccounts, proxies) {
                 })
                 .finally(() => {
                     browser.close();
-                    runningInstances.splice(runningInstances.indexOf(instancePromise), 1);
                 });
 
             runningInstances.push(instancePromise);
             accountsProcessed++;
         }
 
-        if (remainingLinks.length > 0) {
+        if (remainingLinks.length > 0 || runningInstances.length > 0) {
             // Wait for at least one instance to finish before launching more
             await Promise.race(runningInstances);
+
+            // Remove finished instances from the runningInstances list
+            runningInstances = runningInstances.filter(p => p !== Promise.race(runningInstances));
         }
     }
 
