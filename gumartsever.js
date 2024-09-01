@@ -91,7 +91,6 @@ async function printCustomLogo(blink = false) {
 
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
-    let success = false;
     try {
         console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
         await page.goto(accountUrl);
@@ -132,14 +131,12 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
-        success = true;
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
         await logFailedAccount(accountNumber, e.message);
     } finally {
         await page.close();
     }
-    return { success };
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
@@ -168,14 +165,10 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         });
 
         try {
-            const result = await processAccount(browserContext, accountUrl, accountNumber, proxy);
-            if (result.success) {
-                totalSuccessCount++;
-            } else {
-                totalFailureCount++;
-            }
+            await processAccount(browserContext, accountUrl, accountNumber, proxy);
+            totalSuccessCount++;
         } catch (e) {
-            console.log('Tài khoản gặp lỗi:', e.message);
+            console.log('Tài khoản gặp lỗi);
             totalFailureCount++;
         } finally {
             await browserContext.close();
@@ -315,6 +308,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log(`Lỗi: ${e.message}`);
+        console.log(`Lỗi`);
     }
 })();
