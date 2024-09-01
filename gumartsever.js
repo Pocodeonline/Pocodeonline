@@ -139,8 +139,11 @@ async function runPlaywrightInstances(links, proxies) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
-    // Function to process a single account with a given proxy
-    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
+    // Process each account independently
+    const tasks = links.map(async (accountUrl, index) => {
+        const proxy = proxies[proxyIndex % totalProxies];
+        proxyIndex++;
+
         const browser = await chromium.launch({
             headless: true,
             args: [
@@ -160,7 +163,7 @@ async function runPlaywrightInstances(links, proxies) {
         });
 
         try {
-            const result = await processAccount(context, accountUrl, accountNumber, proxy);
+            const result = await processAccount(context, accountUrl, index + 1, proxy);
             if (result.success) {
                 totalSuccessCount++;
             } else {
@@ -172,18 +175,10 @@ async function runPlaywrightInstances(links, proxies) {
         } finally {
             await browser.close();
         }
-    }
+    });
 
-    // Process accounts in batches with limited concurrent browsers
-    for (let i = 0; i < links.length; i += maxConcurrentBrowsers) {
-        const batch = links.slice(i, i + maxConcurrentBrowsers);
-        const tasks = batch.map((accountUrl, index) => {
-            const proxy = proxies[proxyIndex % totalProxies];
-            proxyIndex++;
-            return processAccountWithBrowser(accountUrl, i + index + 1, proxy);
-        });
-        await Promise.all(tasks); // Run in parallel
-    }
+    // Execute all tasks concurrently
+    await Promise.all(tasks);
 
     // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
