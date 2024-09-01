@@ -35,6 +35,22 @@ async function readProxies(filePath) {
     return proxies;
 }
 
+async function countNonEmptyLines(filePath) {
+    const fileStream = fs.createReadStream(filePath);
+    const rl = readline.createInterface({
+        input: fileStream,
+        crlfDelay: Infinity
+    });
+
+    let count = 0;
+    for await (const line of rl) {
+        if (line.trim()) {
+            count++;
+        }
+    }
+    return count;
+}
+
 async function readAccounts(filePath) {
     const fileStream = fs.createReadStream(filePath);
     const rl = readline.createInterface({
@@ -80,6 +96,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
         await page.goto(accountUrl);
 
+        // Check for page load
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
         console.log(`${GREEN}Đã Vào Giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
@@ -95,20 +112,23 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
             await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
             await page.click(imgSelector);
             imgElementFound = false;
-        } catch (error) {}
+        } catch (error) {
+            imgElementFound = true;
+        }
 
         if (!imgElementFound) {
             const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
             const timeElement = await page.waitForSelector(timeSelector);
-            const time = await timeElement.evaluate(el => el.innerText);
+            const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
             console.log(`${RED}X2 Của Acc ${YELLOW}${accountNumber} Còn ${time} Mới Mua Được...`);
         }
 
         await page.waitForTimeout(400);
 
+        // Get points information
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
-        const points = await pointsElement.evaluate(el => el.innerText);
+        const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
@@ -122,14 +142,11 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
     return { success };
 }
 
-async function runPlaywrightInstances(links, proxies, maxConcurrentBrowsers) {
-    const totalProxies = proxies.length;
-    let proxyIndex = 0;
+async function runPlaywrightInstances(links, proxies, maxBrowsers) {
+    const activeBrowsers = new Set();
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
-
-    const accountQueue = [...links];
-    const activeBrowsers = new Set();
+    let proxyIndex = 0; // To track the current proxy being used
 
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
@@ -158,25 +175,23 @@ async function runPlaywrightInstances(links, proxies, maxConcurrentBrowsers) {
                 totalFailureCount++;
             }
         } catch (e) {
-            console.log(`Tài khoản gặp lỗi`);
+            console.log('Tài khoản gặp lỗi');
             totalFailureCount++;
         } finally {
             await browser.close();
             activeBrowsers.delete(browser);
-            if (accountQueue.length > 0) {
-                const nextAccount = accountQueue.shift();
-                const nextProxy = proxies[proxyIndex % totalProxies];
-                proxyIndex++;
-                processAccountWithBrowser(nextAccount, accountQueue.length + 1, nextProxy);
-            }
         }
     }
 
-    for (let i = 0; i < maxConcurrentBrowsers; i++) {
-        if (accountQueue.length === 0) break;
-        const accountUrl = accountQueue.shift();
-        const proxy = proxies[proxyIndex % totalProxies];
+    for (let i = 0; i < links.length; i++) {
+        if (activeBrowsers.size >= maxBrowsers) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait if too many browsers are open
+        }
+
+        const accountUrl = links[i];
+        const proxy = proxies[proxyIndex % proxies.length];
         proxyIndex++;
+
         const browser = await chromium.launch({
             headless: true,
             args: [
@@ -189,13 +204,16 @@ async function runPlaywrightInstances(links, proxies, maxConcurrentBrowsers) {
         });
 
         activeBrowsers.add(browser);
+
         processAccountWithBrowser(accountUrl, i + 1, proxy);
     }
 
+    // Wait for all browsers to close
     while (activeBrowsers.size > 0) {
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
+    // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
     console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
 }
