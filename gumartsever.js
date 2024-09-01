@@ -134,68 +134,65 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
 
 async function runPlaywrightInstances(links, numAccounts, proxies) {
     const concurrencyLimit = 6; // Number of browsers to run concurrently
-    const totalProxies = proxies.length;
-    let proxyIndex = 0; // To track the current proxy being used
-
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
-    const accountsToProcess = links.slice(0, numAccounts); // Process only the number of accounts specified
+    // Process only the number of accounts specified
+    const accountsToProcess = links.slice(0, numAccounts);
 
-    // Queue for managing accounts and proxies
-    const accountQueue = [...accountsToProcess];
-    const proxyQueue = proxies.slice();
+    // Function to process a single account with a given proxy
+    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
+        const browser = await chromium.launch({
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--headless',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                `--proxy-server=${proxy.server}`
+            ]
+        });
 
-    // Function to process a single account with a given browser and proxy
-    async function processAccountWithBrowser(proxy) {
-        while (accountQueue.length > 0) {
-            const accountUrl = accountQueue.shift(); // Get the next account URL
-            const accountNumber = accountsToProcess.length - accountQueue.length; // Account number
-
-            const browser = await chromium.launch({
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--headless',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    `--proxy-server=${proxy.server}`
-                ]
-            });
-
-            const context = await browser.newContext({
-                httpCredentials: {
-                    username: proxy.username,
-                    password: proxy.password
-                }
-            });
-
-            try {
-                const result = await processAccount(context, accountUrl, accountNumber, proxy);
-                if (result.success) {
-                    totalSuccessCount++;
-                } else {
-                    totalFailureCount++;
-                }
-            } catch (e) {
-                console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
-                totalFailureCount++;
-            } finally {
-                await browser.close();
+        const context = await browser.newContext({
+            httpCredentials: {
+                username: proxy.username,
+                password: proxy.password
             }
+        });
+
+        try {
+            const result = await processAccount(context, accountUrl, accountNumber, proxy);
+            if (result.success) {
+                totalSuccessCount++;
+            } else {
+                totalFailureCount++;
+            }
+        } catch (e) {
+            console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
+            totalFailureCount++;
+        } finally {
+            await browser.close();
         }
     }
 
-    // Launch the initial set of browsers
-    const initialBrowsers = [];
-    for (let i = 0; i < concurrencyLimit && proxyQueue.length > 0; i++) {
-        const proxy = proxyQueue[proxyIndex % totalProxies];
-        proxyIndex++;
-        initialBrowsers.push(processAccountWithBrowser(proxy));
+    // Create a list of promises for processing accounts
+    const promises = [];
+    for (let i = 0; i < accountsToProcess.length; i++) {
+        const accountUrl = accountsToProcess[i];
+        const accountNumber = i + 1; // Account number starts from 1
+        const proxy = proxies[i % proxies.length]; // Cycle through proxies
+
+        promises.push(processAccountWithBrowser(accountUrl, accountNumber, proxy));
+        if (promises.length >= concurrencyLimit) {
+            await Promise.all(promises); // Wait for the current batch to finish
+            promises.length = 0; // Reset promises array for next batch
+        }
     }
 
-    // Wait for all initial browsers to complete
-    await Promise.all(initialBrowsers);
+    // Wait for any remaining promises to complete
+    if (promises.length > 0) {
+        await Promise.all(promises);
+    }
 
     // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
