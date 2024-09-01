@@ -143,8 +143,9 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
     let proxyIndex = 0;
-    let activeCount = 0;
-
+    
+    const accountQueue = [...links];
+    
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
@@ -177,31 +178,24 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
     }
 
-    const accountQueue = [...links];
-    while (accountQueue.length > 0 || activeCount > 0) {
-        while (activeCount < maxBrowsers && accountQueue.length > 0) {
+    const tasks = [];
+    while (accountQueue.length > 0) {
+        while (tasks.length < maxBrowsers && accountQueue.length > 0) {
             const accountUrl = accountQueue.shift();
             const accountNumber = links.indexOf(accountUrl) + 1;
             const proxy = proxies[proxyIndex % proxies.length];
             proxyIndex++;
 
-            activeCount++;
-            processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .then(() => {
-                    activeCount--;
-                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
-                })
-                .catch(() => {
-                    activeCount--;
-                    console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
-                });
+            const task = processAccountWithBrowser(accountUrl, accountNumber, proxy);
+            tasks.push(task);
         }
 
-        // Wait for active processes to finish
-        if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
+        // Wait for any task to finish and remove it from the tasks array
+        await Promise.race(tasks);
+        tasks.filter(task => task !== Promise.race(tasks));
     }
+
+    await Promise.all(tasks); // Ensure all remaining tasks are completed
 
     console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản.`);
     console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
