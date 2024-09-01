@@ -139,6 +139,9 @@ async function runPlaywrightInstances(links, proxies) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
+    // Queue to keep track of ongoing tasks
+    const ongoingTasks = new Set();
+
     // Function to process a single account with a given proxy
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
@@ -159,31 +162,57 @@ async function runPlaywrightInstances(links, proxies) {
             }
         });
 
-        try {
-            const result = await processAccount(context, accountUrl, accountNumber, proxy);
-            if (result.success) {
-                totalSuccessCount++;
-            } else {
-                totalFailureCount++;
-            }
-        } catch (e) {
-            console.log(`Tài khoản gặp lỗi`);
+        const result = await processAccount(context, accountUrl, accountNumber, proxy);
+        if (result.success) {
+            totalSuccessCount++;
+        } else {
             totalFailureCount++;
+        }
+
+        await browser.close();
+    }
+
+    async function runTask(accountUrl, accountNumber) {
+        const proxy = proxies[proxyIndex % totalProxies];
+        proxyIndex++;
+        ongoingTasks.add(accountUrl); // Add to ongoing tasks
+
+        try {
+            await processAccountWithBrowser(accountUrl, accountNumber, proxy);
+        } catch (error) {
+            console.log(`Error processing account ${accountNumber}: ${error.message}`);
         } finally {
-            await browser.close();
+            ongoingTasks.delete(accountUrl); // Remove from ongoing tasks
         }
     }
 
-    // Process accounts in batches with limited concurrent browsers
-    for (let i = 0; i < links.length; i += maxConcurrentBrowsers) {
-        const batch = links.slice(i, i + maxConcurrentBrowsers);
-        const tasks = batch.map((accountUrl, index) => {
-            const proxy = proxies[proxyIndex % totalProxies];
-            proxyIndex++;
-            return processAccountWithBrowser(accountUrl, i + index + 1, proxy);
-        });
-        await Promise.all(tasks); // Run in parallel
+    // Process accounts, creating new tasks as soon as one finishes
+    for (let i = 0; i < links.length; i++) {
+        if (ongoingTasks.size >= maxConcurrentBrowsers) {
+            await new Promise(resolve => {
+                const interval = setInterval(() => {
+                    if (ongoingTasks.size < maxConcurrentBrowsers) {
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 1000);
+            });
+        }
+
+        const accountUrl = links[i];
+        const accountNumber = i + 1;
+        runTask(accountUrl, accountNumber);
     }
+
+    // Wait for all tasks to complete
+    await new Promise(resolve => {
+        const interval = setInterval(() => {
+            if (ongoingTasks.size === 0) {
+                clearInterval(interval);
+                resolve();
+            }
+        }, 1000);
+    });
 
     // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
