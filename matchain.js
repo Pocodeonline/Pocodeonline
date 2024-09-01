@@ -208,10 +208,8 @@ async function main() {
 
     console.log(`${COLORS.FLAME_ORANGE}MATCHAIN🔥 code by 🐮`);
     console.log(`${COLORS.PINK}tele \x1b[38;5;11m: \x1b[38;5;15mtphuc_0`);
-    console.log(`${COLORS.LIGHT_PINK}Số tài khoản chưa xử lý\x1b[38;5;11m: \x1b[38;5;9m${accounts.length}`);
-    console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m0`);
 
-    rl.question('${COLORS.GREEN}Nhập số lượng tài khoản muốn 🐮 chạy \x1b[38;5;11m(\x1b[38;5;10mhoặc \x1b[38;5;11m'\x1b[38;5;10mall\x1b[38;5;11m'\x1b[38;5;10m để chạy tất cả\x1b[38;5;11m, \x1b[38;5;10mhoặc \x1b[38;5;9m0 \x1b[38;5;10mđể thoát\x1b[38;5;11m):', async (numAccounts) => {
+    rl.question('Nhập số lượng tài khoản muốn chạy: ', async (numAccounts) => {
         const num = parseInt(numAccounts, 10);
         if (isNaN(num) || num <= 0 || num > accounts.length) {
             console.log('Số lượng tài khoản không hợp lệ.');
@@ -219,7 +217,7 @@ async function main() {
             return;
         }
 
-        rl.question('${COLORS.GREEN}Nhập thời gian nghỉ ngơi giữa các lần chạy (giây): ', async (restTime) => {
+        rl.question('Nhập thời gian nghỉ ngơi giữa các lần chạy (giây): ', async (restTime) => {
             const rest = parseInt(restTime, 10);
             if (isNaN(rest) || rest < 0) {
                 console.log('Thời gian nghỉ ngơi không hợp lệ.');
@@ -236,6 +234,8 @@ async function main() {
                 }
 
                 // Print initial account counts
+                console.log(`${COLORS.LIGHT_PINK}Số tài khoản chưa xử lý\x1b[38;5;11m: \x1b[38;5;9m${accounts.length}`);
+                console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m0`);
 
                 console.log(`${COLORS.GREEN}Sẽ chạy ${num} tài khoản với thời gian nghỉ ngơi ${rest} giây giữa các lần chạy và số lần tự động chạy lại ${retries}`);
                 rl.close();
