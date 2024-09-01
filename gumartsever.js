@@ -146,7 +146,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
     let proxyIndex = 0; // To track the current proxy being used
-    const activeBrowsers = [];
+    let activeCount = 0; // Count of active browsers
 
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
@@ -179,15 +179,16 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             totalFailureCount++;
         } finally {
             await browser.close();
+            activeCount--;
         }
     }
 
     for (let i = 0; i < links.length; i++) {
-        if (activeBrowsers.length >= maxBrowsers) {
+        if (activeCount >= maxBrowsers) {
             // Wait for any browser to close
             await new Promise(resolve => {
                 const checkBrowsers = setInterval(() => {
-                    if (activeBrowsers.length < maxBrowsers) {
+                    if (activeCount < maxBrowsers) {
                         clearInterval(checkBrowsers);
                         resolve();
                     }
@@ -199,19 +200,18 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         const proxy = proxies[proxyIndex];
         proxyIndex = (proxyIndex + 1) % proxies.length;
 
-        const browserPromise = processAccountWithBrowser(accountUrl, i + 1, proxy);
-        activeBrowsers.push(browserPromise);
-
-        // Clean up completed browsers
-        activeBrowsers = activeBrowsers.filter(p => p !== browserPromise);
+        activeCount++;
+        processAccountWithBrowser(accountUrl, i + 1, proxy);
     }
 
     // Wait for all browsers to close
-    await Promise.all(activeBrowsers);
+    while (activeCount > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
     // Final report
-    console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
-    console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
+    console.log(`${GREEN}Tổng số tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
+    console.log(`${RED}Tổng số tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
 
 async function logFailedAccount(accountNumber) {
