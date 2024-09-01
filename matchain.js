@@ -19,6 +19,10 @@ const COLORS = {
 // File paths
 const PROXIES_FILE_PATH = 'proxies.txt';
 
+// Global counters
+let successCount = 0;
+let errorCount = 0;
+
 // Utility functions
 async function readProxies(filePath) {
     const fileStream = fs.createReadStream(filePath);
@@ -221,6 +225,13 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         await page.close();
     }
 
+    // Update global counters
+    if (success) {
+        successCount++;
+    } else {
+        errorCount++;
+    }
+
     return success;
 }
 
@@ -350,6 +361,15 @@ async function runChromeInstances() {
     for (let i = 0; i < maxConcurrency; i++) {
         processNext();
     }
+
+    // Wait for all processes to finish
+    while (ongoingProcesses.size > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    // Print the final summary
+    console.log(`${COLORS.GREEN}Tổng số tài khoản thành công: ${successCount}`);
+    console.log(`${COLORS.RED}Tổng số lỗi: ${errorCount}`);
 }
 
 // Run the script
