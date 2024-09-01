@@ -139,11 +139,11 @@ async function runPlaywrightInstances(links, proxies) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
-    // Process each account independently
-    const tasks = links.map(async (accountUrl, index) => {
-        const proxy = proxies[proxyIndex % totalProxies];
-        proxyIndex++;
+    // Track the list of active browsers
+    const activeBrowsers = new Set();
 
+    // Function to process a single account with a given proxy
+    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
             args: [
@@ -162,8 +162,10 @@ async function runPlaywrightInstances(links, proxies) {
             }
         });
 
+        activeBrowsers.add(browser);
+
         try {
-            const result = await processAccount(context, accountUrl, index + 1, proxy);
+            const result = await processAccount(context, accountUrl, accountNumber, proxy);
             if (result.success) {
                 totalSuccessCount++;
             } else {
@@ -174,11 +176,26 @@ async function runPlaywrightInstances(links, proxies) {
             totalFailureCount++;
         } finally {
             await browser.close();
+            activeBrowsers.delete(browser);
         }
-    });
+    }
 
-    // Execute all tasks concurrently
-    await Promise.all(tasks);
+    // Process accounts in batches with a maximum of concurrent browsers
+    let index = 0;
+    while (index < links.length) {
+        while (activeBrowsers.size < maxConcurrentBrowsers && index < links.length) {
+            const accountUrl = links[index];
+            const proxy = proxies[proxyIndex % totalProxies];
+            proxyIndex++;
+            processAccountWithBrowser(accountUrl, index + 1, proxy);
+            index++;
+        }
+
+        // Wait for at least one browser to finish
+        while (activeBrowsers.size > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
 
     // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
