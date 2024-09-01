@@ -133,7 +133,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
 }
 
 async function runPlaywrightInstances(links, numAccounts, proxies) {
-    const concurrencyLimit = 10; // Number of browsers to run concurrently
+    const concurrencyLimit = 6; // Number of browsers to run concurrently
     const totalProxies = proxies.length;
     let proxyIndex = 0; // To track the current proxy being used
 
