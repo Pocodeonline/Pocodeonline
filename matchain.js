@@ -183,7 +183,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
             const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka > span";
             const countdownText = await page.textContent(countdownHoursSelector);
             console.log(`${COLORS.GREEN}Thời gian còn lại của acc ${accountNumber} là: ${countdownText}`);
-
+            
             success = true;
         } else {
             console.log(`${COLORS.RED}Không tìm thấy nút claim cho acc ${accountNumber}`);
@@ -206,7 +206,12 @@ async function main() {
     const proxies = await readProxies(PROXIES_FILE_PATH);
     const accounts = await readAccounts(ACCOUNTS_FILE_PATH);
 
-    rl.question('Nhập số lượng tài khoản muốn chạy: ', async (numAccounts) => {
+    console.log(`${COLORS.FLAME_ORANGE}MATCHAIN🔥 code by 🐮`);
+    console.log(`${COLORS.PINK}tele \x1b[38;5;11m: \x1b[38;5;15mtphuc_0`);
+    console.log(`${COLORS.LIGHT_PINK}Số tài khoản chưa xử lý\x1b[38;5;11m: \x1b[38;5;9m${accounts.length}`);
+    console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m0`);
+
+    rl.question('${COLORS.GREEN}Nhập số lượng tài khoản muốn 🐮 chạy \x1b[38;5;11m(\x1b[38;5;10mhoặc \x1b[38;5;11m'\x1b[38;5;10mall\x1b[38;5;11m'\x1b[38;5;10m để chạy tất cả\x1b[38;5;11m, \x1b[38;5;10mhoặc \x1b[38;5;9m0 \x1b[38;5;10mđể thoát\x1b[38;5;11m):', async (numAccounts) => {
         const num = parseInt(numAccounts, 10);
         if (isNaN(num) || num <= 0 || num > accounts.length) {
             console.log('Số lượng tài khoản không hợp lệ.');
@@ -214,7 +219,7 @@ async function main() {
             return;
         }
 
-        rl.question('Nhập thời gian nghỉ ngơi giữa các lần chạy (giây): ', async (restTime) => {
+        rl.question('${COLORS.GREEN}Nhập thời gian nghỉ ngơi giữa các lần chạy (giây): ', async (restTime) => {
             const rest = parseInt(restTime, 10);
             if (isNaN(rest) || rest < 0) {
                 console.log('Thời gian nghỉ ngơi không hợp lệ.');
@@ -229,6 +234,8 @@ async function main() {
                     rl.close();
                     return;
                 }
+
+                // Print initial account counts
 
                 console.log(`${COLORS.GREEN}Sẽ chạy ${num} tài khoản với thời gian nghỉ ngơi ${rest} giây giữa các lần chạy và số lần tự động chạy lại ${retries}`);
                 rl.close();
@@ -274,6 +281,10 @@ async function main() {
                     await writeDoneAccounts(doneAccounts, DONE_FILE_PATH);
                     await fs.promises.writeFile(ACCOUNTS_FILE_PATH, accounts.slice(num).join('\n') + '\n');
                     console.log(`${COLORS.GREEN}Đã di chuyển các tài khoản đã xử lý sang donematchain.txt và làm sạch matchain.txt`);
+
+                    // Update account counts
+                    console.log(`${COLORS.LIGHT_PINK}Số tài khoản chưa xử lý\x1b[38;5;11m: \x1b[38;5;9m${accounts.length}`);
+                    console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m${doneAccounts.length}`);
                 }
 
                 console.log(`${COLORS.GREEN}Hoàn tất tất cả các lần chạy.`);
