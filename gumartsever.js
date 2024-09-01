@@ -89,8 +89,8 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(context, accountUrl, accountNumber, proxy) {
-    const page = await context.newPage();
+async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
+    const page = await browserContext.newPage();
     let success = false;
     try {
         console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
@@ -99,17 +99,17 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         // Check for page load
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
-        console.log(`${GREEN}Đã Vào Giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
+        console.log(`${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
+        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1200 });
         await page.click(claimButtonSelector);
 
         const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
         let imgElementFound = true;
 
         try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
             await page.click(imgSelector);
             imgElementFound = false;
         } catch (error) {
@@ -120,10 +120,10 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
             const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
             const timeElement = await page.waitForSelector(timeSelector);
             const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
-            console.log(`${RED}X2 Của Acc ${YELLOW}${accountNumber} Còn ${time} Mới Mua Được...`);
+            console.log(`${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
 
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(400);
 
         // Get points information
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
@@ -160,7 +160,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             ]
         });
 
-        const context = await browser.newContext({
+        const browserContext = await browser.newContext({
             httpCredentials: {
                 username: proxy.username,
                 password: proxy.password
@@ -168,37 +168,36 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         });
 
         try {
-            const result = await processAccount(context, accountUrl, accountNumber, proxy);
+            const result = await processAccount(browserContext, accountUrl, accountNumber, proxy);
             if (result.success) {
                 totalSuccessCount++;
             } else {
                 totalFailureCount++;
             }
         } catch (e) {
-            console.log('Tài khoản gặp lỗi');
+            console.log('Tài khoản gặp lỗi:', e.message);
             totalFailureCount++;
         } finally {
+            await browserContext.close();
             await browser.close();
             activeCount--;
         }
     }
 
-    for (let i = 0; i < links.length; i++) {
+    for (const [i, accountUrl] of links.entries()) {
         if (activeCount >= maxBrowsers) {
-            // Wait for any browser to close
             await new Promise(resolve => {
-                const checkBrowsers = setInterval(() => {
+                const interval = setInterval(() => {
                     if (activeCount < maxBrowsers) {
-                        clearInterval(checkBrowsers);
+                        clearInterval(interval);
                         resolve();
                     }
                 }, 500);
             });
         }
 
-        const accountUrl = links[i];
-        const proxy = proxies[proxyIndex];
-        proxyIndex = (proxyIndex + 1) % proxies.length;
+        const proxy = proxies[proxyIndex % proxies.length];
+        proxyIndex++;
 
         activeCount++;
         processAccountWithBrowser(accountUrl, i + 1, proxy);
