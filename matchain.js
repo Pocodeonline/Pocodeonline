@@ -113,7 +113,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
     let success = false;
 
     try {
-        console.log(`${COLORS.GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
+        console.log(`${COLORS.GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;13mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
         await page.goto(accountUrl);
 
         // Handle optional skip button
@@ -249,6 +249,34 @@ async function promptUser() {
     });
 }
 
+async function promptRestTime() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    return new Promise((resolve) => {
+        rl.question(`${COLORS.GREEN}Nhập số giây nghỉ giữa các lần chạy: `, (input) => {
+            rl.close();
+            resolve(parseInt(input, 10)); // Convert to integer
+        });
+    });
+}
+
+async function promptRepeatCount() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    return new Promise((resolve) => {
+        rl.question(`${COLORS.GREEN}Nhập số lần tự động chạy lại: `, (input) => {
+            rl.close();
+            resolve(parseInt(input, 10)); // Convert to integer
+        });
+    });
+}
+
 async function runChromeInstances() {
     const proxyList = await readProxies(PROXIES_FILE_PATH);
     const accounts = await readAccounts('matchain.txt');
@@ -286,7 +314,6 @@ async function runChromeInstances() {
     console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m${doneAccounts.length}`);
 
     const input = await promptUser();
-
     if (input === '0') {
         console.log("Thoát chương trình.");
         return;
@@ -304,67 +331,81 @@ async function runChromeInstances() {
         numToProcess = Math.min(numToProcess, pendingAccounts.length);
     }
 
-    let index = 0;
-    const ongoingProcesses = new Set();
+    const restTime = await promptRestTime();
+    const repeatCount = await promptRepeatCount();
 
-    async function processNext() {
-        if (index >= numToProcess) return;
+    async function processBatch() {
+        let index = 0;
+        const ongoingProcesses = new Set();
 
-        const proxyIndex = Math.floor(index / (numToProcess / proxyList.length)) % proxyList.length;
-        const proxy = proxyList[proxyIndex];
-        const accountUrl = pendingAccounts[index];
-        const accountNumber = index + 1;
-        index += 1;
+        async function processNext() {
+            if (index >= numToProcess) return;
 
-        const proxyServer = proxy.server;
-        const proxyUsername = proxy.username;
-        const proxyPassword = proxy.password;
+            const proxyIndex = Math.floor(index / (numToProcess / proxyList.length)) % proxyList.length;
+            const proxy = proxyList[proxyIndex];
+            const accountUrl = pendingAccounts[index];
+            const accountNumber = index + 1;
+            index += 1;
 
-        const browserPromise = chromium.launch({
-            headless: true,
-            proxy: {
-                server: proxyServer,
-                username: proxyUsername,
-                password: proxyPassword
-            }
-        });
+            const proxyServer = proxy.server;
+            const proxyUsername = proxy.username;
+            const proxyPassword = proxy.password;
 
-        const browser = await browserPromise;
-        const context = await browser.newContext();
-
-        ongoingProcesses.add(browserPromise);
-
-        browserPromise
-            .then(async () => {
-                const success = await processAccount(context, accountUrl, accountNumber, proxy);
-                if (success) {
-                    await writeDoneAccounts([accountUrl], doneFilePath);
-                    await removeDoneAccount('matchain.txt', accountUrl); // Xóa tài khoản từ accounts.txt
+            const browserPromise = chromium.launch({
+                headless: true,
+                proxy: {
+                    server: proxyServer,
+                    username: proxyUsername,
+                    password: proxyPassword
                 }
-                ongoingProcesses.delete(browserPromise);
-                await browser.close();
-                processNext(); // Start processing next account
-            })
-            .catch(async (error) => {
-                console.error(`${COLORS.RED}Lỗi khi khởi động trình duyệt với proxy ${proxyServer}: ${error}`);
-                ongoingProcesses.delete(browserPromise);
-                await browser.close();
-                processNext(); // Start processing next account
             });
 
-        if (ongoingProcesses.size < maxConcurrency && index < numToProcess) {
-            processNext(); // Ensure we are always processing up to maxConcurrency
+            const browser = await browserPromise;
+            const context = await browser.newContext();
+
+            ongoingProcesses.add(browserPromise);
+
+            browserPromise
+                .then(async () => {
+                    const success = await processAccount(context, accountUrl, accountNumber, proxy);
+                    if (success) {
+                        await writeDoneAccounts([accountUrl], doneFilePath);
+                        await removeDoneAccount('matchain.txt', accountUrl); // Xóa tài khoản từ accounts.txt
+                    }
+                    ongoingProcesses.delete(browserPromise);
+                    await browser.close();
+                    processNext(); // Start processing next account
+                })
+                .catch(async (error) => {
+                    console.error(`${COLORS.RED}Lỗi khi khởi động trình duyệt với proxy ${proxyServer}: ${error}`);
+                    ongoingProcesses.delete(browserPromise);
+                    await browser.close();
+                    processNext(); // Start processing next account
+                });
+
+            if (ongoingProcesses.size < maxConcurrency && index < numToProcess) {
+                processNext(); // Ensure we are always processing up to maxConcurrency
+            }
+        }
+
+        // Start processing accounts
+        for (let i = 0; i < maxConcurrency; i++) {
+            processNext();
+        }
+
+        // Wait for all processes to finish
+        while (ongoingProcesses.size > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
 
-    // Start processing accounts
-    for (let i = 0; i < maxConcurrency; i++) {
-        processNext();
-    }
-
-    // Wait for all processes to finish
-    while (ongoingProcesses.size > 0) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    for (let i = 0; i < repeatCount; i++) {
+        console.log(`${COLORS.GREEN}Chạy lặp lại ${i + 1}/${repeatCount}`);
+        await processBatch();
+        if (i < repeatCount - 1) {
+            console.log(`${COLORS.GREEN}Nghỉ ${restTime} giây trước khi chạy lại.`);
+            await new Promise(resolve => setTimeout(resolve, restTime * 1000)); // Convert seconds to milliseconds
+        }
     }
 
     // Print the final summary
