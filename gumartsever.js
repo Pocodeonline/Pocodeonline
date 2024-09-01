@@ -88,7 +88,7 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
 
         // Check for page load
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
-        await page.waitForSelector(pageLoadedSelector, { timeout: 10000 });
+        await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
         console.log(`\x1b[38;5;10mĐã Vào Giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
