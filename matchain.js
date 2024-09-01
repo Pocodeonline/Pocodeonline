@@ -1,6 +1,8 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
+const path = require('path');
+const { expect } = require('@playwright/test');
 
 // Color constants
 const COLORS = {
@@ -16,8 +18,6 @@ const COLORS = {
 
 // File paths
 const PROXIES_FILE_PATH = 'proxies.txt';
-const DONE_FILE_PATH = 'donematchain.txt';
-const ACCOUNTS_FILE_PATH = 'matchain.txt';
 
 // Utility functions
 async function readProxies(filePath) {
@@ -40,6 +40,12 @@ async function readProxies(filePath) {
         }
     }
     return proxies;
+}
+
+async function countNonEmptyLines(filePath) {
+    if (!fs.existsSync(filePath)) return 0;
+    const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
+    return lines.filter(line => line.trim()).length;
 }
 
 async function readAccounts(filePath) {
@@ -161,9 +167,9 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
         } catch (err) {
             // Even if claim button does not exist, proceed to remove the account and add to done
             console.log(`${COLORS.RED}Acc ${accountNumber} claim rồi hoặc không tồn tại.`);
-            await writeDoneAccounts([accountUrl], DONE_FILE_PATH);
-            await removeDoneAccount(ACCOUNTS_FILE_PATH, accountUrl); // Xóa tài khoản từ accounts.txt
-            return false; // Mark as failure
+            await writeDoneAccounts([accountUrl], doneFilePath);
+            await removeDoneAccount('matchain.txt', accountUrl); // Xóa tài khoản từ accounts.txt
+            return;
         }
 
         // Click claim button
@@ -179,17 +185,38 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
             console.log(`${COLORS.GREEN}Đang cho acc đào tiếp ${accountNumber}`);
             await page.waitForTimeout(800);
 
-            // Wait for countdown text
-            const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka > span";
-            const countdownText = await page.textContent(countdownHoursSelector);
-            console.log(`${COLORS.GREEN}Thời gian còn lại của acc ${accountNumber} là: ${countdownText}`);
-            
+            // Print remaining time
+            const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
+            const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
+            console.log(`${COLORS.GREEN}Thời gian còn lại của acc ${accountNumber}: ${countdownHours}`);
+            await page.waitForTimeout(800);
+
+            // Click on specific element
+            const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div";
+            await page.waitForSelector(clickItemSelector);
+            await page.click(clickItemSelector);
+            console.log(`${COLORS.GREEN}Đang mua x2...${accountNumber}`);
+            await page.waitForTimeout(1000);
+
+            // Click on specific element
+            const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
+            await page.waitForSelector(clickx2Selector);
+            await page.click(clickx2Selector);
+            console.log(`${COLORS.GREEN}Đã mua x2${accountNumber}`);
+            await page.waitForTimeout(2000);
+
+            // Wait for final element and get its text
+            const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
+            await page.waitForSelector(finalPointsSelector);
+            const finalPoints = await page.textContent(finalPointsSelector);
+            console.log(`${COLORS.GREEN}-50 ${accountNumber}\x1b[38;5;11m: ${finalPoints}`);
+
+            console.log(`${COLORS.GREEN}Mua x2 thành công cho acc ${accountNumber}`);
             success = true;
-        } else {
-            console.log(`${COLORS.RED}Không tìm thấy nút claim cho acc ${accountNumber}`);
         }
     } catch (error) {
-        console.log(`${COLORS.RED}Lỗi khi xử lý tài khoản ${accountNumber}: ${error.message}`);
+        console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}`);
+        await logFailedAccount(accountNumber);
     } finally {
         await page.close();
     }
@@ -197,100 +224,133 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
     return success;
 }
 
-async function main() {
+async function promptUser() {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
 
-    const proxies = await readProxies(PROXIES_FILE_PATH);
-    const accounts = await readAccounts(ACCOUNTS_FILE_PATH);
-
-    console.log(`${COLORS.FLAME_ORANGE}MATCHAIN🔥 code by 🐮`);
-    console.log(`${COLORS.PINK}tele \x1b[38;5;11m: \x1b[38;5;15mtphuc_0`);
-
-    rl.question('Nhập số lượng tài khoản muốn chạy: ', async (numAccounts) => {
-        const num = parseInt(numAccounts, 10);
-        if (isNaN(num) || num <= 0 || num > accounts.length) {
-            console.log('Số lượng tài khoản không hợp lệ.');
+    return new Promise((resolve) => {
+        rl.question(`${COLORS.GREEN}Nhập số lượng tài khoản muốn 🐮 chạy \x1b[38;5;11m(\x1b[38;5;10mhoặc \x1b[38;5;11m'\x1b[38;5;10mall\x1b[38;5;11m'\x1b[38;5;10m để chạy tất cả\x1b[38;5;11m, \x1b[38;5;10mhoặc \x1b[38;5;9m0 \x1b[38;5;10mđể thoát\x1b[38;5;11m): `, (input) => {
             rl.close();
-            return;
-        }
-
-        rl.question('Nhập thời gian nghỉ ngơi giữa các lần chạy (giây): ', async (restTime) => {
-            const rest = parseInt(restTime, 10);
-            if (isNaN(rest) || rest < 0) {
-                console.log('Thời gian nghỉ ngơi không hợp lệ.');
-                rl.close();
-                return;
-            }
-
-            rl.question('Nhập số lần tự động chạy lại: ', async (retryTimes) => {
-                const retries = parseInt(retryTimes, 10);
-                if (isNaN(retries) || retries < 0) {
-                    console.log('Số lần tự động chạy lại không hợp lệ.');
-                    rl.close();
-                    return;
-                }
-
-                // Print initial account counts
-                console.log(`${COLORS.LIGHT_PINK}Số tài khoản chưa xử lý\x1b[38;5;11m: \x1b[38;5;9m${accounts.length}`);
-                console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m0`);
-
-                console.log(`${COLORS.GREEN}Sẽ chạy ${num} tài khoản với thời gian nghỉ ngơi ${rest} giây giữa các lần chạy và số lần tự động chạy lại ${retries}`);
-                rl.close();
-
-                for (let attempt = 0; attempt <= retries; attempt++) {
-                    console.log(`${COLORS.YELLOW}Lần chạy số ${attempt + 1} bắt đầu...`);
-
-                    let successfulCount = 0;
-                    let failedCount = 0;
-
-                    for (let i = 0; i < num; i++) {
-                        const proxy = proxies[i % proxies.length];
-                        const accountUrl = accounts[i];
-
-                        const browser = await chromium.launch({ headless: false });
-                        const context = await browser.newContext({
-                            proxy: proxy ? {
-                                server: `http://${proxy.server}`,
-                                username: proxy.username,
-                                password: proxy.password
-                            } : undefined
-                        });
-
-                        const success = await processAccount(context, accountUrl, i + 1, proxy);
-                        if (success) {
-                            successfulCount++;
-                        } else {
-                            failedCount++;
-                        }
-
-                        await context.close();
-                        await browser.close();
-                    }
-
-                    console.log(`${COLORS.GREEN}Tổng số tài khoản thành công: ${successfulCount}`);
-                    console.log(`${COLORS.RED}Tổng số tài khoản thất bại: ${failedCount}`);
-
-                    console.log(`${COLORS.YELLOW}Đang nghỉ ngơi ${rest} giây trước khi tiếp tục...`);
-                    await new Promise(resolve => setTimeout(resolve, rest * 1000));
-
-                    // Di chuyển các tài khoản đã xử lý từ matchain.txt sang donematchain.txt
-                    const doneAccounts = accounts.slice(0, num);
-                    await writeDoneAccounts(doneAccounts, DONE_FILE_PATH);
-                    await fs.promises.writeFile(ACCOUNTS_FILE_PATH, accounts.slice(num).join('\n') + '\n');
-                    console.log(`${COLORS.GREEN}Đã di chuyển các tài khoản đã xử lý sang donematchain.txt và làm sạch matchain.txt`);
-
-                    // Update account counts
-                    console.log(`${COLORS.LIGHT_PINK}Số tài khoản chưa xử lý\x1b[38;5;11m: \x1b[38;5;9m${accounts.length}`);
-                    console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m${doneAccounts.length}`);
-                }
-
-                console.log(`${COLORS.GREEN}Hoàn tất tất cả các lần chạy.`);
-            });
+            resolve(input.trim()); // Ensure no leading or trailing whitespace
         });
     });
 }
 
-main();
+async function runChromeInstances() {
+    const proxyList = await readProxies(PROXIES_FILE_PATH);
+    const accounts = await readAccounts('matchain.txt');
+
+    if (accounts.length === 0) {
+        console.log(`${COLORS.RED}Không tìm thấy tài khoản nào trong matchain.txt`);
+        return;
+    }
+
+    if (proxyList.length === 0) {
+        console.log(`${COLORS.RED}Không tìm thấy proxy nào trong proxies.txt`);
+        return;
+    }
+
+    const maxConcurrency = 4; // Maximum number of concurrent browser instances
+    const doneFilePath = 'donematchain.txt';
+
+    // Ensure the done file exists and is read as a string
+    let doneAccounts = [];
+    if (fs.existsSync(doneFilePath)) {
+        const doneFileContent = await fs.promises.readFile(doneFilePath);
+        doneAccounts = doneFileContent.toString().split('\n').filter(line => line.trim());
+    }
+
+    const pendingAccounts = accounts.filter(account => !doneAccounts.includes(account.trim()));
+
+    if (pendingAccounts.length === 0) {
+        console.log(`${COLORS.YELLOW}Tất cả các tài khoản đã được xử lý.`);
+        return;
+    }
+
+    console.log(`${COLORS.FLAME_ORANGE}MATCHAIN🔥 code by 🐮`);
+    console.log(`${COLORS.PINK}tele \x1b[38;5;11m: \x1b[38;5;15mtphuc_0`);
+    console.log(`${COLORS.LIGHT_PINK}Số tài khoản chưa xử lý\x1b[38;5;11m: \x1b[38;5;9m${pendingAccounts.length}`);
+    console.log(`${COLORS.LIGHT_PINK}Số tài khoản đã xử lý\x1b[38;5;11m: \x1b[38;5;10m${doneAccounts.length}`);
+
+    const input = await promptUser();
+
+    if (input === '0') {
+        console.log("Thoát chương trình.");
+        return;
+    }
+
+    let numToProcess;
+    if (input.toLowerCase() === 'all') {
+        numToProcess = pendingAccounts.length;
+    } else {
+        numToProcess = parseInt(input, 10);
+        if (isNaN(numToProcess) || numToProcess <= 0) {
+            console.log(`${COLORS.RED}Số lượng không hợp lệ. Vui lòng nhập một số hợp lệ hoặc 'all'.`);
+            return;
+        }
+        numToProcess = Math.min(numToProcess, pendingAccounts.length);
+    }
+
+    let index = 0;
+    const runningBrowsers = new Set();
+
+    async function processNext() {
+        if (index >= numToProcess) return;
+
+        if (runningBrowsers.size >= maxConcurrency) {
+            // Wait for any browser to finish
+            await Promise.race([...runningBrowsers].map(browser => browser.closed()));
+        }
+
+        const proxyIndex = Math.floor(index / (numToProcess / proxyList.length)) % proxyList.length;
+        const proxy = proxyList[proxyIndex];
+        const accountUrl = pendingAccounts[index];
+        const accountNumber = index + 1;
+        index += 1;
+
+        const proxyServer = proxy.server;
+        const proxyUsername = proxy.username;
+        const proxyPassword = proxy.password;
+
+        try {
+            const browser = await chromium.launch({
+                headless: true,
+                proxy: {
+                    server: proxyServer,
+                    username: proxyUsername,
+                    password: proxyPassword
+                }
+            });
+
+            const context = await browser.newContext();
+            runningBrowsers.add(browser);
+
+            const success = await processAccount(context, accountUrl, accountNumber, proxy);
+            if (success) {
+                await writeDoneAccounts([accountUrl], doneFilePath);
+                await removeDoneAccount('matchain.txt', accountUrl); // Xóa tài khoản từ accounts.txt
+            }
+
+            await browser.close();
+            runningBrowsers.delete(browser);
+        } catch (error) {
+            console.error(`${COLORS.RED}Lỗi khi khởi động trình duyệt với proxy ${proxyServer}: ${error}`);
+        }
+
+        // Schedule the next instance
+        processNext();
+    }
+
+    // Start processing accounts
+    for (let i = 0; i < Math.min(maxConcurrency, numToProcess); i++) {
+        processNext();
+    }
+}
+
+// Run the script
+(async () => {
+    await printCustomLogo(true);
+    await runChromeInstances();
+})();
