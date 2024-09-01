@@ -139,9 +139,6 @@ async function runPlaywrightInstances(links, proxies) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
-    // Track the list of active browsers
-    const activeBrowsers = new Set();
-
     // Function to process a single account with a given proxy
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
@@ -162,8 +159,6 @@ async function runPlaywrightInstances(links, proxies) {
             }
         });
 
-        activeBrowsers.add(browser);
-
         try {
             const result = await processAccount(context, accountUrl, accountNumber, proxy);
             if (result.success) {
@@ -176,25 +171,18 @@ async function runPlaywrightInstances(links, proxies) {
             totalFailureCount++;
         } finally {
             await browser.close();
-            activeBrowsers.delete(browser);
         }
     }
 
-    // Process accounts in batches with a maximum of concurrent browsers
-    let index = 0;
-    while (index < links.length) {
-        while (activeBrowsers.size < maxConcurrentBrowsers && index < links.length) {
-            const accountUrl = links[index];
+    // Process accounts in batches with limited concurrent browsers
+    for (let i = 0; i < links.length; i += maxConcurrentBrowsers) {
+        const batch = links.slice(i, i + maxConcurrentBrowsers);
+        const tasks = batch.map((accountUrl, index) => {
             const proxy = proxies[proxyIndex % totalProxies];
             proxyIndex++;
-            processAccountWithBrowser(accountUrl, index + 1, proxy);
-            index++;
-        }
-
-        // Wait for at least one browser to finish
-        while (activeBrowsers.size > 0) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+            return processAccountWithBrowser(accountUrl, i + index + 1, proxy);
+        });
+        await Promise.all(tasks); // Run in parallel
     }
 
     // Final report
