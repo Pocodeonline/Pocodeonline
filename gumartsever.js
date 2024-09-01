@@ -131,70 +131,59 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
     return { success };
 }
 
-async function runPlaywrightInstances(links, numAccounts, proxies) {
-    const concurrencyLimit = 6; // Number of browsers to run concurrently
+async function runPlaywrightInstances(links, proxies) {
     const totalProxies = proxies.length;
     let proxyIndex = 0; // To track the current proxy being used
 
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
 
-    const accountsToProcess = links.slice(0, numAccounts); // Process only the number of accounts specified
+    // Queue for managing accounts
+    const accountQueue = [...links];
 
-    // Queue for managing accounts and proxies
-    const accountQueue = [...accountsToProcess];
-    const proxyQueue = proxies.slice();
+    // Function to process a single account with a given proxy
+    async function processAccountWithBrowser(accountUrl, proxy) {
+        const browser = await chromium.launch({
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--headless',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                `--proxy-server=${proxy.server}`
+            ]
+        });
 
-    // Function to process a single account with a given browser and proxy
-    async function processAccountWithBrowser(proxy) {
-        while (accountQueue.length > 0) {
-            const accountUrl = accountQueue.shift(); // Get the next account URL
-            const accountNumber = accountsToProcess.length - accountQueue.length; // Account number
-
-            const browser = await chromium.launch({
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--headless',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    `--proxy-server=${proxy.server}`
-                ]
-            });
-
-            const context = await browser.newContext({
-                httpCredentials: {
-                    username: proxy.username,
-                    password: proxy.password
-                }
-            });
-
-            try {
-                const result = await processAccount(context, accountUrl, accountNumber, proxy);
-                if (result.success) {
-                    totalSuccessCount++;
-                } else {
-                    totalFailureCount++;
-                }
-            } catch (e) {
-                console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
-                totalFailureCount++;
-            } finally {
-                await browser.close();
+        const context = await browser.newContext({
+            httpCredentials: {
+                username: proxy.username,
+                password: proxy.password
             }
+        });
+
+        try {
+            const accountNumber = links.length - accountQueue.length + 1; // Account number
+
+            const result = await processAccount(context, accountUrl, accountNumber, proxy);
+            if (result.success) {
+                totalSuccessCount++;
+            } else {
+                totalFailureCount++;
+            }
+        } catch (e) {
+            console.log(`Tài khoản gặp lỗi`);
+            totalFailureCount++;
+        } finally {
+            await browser.close();
         }
     }
 
-    // Launch the initial set of browsers
-    const initialBrowsers = [];
-    for (let i = 0; i < concurrencyLimit && proxyQueue.length > 0; i++) {
-        const proxy = proxyQueue[proxyIndex % totalProxies];
+    // Process each account with its own proxy
+    for (const accountUrl of accountQueue) {
+        const proxy = proxies[proxyIndex % totalProxies];
         proxyIndex++;
-        initialBrowsers.push(processAccountWithBrowser(proxy));
+        await processAccountWithBrowser(accountUrl, proxy);
     }
-
-    // Wait for all initial browsers to complete
-    await Promise.all(initialBrowsers);
 
     // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
@@ -293,7 +282,7 @@ async function countdownTimer(seconds) {
             // Run the Playwright instances and get the number of accounts processed
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links, numAccounts, proxies);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies);
 
                 if (i < repeatCount) { // Only rest if more repeats are needed
                     await countdownTimer(restTime); // Display countdown timer
