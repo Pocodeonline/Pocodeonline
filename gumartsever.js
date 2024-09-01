@@ -143,10 +143,10 @@ async function processAccount(context, accountUrl, accountNumber, proxy) {
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
-    const activeBrowsers = new Set();
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
     let proxyIndex = 0; // To track the current proxy being used
+    const activeBrowsers = [];
 
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
@@ -179,39 +179,35 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             totalFailureCount++;
         } finally {
             await browser.close();
-            activeBrowsers.delete(browser);
         }
     }
 
     for (let i = 0; i < links.length; i++) {
-        if (activeBrowsers.size >= maxBrowsers) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait if too many browsers are open
+        if (activeBrowsers.length >= maxBrowsers) {
+            // Wait for any browser to close
+            await new Promise(resolve => {
+                const checkBrowsers = setInterval(() => {
+                    if (activeBrowsers.length < maxBrowsers) {
+                        clearInterval(checkBrowsers);
+                        resolve();
+                    }
+                }, 500);
+            });
         }
 
         const accountUrl = links[i];
-        const proxy = proxies[proxyIndex % proxies.length];
-        proxyIndex++;
+        const proxy = proxies[proxyIndex];
+        proxyIndex = (proxyIndex + 1) % proxies.length;
 
-        const browser = await chromium.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--headless',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                `--proxy-server=${proxy.server}`
-            ]
-        });
+        const browserPromise = processAccountWithBrowser(accountUrl, i + 1, proxy);
+        activeBrowsers.push(browserPromise);
 
-        activeBrowsers.add(browser);
-
-        processAccountWithBrowser(accountUrl, i + 1, proxy);
+        // Clean up completed browsers
+        activeBrowsers = activeBrowsers.filter(p => p !== browserPromise);
     }
 
     // Wait for all browsers to close
-    while (activeBrowsers.size > 0) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+    await Promise.all(activeBrowsers);
 
     // Final report
     console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
