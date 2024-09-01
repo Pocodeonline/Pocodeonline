@@ -130,11 +130,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
         await logFailedAccount(accountNumber, e.message);
+        return false; // Indicate that this account failed
     } finally {
         await page.close();
     }
+    return true; // Indicate that this account succeeded
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
@@ -162,44 +164,48 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             }
         });
 
+        let accountSuccess = false;
         try {
-            await processAccount(browserContext, accountUrl, accountNumber, proxy);
-            totalSuccessCount++;
-        } catch (e) {
-            console.log('Tài khoản gặp lỗi:', e.message);
+            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
+            if (accountSuccess) totalSuccessCount++;
+            else totalFailureCount++;
+        } catch (error) {
             totalFailureCount++;
         } finally {
             await browserContext.close();
             await browser.close();
-            activeCount--;
         }
     }
 
-    for (const [i, accountUrl] of links.entries()) {
-        if (activeCount >= maxBrowsers) {
-            await new Promise(resolve => {
-                const interval = setInterval(() => {
-                    if (activeCount < maxBrowsers) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 500);
-            });
+    const accountQueue = [...links];
+    while (accountQueue.length > 0 || activeCount > 0) {
+        while (activeCount < maxBrowsers && accountQueue.length > 0) {
+            const accountUrl = accountQueue.shift();
+            const accountNumber = links.indexOf(accountUrl) + 1;
+            const proxy = proxies[proxyIndex % proxies.length];
+            proxyIndex++;
+
+            activeCount++;
+            processAccountWithBrowser(accountUrl, accountNumber, proxy)
+                .then(() => {
+                    activeCount--;
+                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                })
+                .catch(() => {
+                    activeCount--;
+                    console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
+                });
         }
 
-        const proxy = proxies[proxyIndex % proxies.length];
-        proxyIndex++;
-
-        activeCount++;
-        processAccountWithBrowser(accountUrl, i + 1, proxy);
+        // Wait for active processes to finish
+        if (activeCount > 0) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
     }
 
-    while (activeCount > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    console.log(`${GREEN}Tổng số tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
-    console.log(`${RED}Tổng số tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
+    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản.`);
+    console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
+    console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
@@ -303,6 +309,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log(`Lỗi: ${e.message}`);
+        console.log(`Lỗi`);
     }
 })();
