@@ -132,7 +132,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
         await logFailedAccount(accountNumber, e.message);
     } finally {
         await page.close();
@@ -168,7 +168,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             await processAccount(browserContext, accountUrl, accountNumber, proxy);
             totalSuccessCount++;
         } catch (e) {
-            console.log('Tài khoản gặp lỗi);
+            console.log('Tài khoản gặp lỗi:', e.message);
             totalFailureCount++;
         } finally {
             await browserContext.close();
@@ -308,6 +308,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log(`Lỗi`);
+        console.log(`Lỗi: ${e.message}`);
     }
 })();
