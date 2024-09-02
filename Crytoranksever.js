@@ -147,6 +147,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const claimButton = await page.$(claimpointButtonSelector);
             if (claimButton) {
                 await claimButton.click();
+                console.log(`${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mclaim thành công`);
                 await page.waitForTimeout(1500);
             }
         } catch (error) {
@@ -160,6 +161,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
+                console.log(`${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mĐào lại thành công`);
             }
         } catch (error) {
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstartmining rồi...`);
