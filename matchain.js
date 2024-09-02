@@ -273,7 +273,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
     }
 
-    console.log(`${COLORS.GREEN}Hoàn tất xử lý tất cả tài khoản lần${COLORS.YELLOW} {i + 1}${COLORS.RESET}`);
+    console.log(`${COLORS.GREEN}Hoàn tất xử lý tất cả tài khoản lần${COLORS.YELLOW} ${i + 1}${COLORS.RESET}`);
     console.log(`${COLORS.SILVER}Tổng tài khoản thành công: ${COLORS.YELLOW}${totalSuccessCount}${COLORS.RESET}`);
     console.log(`${COLORS.SILVER}Tổng tài khoản lỗi: ${COLORS.YELLOW}${totalFailureCount}${COLORS.RESET}`);
 }
