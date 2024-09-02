@@ -114,18 +114,17 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             if (skipButtonFound) {
                 const skipButton = await page.waitForSelector(skipButtonSelector);
                 await skipButton.click();
-                console.log(`${COLORS.GREEN}Skip bỏ qua mainet matchain acc ${accountNumber}${COLORS.RESET}`);
+                console.log(`${COLORS.GREEN}Skip bỏ qua mainet matchain acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             } else {
-                console.log(`${COLORS.RED}Không thấy skip acc ${accountNumber}. Tiếp tục với bước tiếp theo.${COLORS.RESET}`);
+                console.log(`${COLORS.RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             }
         } catch (err) {
-            console.log(`${COLORS.RED}Lỗi khi bỏ qua ở acc ${accountNumber}. Tiếp tục với bước tiếp theo.${COLORS.RESET}`);
         }
 
         // Check for page load
         const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_balance___ClINX";
         await page.waitForSelector(pageLoadedSelector, { timeout: 30000 });
-        console.log(`${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc ${accountNumber}${COLORS.RESET}`);
+        console.log(`${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
         // Wait for random number to be different from 0.0000
         const randomNumberSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_rewards_mining___u39zf > div > span:nth-child(1)";
@@ -134,19 +133,19 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             try {
                 randomNumber = await page.textContent(randomNumberSelector);
             } catch (err) {
-                console.log(`${COLORS.RED}Không thể tìm thấy số điểm đã đào ở acc ${accountNumber}${COLORS.RESET}`);
+                console.log(`${COLORS.RED}Không thể tìm thấy số điểm đã đào ở acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                 randomNumber = '0.0000'; // Ensure the loop continues if the number is not found
             }
             if (randomNumber === '0.0000') {
-                console.log(`${COLORS.CYAN}Chờ để số điểm cập nhật ở acc ${accountNumber}...${COLORS.RESET}`);
+                console.log(`${COLORS.CYAN}Chờ để số điểm cập nhật ở acc \x1b[38;5;11m${accountNumber}...${COLORS.RESET}`);
                 await page.waitForTimeout(4000);
             }
         } while (randomNumber === '0.0000');
 
         const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
         const currentBalance = await page.textContent(currentBalanceSelector);
-        console.log(`${COLORS.GREEN}Số điểm đã đào của acc ${accountNumber} \x1b[38;5;11m: ${randomNumber}${COLORS.RESET}`);
-        console.log(`${COLORS.GREEN}Số dư hiện tại của acc ${accountNumber} \x1b[38;5;11m: ${currentBalance}${COLORS.RESET}`);
+        console.log(`${COLORS.GREEN}Số điểm đã đào của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${randomNumber}${COLORS.RESET}`);
+        console.log(`${COLORS.GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance}${COLORS.RESET}`);
         await page.waitForTimeout(1500);
 
         // Check if claim button exists
@@ -156,54 +155,54 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         try {
             claimButtonExists = await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 8000 });
         } catch (err) {
-            console.log(`${COLORS.RED}Acc ${accountNumber} claim rồi hoặc không tồn tại.${COLORS.RESET}`);
+            console.log(`${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi hoặc không tồn tại.${COLORS.RESET}`);
             return;
         }
 
         // Click claim button
         if (claimButtonExists) {
             await page.click(claimButtonSelector);
-            console.log(`${COLORS.GREEN}Đang claim acc ${accountNumber}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
             // Confirm claim process
             const claimProcessedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
             await page.waitForSelector(claimProcessedSelector);
-            console.log(`${COLORS.GREEN}Claim thành công ${randomNumber} acc ${accountNumber}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Claim thành công \x1b[38;5;11m${randomNumber} \x1b[38;5;10macc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             await page.click(claimProcessedSelector);
-            console.log(`${COLORS.GREEN}Đang cho acc đào tiếp ${accountNumber}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Đang cho đào tiếp acc\x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             await page.waitForTimeout(800);
 
             // Print remaining time
             const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
             const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
-            console.log(`${COLORS.GREEN}Thời gian còn lại của acc ${accountNumber}: ${countdownHours}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${COLORS.RESET}`);
             await page.waitForTimeout(800);
 
             // Click on specific element
             const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div";
             await page.waitForSelector(clickItemSelector);
             await page.click(clickItemSelector);
-            console.log(`${COLORS.GREEN}Đang mua x2 cho acc ${accountNumber}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             await page.waitForTimeout(1000);
 
             // Click on specific element
             const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
             await page.waitForSelector(clickx2Selector);
             await page.click(clickx2Selector);
-            console.log(`${COLORS.GREEN}Đã mua x2 cho acc ${accountNumber}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             await page.waitForTimeout(2000);
 
             // Wait for final element and get its text
             const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
             await page.waitForSelector(finalPointsSelector);
             const finalPoints = await page.textContent(finalPointsSelector);
-            console.log(`${COLORS.GREEN}-50 ${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}-50 acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
 
-            console.log(`${COLORS.GREEN}Mua x2 thành công cho acc ${accountNumber}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Mua x2 thành công cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             success = true;
         }
     } catch (error) {
-        console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}: ${error.message}${COLORS.RESET}`);
+        console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
         await logFailedAccount(accountNumber, error.message);
     } finally {
         await page.close();
@@ -310,16 +309,16 @@ async function countdownTimer(seconds) {
             }
 
             const links = await readAccounts(filePath);
-            console.log(`${COLORS.SILVER}CRYTORANK ${COLORS.LIGHT_PINK}code by 🐮${COLORS.RESET}`);
-            console.log(`${COLORS.LIGHT_PINK}tele${COLORS.YELLOW}: ${COLORS.PINK}tphuc_0 ${COLORS.RESET}`);
-            console.log(`${COLORS.LIGHT_BLUE}Hiện tại bạn có ${COLORS.YELLOW}${nonEmptyLines}${COLORS.LIGHT_BLUE} tài khoản${COLORS.RESET}`);
+            console.log(`${COLORS.SILVER}MATCHAIIN ${COLORS.LIGHT_PINK}code by 🐮${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}tele${COLORS.YELLOW}: ${COLORS.PINK}tphuc_0 ${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Hiện tại bạn có ${COLORS.YELLOW}${nonEmptyLines}${COLORS.GREEN} tài khoản${COLORS.RESET}`);
 
             const userInput = await new Promise(resolve => {
                 const rl = readline.createInterface({
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${COLORS.LIGHT_BLUE}Nhập số lượng tài khoản muốn 🐮 chạy ${COLORS.YELLOW}(${COLORS.LIGHT_BLUE}hoặc ${COLORS.YELLOW}'all' ${COLORS.LIGHT_BLUE}để chạy tất cả${COLORS.YELLOW}, ${COLORS.RED}0 ${COLORS.LIGHT_BLUE}để thoát${COLORS.YELLOW}): `, (answer) => {
+                rl.question(`${COLORS.GREEN}Nhập số lượng tài khoản muốn 🐮 chạy ${COLORS.YELLOW}(${COLORS.GREEN}hoặc ${COLORS.YELLOW}'all' ${COLORS.GREEN}để chạy tất cả${COLORS.YELLOW}, ${COLORS.RED}0 ${COLORS.GREEN}để thoát${COLORS.YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -342,7 +341,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${COLORS.LIGHT_BLUE}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${COLORS.YELLOW}(${COLORS.LIGHT_BLUE}Khuyên ${COLORS.YELLOW}9000 ${COLORS.LIGHT_BLUE}nha${COLORS.YELLOW}): `, (answer) => {
+                rl.question(`${COLORS.GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${COLORS.YELLOW}(${COLORS.GREEN}Khuyên ${COLORS.YELLOW}9000 ${COLORS.GREEN}nha${COLORS.YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -353,7 +352,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${COLORS.LIGHT_BLUE}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${COLORS.YELLOW}(${COLORS.LIGHT_BLUE}hoặc ${COLORS.YELLOW}0 ${COLORS.LIGHT_BLUE}để chạy một lần): `, (answer) => {
+                rl.question(`${COLORS.GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${COLORS.YELLOW}(${COLORS.GREEN}hoặc ${COLORS.YELLOW}0 ${COLORS.GREEN}để chạy một lần): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -376,6 +375,6 @@ async function countdownTimer(seconds) {
             console.log(`${COLORS.GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.${COLORS.RESET}`);
         }
     } catch (e) {
-        console.log(`${COLORS.RED}Lỗi: ${e.message}${COLORS.RESET}`);
+        console.log(`${COLORS.RED}Lỗi${COLORS.RESET}`);
     }
 })();
