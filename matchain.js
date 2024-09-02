@@ -122,6 +122,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${COLORS.RED}Không  thấy skip acc ${accountNumber}. Tiếp tục với bước tiếp theo.${COLORS.RESET}`);
             }
         } catch (err) {
+            console.log(`${COLORS.RED}Lỗi khi  bỏ qua ở acc ${accountNumber}. Tiếp tục với bước tiếp theo.${COLORS.RESET}`);
         }
 
         // Check for page load
@@ -171,7 +172,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.waitForSelector(claimProcessedSelector);
             console.log(`${COLORS.GREEN}Claim thành công ${randomNumber} acc ${accountNumber}${COLORS.RESET}`);
             await page.click(claimProcessedSelector);
-            console.log(`${COLORS.GREEN}Đang cho acc  ${accountNumber} ${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}Đang cho acc đào tiếp ${accountNumber}${COLORS.RESET}`);
             await page.waitForTimeout(800);
 
             // Print remaining time
@@ -185,20 +186,20 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.waitForSelector(clickItemSelector);
             await page.click(clickItemSelector);
             console.log(`${COLORS.GREEN}Đang mua x2 cho acc ${accountNumber}${COLORS.RESET}`);
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(1000);
 
             // Click on specific element
             const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
             await page.waitForSelector(clickx2Selector);
             await page.click(clickx2Selector);
             console.log(`${COLORS.GREEN}Đã mua x2 cho acc ${accountNumber}${COLORS.RESET}`);
-            await page.waitForTimeout(2400);
+            await page.waitForTimeout(2000);
 
             // Wait for final element and get its text
             const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
             await page.waitForSelector(finalPointsSelector);
             const finalPoints = await page.textContent(finalPointsSelector);
-            console.log(`${COLORS.GREEN}-50 Acc ${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
+            console.log(`${COLORS.GREEN}-50 ${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
 
             console.log(`${COLORS.GREEN}Mua x2 thành công cho acc ${accountNumber}${COLORS.RESET}`);
             success = true;
