@@ -131,7 +131,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
     } catch (e) {
         console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
-        await logFailedAccount(accountNumber, e.message);
+        await logFailedAccount(accountNumber, proxy.server, e.message);
         return false; // Indicate that this account failed
     } finally {
         await page.close();
@@ -178,6 +178,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     }
 
     const accountQueue = [...links];
+    const failedAccounts = [];
     while (accountQueue.length > 0 || activeCount > 0) {
         while (activeCount < maxBrowsers && accountQueue.length > 0) {
             const accountUrl = accountQueue.shift();
@@ -206,10 +207,86 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản.`);
     console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
     console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
+
+    return failedAccounts;
 }
 
-async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${errorMessage}\n`);
+async function retryFailedAccounts(failedAccounts, proxies) {
+    if (failedAccounts.length === 0) return;
+
+    console.log(`${RED}Đang xử lý lại các tài khoản thất bại...`);
+
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+    let proxyIndex = 0;
+    let activeCount = 0;
+
+    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
+        const browser = await chromium.launch({
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--headless',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                `--proxy-server=${proxy.server}`
+            ]
+        });
+
+        const browserContext = await browser.newContext({
+            httpCredentials: {
+                username: proxy.username,
+                password: proxy.password
+            }
+        });
+
+        let accountSuccess = false;
+        try {
+            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
+            if (accountSuccess) totalSuccessCount++;
+            else totalFailureCount++;
+        } catch (error) {
+            totalFailureCount++;
+        } finally {
+            await browserContext.close();
+            await browser.close();
+        }
+    }
+
+    while (failedAccounts.length > 0 || activeCount > 0) {
+        while (activeCount < 6 && failedAccounts.length > 0) {
+            const { accountUrl, accountNumber, proxy } = failedAccounts.shift();
+            activeCount++;
+            processAccountWithBrowser(accountUrl, accountNumber, proxy)
+                .then(() => {
+                    activeCount--;
+                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                })
+                .catch(() => {
+                    activeCount--;
+                    console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
+                });
+        }
+
+        // Wait for active processes to finish
+        if (activeCount > 0) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+    }
+
+    console.log(`${GREEN}Hoàn tất xử lý lại tất cả tài khoản thất bại.`);
+    console.log(`${SILVER}Tổng tài khoản thành công sau retry: ${YELLOW}${totalSuccessCount}`);
+    console.log(`${SILVER}Tổng tài khoản lỗi sau retry: ${YELLOW}${totalFailureCount}`);
+}
+
+async function logFailedAccount(accountNumber, proxyServer, errorMessage) {
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${proxyServer} - ${errorMessage}\n`);
+}
+
+async function removeFailedAccount(accountNumber) {
+    const lines = fs.readFileSync('gumart.txt', 'utf-8').split('\n');
+    const filteredLines = lines.filter(line => !line.trim().includes(accountNumber));
+    fs.writeFileSync('gumart.txt', filteredLines.join('\n'));
 }
 
 async function countdownTimer(seconds) {
@@ -299,7 +376,17 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
+                const failedAccounts = await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
+
+                // Retry failed accounts
+                if (failedAccounts.length > 0) {
+                    await retryFailedAccounts(failedAccounts, proxies);
+                }
+
+                // Remove failed accounts from the main file
+                for (let account of failedAccounts) {
+                    await removeFailedAccount(account.accountNumber);
+                }
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
@@ -309,6 +396,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log(`Lỗi`);
+        console.log('Lỗi', e);
     }
 })();
