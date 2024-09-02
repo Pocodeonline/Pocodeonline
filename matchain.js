@@ -2,15 +2,17 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
 
-const SILVER = '\x1b[38;5;231m';
-const LIGHT_PINK = '\x1b[38;5;207m';
-const PINK = '\x1b[38;5;13m';
-const YELLOW = '\x1b[38;5;11m';
-const GREEN = '\x1b[38;5;10m';
-const RED = '\x1b[38;5;9m';
-const LIGHT_BLUE = '\x1b[38;5;12m';
-const DARK_BLUE = '\x1b[38;5;19m';
-const RESET = '\x1b[0m';
+const COLORS = {
+    SILVER: '\x1b[38;5;231m',
+    LIGHT_PINK: '\x1b[38;5;207m',
+    PINK: '\x1b[38;5;13m',
+    YELLOW: '\x1b[38;5;11m',
+    GREEN: '\x1b[38;5;10m',
+    RED: '\x1b[38;5;9m',
+    LIGHT_BLUE: '\x1b[38;5;12m',
+    DARK_BLUE: '\x1b[38;5;19m',
+    RESET: '\x1b[0m'
+};
 
 const ERROR_LOG_PATH = 'failed_accounts.txt';
 const PROXIES_FILE_PATH = 'proxies.txt'; // Path to the proxies file
