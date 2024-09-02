@@ -264,7 +264,7 @@ async function retryFailedAccounts(failedAccounts, proxies) {
 }
 
 async function logFailedAccount(accountNumber, proxyServer, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${proxyServer} - ${errorMessage}\n`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${proxyServer} `);
 }
 
 async function removeFailedAccount(accountNumber) {
