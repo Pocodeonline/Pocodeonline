@@ -67,20 +67,23 @@ async function readAccounts(filePath) {
     return links;
 }
 
-async function printCustomLogo(LIGHT_BLUE = true) {
+async function printCustomLogo(blink = false) {
     const logo = [
-        "CHỜ MỘT LÁT ĐANG VÀO TOOL CRYTORANK..."
+        "🔥🔥    🔥🔥      🔥🔥   🔥🔥🔥  🔥🔥🔥   🔥  🔥    🔥🔥   🔥  🔥🔥   🔥",
+        "🔥 🔥  🔥 🔥     🔥  🔥    🔥   🔥        🔥  🔥   🔥  🔥  🔥  🔥 🔥  🔥",
+        "🔥  🔥🔥  🔥    🔥 🔥 🔥   🔥   🔥        🔥🔥🔥   🔥🔥🔥  🔥  🔥  🔥 🔥",
+        "🔥   🔥    🔥  🔥      🔥  🔥   🔥        🔥  🔥  🔥    🔥 🔥  🔥   🔥🔥",
+        "🔥         🔥 🔥        🔥 🔥    🔥🔥 🔥  🔥  🔥 🔥      🔥🔥  🔥     🔥",
+        "",
+        "chờ một lát..."
     ];
+
     console.clear();
     for (let i = 0; i < 5; i++) {
-        if (LIGHT_BLUE) {
-            console.log('\x1b[5m\x1b[32m' + logo.join('\n') + '\x1b[0m');
-        } else {
-            console.log('\x1b[32m' + logo.join('\n'));
-        }
-        await new Promise(resolve => setTimeout(resolve, 300));
+        console.log(`${blink ? '\x1b[5m' : ''}${COLORS.PINK}${logo.join('\n')}${COLORS.RESET}`);
+        await new Promise(r => setTimeout(r, 500));
         console.clear();
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(r => setTimeout(r, 300));
     }
 }
 
