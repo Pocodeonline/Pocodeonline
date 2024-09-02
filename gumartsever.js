@@ -130,8 +130,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
     } catch (e) {
-        console.error(`Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
-        await logFailedAccount(accountNumber, proxy.server, e.message);
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
+        await logFailedAccount(accountNumber, e.message);
         return false; // Indicate that this account failed
     } finally {
         await page.close();
@@ -144,8 +144,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     let totalFailureCount = 0;
     let proxyIndex = 0;
     let activeCount = 0;
-
-    const failedAccounts = [];
 
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
@@ -173,7 +171,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             else totalFailureCount++;
         } catch (error) {
             totalFailureCount++;
-            console.error(`Unexpected error processing account ${accountNumber}: ${error.message}`);
         } finally {
             await browserContext.close();
             await browser.close();
@@ -190,14 +187,9 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
             activeCount++;
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .then(success => {
+                .then(() => {
                     activeCount--;
-                    if (!success) {
-                        failedAccounts.push({ accountUrl, accountNumber, proxy });
-                        console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
-                    } else {
-                        console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
-                    }
+                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
                 })
                 .catch(() => {
                     activeCount--;
@@ -214,63 +206,10 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản.`);
     console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
     console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
-
-    return failedAccounts;
 }
 
-async function retryFailedAccounts(failedAccounts, proxies) {
-    if (failedAccounts.length === 0) return;
-
-    console.log(`${RED}Đang xử lý lại các tài khoản thất bại...`);
-
-    let totalSuccessCount = 0;
-    let totalFailureCount = 0;
-    let proxyIndex = 0;
-    let activeCount = 0;
-
-    while (failedAccounts.length > 0 || activeCount > 0) {
-        while (activeCount < 6 && failedAccounts.length > 0) {
-            const { accountUrl, accountNumber, proxy } = failedAccounts.shift();
-            activeCount++;
-            processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .then(success => {
-                    activeCount--;
-                    if (success) {
-                        totalSuccessCount++;
-                        console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
-                    } else {
-                        totalFailureCount++;
-                        console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
-                        failedAccounts.push({ accountUrl, accountNumber, proxy }); // Retry again
-                    }
-                })
-                .catch(() => {
-                    activeCount--;
-                    totalFailureCount++;
-                    console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
-                    failedAccounts.push({ accountUrl, accountNumber, proxy }); // Retry again
-                });
-        }
-
-        // Wait for active processes to finish
-        if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-    }
-
-    console.log(`${GREEN}Hoàn tất xử lý lại tất cả tài khoản thất bại.`);
-    console.log(`${SILVER}Tổng tài khoản thành công sau retry: ${YELLOW}${totalSuccessCount}`);
-    console.log(`${SILVER}Tổng tài khoản lỗi sau retry: ${YELLOW}${totalFailureCount}`);
-}
-
-async function logFailedAccount(accountNumber, proxyServer, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${proxyServer} `);
-}
-
-async function removeFailedAccount(accountNumber) {
-    const lines = fs.readFileSync('gumart.txt', 'utf-8').split('\n');
-    const filteredLines = lines.filter(line => !line.trim().includes(accountNumber));
-    fs.writeFileSync('gumart.txt', filteredLines.join('\n'));
+async function logFailedAccount(accountNumber, errorMessage) {
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi`);
 }
 
 async function countdownTimer(seconds) {
@@ -360,17 +299,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                const failedAccounts = await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
-
-                // Retry failed accounts
-                if (failedAccounts.length > 0) {
-                    await retryFailedAccounts(failedAccounts, proxies);
-                }
-
-                // Remove failed accounts from the main file
-                for (let account of failedAccounts) {
-                    await removeFailedAccount(account.accountNumber);
-                }
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
@@ -380,6 +309,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log('Lỗi', e);
+        console.log(`Lỗi`);
     }
 })();
