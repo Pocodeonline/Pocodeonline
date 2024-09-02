@@ -148,16 +148,15 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             if (claimButton) {
                 await claimButton.click();
                 console.log(`${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mclaim thành công`);
-                await page.waitForTimeout(1500);
             }
         } catch (error) {
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi...`);
         }
-        
+        await page.waitForTimeout(2500);
         const startminingButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(startminingButtonSelector, { timeout: 3000 });
+            await page.waitForSelector(startminingButtonSelector, { timeout: 2000 });
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
