@@ -251,7 +251,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
     }
 
-    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản lần {i + 1}`);
+    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản lần \x1b[38;5;11m {i + 1}`);
     console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
     console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
