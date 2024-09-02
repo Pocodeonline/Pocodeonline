@@ -203,13 +203,13 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
     }
 
-    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản lần \x1b[38;5;11m {i + 1}`);
+    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản lần \x1b[38;5;11m ${i + 1}`);
     console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
     console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi \n`);
 }
 
 async function countdownTimer(seconds) {
@@ -299,7 +299,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
