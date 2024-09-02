@@ -145,6 +145,8 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     let proxyIndex = 0;
     let activeCount = 0;
 
+    const failedAccounts = [];
+
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
@@ -178,7 +180,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     }
 
     const accountQueue = [...links];
-    const failedAccounts = [];
     while (accountQueue.length > 0 || activeCount > 0) {
         while (activeCount < maxBrowsers && accountQueue.length > 0) {
             const accountUrl = accountQueue.shift();
@@ -188,9 +189,14 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
             activeCount++;
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .then(() => {
+                .then(success => {
                     activeCount--;
-                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    if (!success) {
+                        failedAccounts.push({ accountUrl, accountNumber, proxy });
+                        console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
+                    } else {
+                        console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    }
                 })
                 .catch(() => {
                     activeCount--;
@@ -221,50 +227,27 @@ async function retryFailedAccounts(failedAccounts, proxies) {
     let proxyIndex = 0;
     let activeCount = 0;
 
-    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
-        const browser = await chromium.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--headless',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                `--proxy-server=${proxy.server}`
-            ]
-        });
-
-        const browserContext = await browser.newContext({
-            httpCredentials: {
-                username: proxy.username,
-                password: proxy.password
-            }
-        });
-
-        let accountSuccess = false;
-        try {
-            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
-            if (accountSuccess) totalSuccessCount++;
-            else totalFailureCount++;
-        } catch (error) {
-            totalFailureCount++;
-        } finally {
-            await browserContext.close();
-            await browser.close();
-        }
-    }
-
     while (failedAccounts.length > 0 || activeCount > 0) {
         while (activeCount < 6 && failedAccounts.length > 0) {
             const { accountUrl, accountNumber, proxy } = failedAccounts.shift();
             activeCount++;
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .then(() => {
+                .then(success => {
                     activeCount--;
-                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    if (success) {
+                        totalSuccessCount++;
+                        console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    } else {
+                        totalFailureCount++;
+                        console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
+                        failedAccounts.push({ accountUrl, accountNumber, proxy }); // Retry again
+                    }
                 })
                 .catch(() => {
                     activeCount--;
+                    totalFailureCount++;
                     console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
+                    failedAccounts.push({ accountUrl, accountNumber, proxy }); // Retry again
                 });
         }
 
