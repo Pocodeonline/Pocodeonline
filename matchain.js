@@ -12,7 +12,6 @@ const LIGHT_BLUE = '\x1b[38;5;12m';
 const DARK_BLUE = '\x1b[38;5;19m';
 const RESET = '\x1b[0m';
 
-
 const ERROR_LOG_PATH = 'failed_accounts.txt';
 const PROXIES_FILE_PATH = 'proxies.txt'; // Path to the proxies file
 
@@ -148,8 +147,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (err) {
             // Even if claim button does not exist, proceed to remove the account and add to done
             console.log(`${COLORS.RED}Acc ${accountNumber} claim rồi hoặc không tồn tại.`);
-            await writeDoneAccounts([accountUrl], doneFilePath);
-            await removeDoneAccount('matchain.txt', accountUrl); // Xóa tài khoản từ accounts.txt
+            // Removed lines that handle done accounts and remove accounts
             return;
         }
 
@@ -197,7 +195,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         }
     } catch (error) {
         console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}`);
-        await logFailedAccount(accountNumber);
+        await logFailedAccount(accountNumber, error.message); // Updated to include error message
     } finally {
         await page.close();
     }
@@ -375,6 +373,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.`);
         }
     } catch (e) {
-        console.log(`Lỗi`);
+        console.log(`${RED}Lỗi: ${e.message}`);
     }
 })();
