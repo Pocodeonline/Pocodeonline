@@ -95,6 +95,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
         await page.goto(accountUrl);
 
+        await page.reload({ waitUntil: 'networkidle0' });
+
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
         console.log(`${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
