@@ -96,7 +96,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const skipButtonSelector = "#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full";
         
         try {
-            await page.waitForSelector(skipButtonSelector, { timeout: 13000 });
+            await page.waitForSelector(skipButtonSelector, { timeout: 14500 });
             const skipButton = await page.$(skipButtonSelector);
             if (skipButton) {
                 await skipButton.click();
