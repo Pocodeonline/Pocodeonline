@@ -134,8 +134,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư khi làm xong acc\x1b[38;5;11m: ${points}`);
         const points2Selector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
         const points2Element = await page.waitForSelector(points2Selector);
-        const points = await points2Element.evaluate(el => el.innerText);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}thời gian còn lại acc acc\x1b[38;5;11m: ${points}`);
+        const points2 = await points2Element.evaluate(el => el.innerText);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}thời gian còn lại acc acc\x1b[38;5;11m: ${points2}`);
 
     } catch (e) {
         console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
