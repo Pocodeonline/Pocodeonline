@@ -164,13 +164,21 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.click(claimButtonSelector);
             console.log(`${COLORS.GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
-            // Confirm claim process
-            const claimProcessedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
-            await page.waitForSelector(claimProcessedSelector);
-            console.log(`${COLORS.GREEN}Claim thành công \x1b[38;5;11m${randomNumber} \x1b[38;5;10macc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-            await page.click(claimProcessedSelector);
-            console.log(`${COLORS.GREEN}Đang cho đào tiếp acc\x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-            await page.waitForTimeout(800);
+        // Confirm strartmining process
+        const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
+        let startminingButtonExists = false;
+
+        try {
+            claimButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 8000 });
+        } catch (err) {
+            console.log(`${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstart rồi hoặc không tồn tại.${COLORS.RESET}`);
+            return;
+        }
+
+        // Confirm strartmining process
+        if (startminingButtonnExists) {
+            await page.click(startminingButtonSelector);
+            console.log(`${COLORS.GREEN}Đã đào lại cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
             // Print remaining time
             const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
