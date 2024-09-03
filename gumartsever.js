@@ -93,30 +93,28 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     const page = await browserContext.newPage();
     try {
         console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
-        await page.goto(accountUrl);
+        await page.goto(accountUrl, { waitUntil: 'networkidle' });
 
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
         console.log(`${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1200 });
+        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 12000 });
         await page.click(claimButtonSelector);
 
         const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
-        let imgElementFound = true;
-
         try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 3000 });
             await page.click(imgSelector);
-            imgElementFound = false;
+            console.log(`${GREEN}Đã click vào hình ảnh thành công`);
         } catch (error) {
-            imgElementFound = true;
+            console.log(`${RED}Không tìm thấy hình ảnh`);
         }
 
-        if (!imgElementFound) {
-            const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
-            const timeElement = await page.waitForSelector(timeSelector);
+        const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
+        const timeElement = await page.waitForSelector(timeSelector, { timeout: 5000 });
+        if (timeElement) {
             const time = await timeElement.evaluate(el => el.innerText);
             console.log(`${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
@@ -124,19 +122,17 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         await page.waitForTimeout(400);
 
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
-        const pointsElement = await page.waitForSelector(pointsSelector);
+        const pointsElement = await page.waitForSelector(pointsSelector, { timeout: 5000 });
         const points = await pointsElement.evaluate(el => el.innerText);
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
+        console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
         await logFailedAccount(accountNumber, e.message);
-        return false; // Indicate that this account failed
     } finally {
         await page.close();
     }
-    return true; // Indicate that this account succeeded
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
@@ -209,7 +205,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi \n`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${errorMessage}\n`);
 }
 
 async function countdownTimer(seconds) {
@@ -309,6 +305,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log(`Lỗi`);
+        console.log(`${RED}Lỗi: ${e.message}`);
     }
 })();
