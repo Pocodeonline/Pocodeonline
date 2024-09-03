@@ -86,7 +86,7 @@ async function printCustomLogo(LIGHT_BLUE = true) {
 
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
-    let success = true;
+    let success = false;
 
     try {
         console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[35m🐮 Đang chạy tài khoản \x1b[33m${accountNumber} \x1b[31mIP \x1b[33m: \x1b[35m${proxy.server}`);
@@ -129,7 +129,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         await page.waitForTimeout(1500);
 
-        const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
+        const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1) > svg > g > path:nth-child(2)';
         await page.waitForSelector(nextSVGSelector, { timeout: 2000 });
         await page.click(nextSVGSelector);
 
