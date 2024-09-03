@@ -134,13 +134,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         // Click on the next SVG icon to proceed
         const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
-        await page.waitForSelector(nextSVGSelector, { timeout: 2500 });
+        await page.waitForSelector(nextSVGSelector, { timeout: 4000 });
         await page.click(nextSVGSelector);
-
+        await page.waitForTimeout(1500);
         const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(claimpointButtonSelector, { timeout: 3000 });
+            await page.waitForSelector(claimpointButtonSelector, { timeout: 4000 });
             const claimButton = await page.$(claimpointButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -149,7 +149,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi...`);
         }
-
+        await page.waitForTimeout(1500);
         const startminingButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
@@ -162,7 +162,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstartmining rồi...`);
         }
-
+        await page.waitForTimeout(1500);
         const timenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
         const balancenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
         const timenowElement = await page.waitForSelector(timenowSelector, { timeout: 6000 });
