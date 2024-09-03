@@ -92,11 +92,12 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;207m🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;12mIP \x1b[38;5;11m: \x1b[38;5;12m${proxy.server}`);
         await page.goto(accountUrl);
 
-        // Handle optional skip button
-        const skipButtonSelector = "#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full";
-        
+        const pageLoadedSelector = '#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full';
+        await page.waitForSelector(pageLoadedSelector, { timeout: 22000 });
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;207mĐã vào giao diện crytorank acc ${YELLOW}${accountNumber}`);
+
         try {
-            await page.waitForSelector(skipButtonSelector, { timeout: 16000 });
+            await page.waitForSelector(skipButtonSelector, { timeout: 5000 });
             const skipButton = await page.$(skipButtonSelector);
             if (skipButton) {
                 await skipButton.click();
@@ -159,7 +160,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstartmining rồi...`);
         }
-        
+        await page.waitForTimeout(1500);
         const timenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
         const balancenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
         const timenowElement = await page.waitForSelector(timenowSelector, { timeout: 6000 });
