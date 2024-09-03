@@ -69,7 +69,7 @@ async function readAccounts(filePath) {
 
 async function printCustomLogo(LIGHT_BLUE = true) {
     const logo = [
-        "CHỜ MỘT LÁT ĐANG VÀO TOOL ICEBERG..."
+        "CHỜ MỘT LÁT ĐANG VÀO TOOL CRYTORANK..."
     ];
     console.clear();
     for (let i = 0; i < 5; i++) {
@@ -255,7 +255,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${errorMessage}\n`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi\n`);
 }
 
 async function countdownTimer(seconds) {
@@ -268,7 +268,7 @@ async function countdownTimer(seconds) {
 
 (async () => {
     await printCustomLogo(true);
-    const filePath = 'iceberg.txt';
+    const filePath = 'crytorank.txt';
 
     try {
         const proxies = await readProxies(PROXIES_FILE_PATH);
