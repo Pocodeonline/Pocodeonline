@@ -36,19 +36,9 @@ async function readProxies(filePath) {
 }
 
 async function countNonEmptyLines(filePath) {
-    const fileStream = fs.createReadStream(filePath);
-    const rl = readline.createInterface({
-        input: fileStream,
-        crlfDelay: Infinity
-    });
-
-    let count = 0;
-    for await (const line of rl) {
-        if (line.trim()) {
-            count++;
-        }
-    }
-    return count;
+    if (!fs.existsSync(filePath)) return 0;
+    const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
+    return lines.filter(line => line.trim()).length;
 }
 
 async function readAccounts(filePath) {
@@ -81,7 +71,7 @@ async function printCustomLogo(blink = false) {
         if (blink) {
             console.log('\x1b[5m\x1b[32m' + logo.join('\n') + '\x1b[0m');
         } else {
-            console.log('\x1b[32m' + logo.join('\n'));
+            console.log('\x1b[5m\x1b[32m' + logo.join('\n'));
         }
         await new Promise(resolve => setTimeout(resolve, 300));
         console.clear();
@@ -89,128 +79,132 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
-    const page = await browserContext.newPage();
+async function processAccount(context, accountUrl, accountNumber, proxy) {
+    const page = await context.newPage();
+    let success = false;
     try {
-        console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
+        console.log(`\x1b[38;5;207m🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}`);
         await page.goto(accountUrl);
 
+        // Check for page load
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
-        await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
-        console.log(`${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
+        await page.waitForSelector(pageLoadedSelector, { timeout: 10000 });
+        console.log(`\x1b[38;5;10mĐã Vào Giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1200 });
+        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 400 });
         await page.click(claimButtonSelector);
 
-        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
-        let imgElementFound = true;
+        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
+        let imgElementFound = false;
 
         try {
             await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
             await page.click(imgSelector);
-            imgElementFound = false;
-        } catch (error) {
             imgElementFound = true;
+        } catch (error) {
         }
 
         if (!imgElementFound) {
+
             const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
             const timeElement = await page.waitForSelector(timeSelector);
-            const time = await timeElement.evaluate(el => el.innerText);
-            console.log(`${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
+            const time = await timeElement.evaluate(el => el.innerText); // Use evaluate to get the text
+            // Skip this step and proceed to get points information
+            console.log(`\x1b[38;5;9mX2 Của Acc \x1b[38;5;11m${accountNumber} Còn ${time} Mới Mua Được...`);
         }
 
         await page.waitForTimeout(400);
 
+        // Get points information
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
-        const points = await pointsElement.evaluate(el => el.innerText);
+        const points = await pointsElement.evaluate(el => el.innerText); // Use evaluate to get the text
         console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
+        success = true;
     } catch (e) {
-        console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
-        await logFailedAccount(accountNumber, e.message);
-        return false; // Indicate that this account failed
+        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
+        await logFailedAccount(accountNumber);
     } finally {
         await page.close();
     }
-    return true; // Indicate that this account succeeded
+    return { success };
 }
 
-async function runPlaywrightInstances(links, proxies, maxBrowsers) {
+async function runPlaywrightInstances(links, numAccounts, proxies) {
+    const concurrencyLimit = 10; // Number of browsers to run concurrently
+    const totalProxies = proxies.length;
+    let proxyIndex = 0; // To track the current proxy being used
+
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
-    let proxyIndex = 0;
-    let activeCount = 0;
 
-    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
-        const browser = await chromium.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--headless',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                `--proxy-server=${proxy.server}`
-            ]
-        });
+    let accountsProcessed = 0; // Track the number of accounts processed
+    let remainingLinks = links.slice(0, numAccounts); // Process only the number of accounts specified
 
-        const browserContext = await browser.newContext({
-            httpCredentials: {
-                username: proxy.username,
-                password: proxy.password
+    while (remainingLinks.length > 0) {
+        const batchSize = Math.min(concurrencyLimit, remainingLinks.length);
+        const batchAccounts = remainingLinks.splice(0, batchSize); // Get the next batch of accounts
+
+        // Determine the proxies for this batch
+        const batchProxies = [];
+        for (let i = 0; i < batchSize; i++) {
+            batchProxies.push(proxies[proxyIndex % totalProxies]);
+            proxyIndex++;
+        }
+
+        // Launch and handle each browser with its corresponding proxy
+        const browserPromises = batchAccounts.map(async (accountUrl, index) => {
+            const proxy = batchProxies[index]; // Use the proxy for this specific account
+            const browser = await chromium.launch({
+                headless: false,
+                args: [
+                    '--no-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    `--proxy-server=${proxy.server}`
+                ]
+            });
+            const context = await browser.newContext({
+                httpCredentials: {
+                    username: proxy.username,
+                    password: proxy.password
+                }
+            });
+
+            try {
+                const result = await processAccount(context, accountUrl, accountsProcessed + index + 1, proxy);
+                if (result.success) {
+                    totalSuccessCount++;
+                } else {
+                    totalFailureCount++;
+                }
+            } catch (e) {
+                console.log(`Tài khoản số ${accountsProcessed + index + 1} gặp lỗi`);
+                totalFailureCount++;
+            } finally {
+                await browser.close();
             }
         });
 
-        let accountSuccess = false;
-        try {
-            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
-            if (accountSuccess) totalSuccessCount++;
-            else totalFailureCount++;
-        } catch (error) {
-            console.error(`${RED}Lỗi trong khi xử lý tài khoản ${accountNumber}: ${error.message}`);
-            totalFailureCount++;
-        } finally {
-            await browserContext.close();
-            await browser.close();
-        }
+        await Promise.all(browserPromises);
+        accountsProcessed += batchSize; // Update number of processed accounts
     }
 
-    const accountQueue = [...links];
-    while (accountQueue.length > 0 || activeCount > 0) {
-        while (activeCount < maxBrowsers && accountQueue.length > 0) {
-            const accountUrl = accountQueue.shift();
-            const accountNumber = links.indexOf(accountUrl) + 1;
-            const proxy = proxies[proxyIndex % proxies.length];
-            proxyIndex++;
-
-            activeCount++;
-            processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .finally(() => {
-                    activeCount--;
-                });
-        }
-
-        // Wait for active processes to finish
-        if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-    }
-
-    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản `);
-    console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
-    console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
+    // Final report
+    console.log(`${GREEN}Tổng số tài khoản thành công: ${totalSuccessCount}`);
+    console.log(`${RED}Tổng số tài khoản lỗi: ${totalFailureCount}`);
 }
 
-async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${errorMessage}\n`);
+async function logFailedAccount(accountNumber) {
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber}\n`);
 }
 
 async function countdownTimer(seconds) {
     for (let i = seconds; i >= 0; i--) {
-        process.stdout.write(`\r${RED}Đang nghỉ ngơi còn lại ${YELLOW}${i} ${RED}giây`);
+        process.stdout.write(`\r\x1b[38;5;9mĐang nghỉ ngơi còn lại \x1b[38;5;11m${i} \x1b[38;5;9mgiây `);
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
     console.log(); // Move to the next line after countdown
@@ -237,7 +231,7 @@ async function countdownTimer(seconds) {
             const links = await readAccounts(filePath);
             console.log(`${SILVER}GUMART 🛒 ${LIGHT_PINK}code by 🐮${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
-            console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản`);
+            console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản `);
 
             const userInput = await new Promise(resolve => {
                 const rl = readline.createInterface({
@@ -293,18 +287,19 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
+            // Run the Playwright instances and get the number of accounts processed
             for (let i = 0; i <= repeatCount; i++) {
-                console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
+                console.log(`\x1b[38;5;231mChạy lần \x1b[38;5;10m${i + 1}`);
+                await runPlaywrightInstances(links, numAccounts, proxies);
 
-                if (i < repeatCount) {
-                    await countdownTimer(restTime);
+                if (i < repeatCount) { // Only rest if more repeats are needed
+                    await countdownTimer(restTime); // Display countdown timer
                 }
             }
 
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.error(`${RED}Lỗi không xác định: ${e.message}`);
+        console.log(`Lỗi: ${e.message}`);
     }
 })();
