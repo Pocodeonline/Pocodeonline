@@ -69,14 +69,7 @@ async function readAccounts(filePath) {
 
 async function printCustomLogo(blink = false) {
     const logo = [
-        " 🛒🛒🛒    🛒       🛒  🛒      🛒      🛒🛒      🛒🛒🛒  🛒🛒🛒🛒🛒 ",
-        "🛒    🛒   🛒       🛒  🛒🛒  🛒🛒     🛒  🛒     🛒    🛒    🛒 ",
-        "🛒         🛒       🛒  🛒 🛒🛒 🛒    🛒🛒🛒🛒    🛒    🛒    🛒",
-        "🛒   🛒🛒  🛒       🛒  🛒  🛒  🛒   🛒      🛒   🛒🛒🛒🛒    🛒 ",
-        "🛒    🛒   🛒       🛒  🛒      🛒  🛒        🛒  🛒    🛒    🛒",
-        " 🛒🛒🛒     🛒🛒🛒🛒🛒  🛒      🛒 🛒          🛒 🛒     🛒   🛒",
-        "                                                                         ",
-        "chờ một lát..."
+    "CHỜ MỘT LÁT ĐANG VÀO TOOL ICEBERG..."
     ];
     console.clear();
     for (let i = 0; i < 5; i++) {
