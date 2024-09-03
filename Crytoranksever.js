@@ -12,7 +12,6 @@ const LIGHT_BLUE = '\x1b[38;5;12m';
 const DARK_BLUE = '\x1b[38;5;19m';
 const RESET = '\x1b[0m';
 
-
 const ERROR_LOG_PATH = 'failed_accounts.txt';
 const PROXIES_FILE_PATH = 'proxies.txt'; // Path to the proxies file
 
@@ -70,7 +69,7 @@ async function readAccounts(filePath) {
 
 async function printCustomLogo(LIGHT_BLUE = true) {
     const logo = [
-        "CHỜ MỘT LÁT ĐANG VÀO TOOL CRYTORANK..."
+        "CHỜ MỘT LÁT ĐANG VÀO TOOL ICEBERG..."
     ];
     console.clear();
     for (let i = 0; i < 5; i++) {
@@ -90,7 +89,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     let success = false;
 
     try {
-        console.log(`${LIGHT_BLUE}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;12mIP \x1b[38;5;11m: \x1b[38;5;12m${proxy.server}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;207m🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;12mIP \x1b[38;5;11m: \x1b[38;5;12m${proxy.server}`);
         await page.goto(accountUrl);
 
         // Handle optional skip button
@@ -115,7 +114,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
-        console.log(`${LIGHT_BLUE}Số dư acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mlà \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mlà \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
 
         // Click on the SVG icon to proceed
         const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold';
@@ -129,7 +128,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.waitForSelector(successButtonSelector, { timeout: 4400 });
             await page.click(successButtonSelector);
             await page.waitForTimeout(1500);
-            console.log(`${LIGHT_BLUE}Điểm danh Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mhôm nay thành công`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mhôm nay thành công`);
         } catch (error) {
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mhôm nay điểm danh rồi`);
         }
@@ -147,7 +146,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const claimButton = await page.$(claimpointButtonSelector);
             if (claimButton) {
                 await claimButton.click();
-                console.log(`${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mclaim thành công`);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mclaim thành công`);
             }
         } catch (error) {
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi...`);
@@ -160,7 +159,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
-                console.log(`${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mĐào lại thành công`);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mĐào lại thành công`);
             }
         } catch (error) {
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstartmining rồi...`);
@@ -172,8 +171,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balancenowElement = await page.waitForSelector(balancenowSelector, { timeout: 6000 });
         const timenowText = await timenowElement.evaluate(el => el.innerText);
         const balancenowText = await balancenowElement.evaluate(el => el.innerText);
-        console.log(`${LIGHT_BLUE}Thời gian còn lại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mđào lại là \x1b[38;5;11m: \x1b[38;5;11m${timenowText}`);
-        console.log(`${LIGHT_BLUE}Số dư acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12msau khi cày là \x1b[38;5;11m: \x1b[38;5;11m${balancenowText}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Thời gian còn lại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mđào lại là \x1b[38;5;11m: \x1b[38;5;11m${timenowText}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12msau khi cày là \x1b[38;5;11m: \x1b[38;5;11m${balancenowText}`);
 
         success = true;
 
@@ -214,7 +213,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         let accountSuccess = false;
         try {
             accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
-            if (accountSuccess) totalSuccessCount++;
+            if (accountSuccess.success) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
             totalFailureCount++;
@@ -246,17 +245,17 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
         // Wait for active processes to finish
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 15000));
         }
     }
 
-    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản `);
-    console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
-    console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
+    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231m Tool \x1b[38;5;207m• ${YELLOW}[ \x1b[38;5;231mCRYTORANK \x1b[38;5;11m]`);
+    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
+    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi\n`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${errorMessage}\n`);
 }
 
 async function countdownTimer(seconds) {
@@ -269,7 +268,7 @@ async function countdownTimer(seconds) {
 
 (async () => {
     await printCustomLogo(true);
-    const filePath = 'crytorank.txt';
+    const filePath = 'iceberg.txt';
 
     try {
         const proxies = await readProxies(PROXIES_FILE_PATH);
@@ -286,7 +285,7 @@ async function countdownTimer(seconds) {
             }
 
             const links = await readAccounts(filePath);
-            console.log(`${SILVER}CRYTORANK ${LIGHT_PINK}code by 🐮${RESET}`);
+            console.log(`${SILVER}Crytorank ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
             console.log(`${LIGHT_BLUE}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${LIGHT_BLUE} tài khoản`);
 
@@ -295,7 +294,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${LIGHT_BLUE}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${LIGHT_BLUE}hoặc ${YELLOW}'all' ${LIGHT_BLUE}để chạy tất cả${YELLOW}, ${RED}0 ${LIGHT_BLUE}để thoát${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${LIGHT_BLUE}hoặc ${YELLOW}'all' ${LIGHT_BLUE}để chạy tất cả${YELLOW}, ${RED}0 ${LIGHT_BLUE}để thoát${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -322,7 +321,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${LIGHT_BLUE}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}(${LIGHT_BLUE}Khuyên ${YELLOW}9000 ${LIGHT_BLUE}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}(${LIGHT_BLUE}Khuyên ${YELLOW}21650 ${LIGHT_BLUE}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -333,7 +332,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${LIGHT_BLUE}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}(${LIGHT_BLUE}hoặc ${YELLOW}0 ${LIGHT_BLUE}để chạy một lần): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}(${LIGHT_BLUE}hoặc ${YELLOW}0 ${LIGHT_BLUE}để chạy một lần): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -346,14 +345,14 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
                 }
             }
 
-            console.log(`${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.`);
         }
     } catch (e) {
         console.log(`Lỗi`);
