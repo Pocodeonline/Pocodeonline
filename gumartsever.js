@@ -102,17 +102,16 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2500 });
+        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1000 });
         await page.click(claimButtonSelector);
-        await page.waitForTimeout(600);
-
+        await page.waitForTimeout(1300);
         const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
         let imgElementFound = true;
 
         try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 300 });
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
             await page.click(imgSelector);
-            await page.waitForTimeout(600);
+            await page.waitForTimeout(1500);
             imgElementFound = false;
         } catch (error) {
             imgElementFound = true;
@@ -124,8 +123,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const time = await timeElement.evaluate(el => el.innerText);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
-
-        await page.waitForTimeout(600);
 
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
@@ -200,7 +197,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 15000));
+            await new Promise(resolve => setTimeout(resolve, 8200));
         }
     }
 
