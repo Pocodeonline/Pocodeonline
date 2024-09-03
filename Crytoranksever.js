@@ -159,10 +159,10 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`\x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m startmining rồi...`);
         }
 
-        const timenowSelector = '#root > div > div.grid.h-\[calc\(100svh-96px\)\].grid-rows-\[1fr_auto\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
+        const timenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
         const balancenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
 
-        const timenowElement = await page.waitForSelector(timenowSelector, { timeout: 8000 });
+        const timenowElement = await page.waitForSelector(timenowSelector, { timeout: 10000 });
         const balancenowElement = await page.waitForSelector(balancenowSelector, { timeout: 6000 });
         const timenowText = await timenowElement.evaluate(el => el.innerText);
         const balancenowText = await balancenowElement.evaluate(el => el.innerText);
