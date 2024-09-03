@@ -13,7 +13,7 @@ const DARK_BLUE = '\x1b[38;5;19m';
 const RESET = '\x1b[0m';
 
 const ERROR_LOG_PATH = 'failed_accounts.txt';
-const PROXIES_FILE_PATH = 'proxies.txt'; // Path to the proxies file
+const PROXIES_FILE_PATH = 'proxies.txt';
 
 async function readProxies(filePath) {
     const fileStream = fs.createReadStream(filePath);
@@ -136,11 +136,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     } catch (e) {
         console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
         await logFailedAccount(accountNumber, e.message);
-        return false; // Indicate that this account failed
+        return false;
     } finally {
         await page.close();
     }
-    return true; // Indicate that this account succeeded
+    return true;
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
@@ -154,7 +154,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             headless: true,
             args: [
                 '--no-sandbox',
-                '--headless',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
                 `--proxy-server=${proxy.server}`
@@ -201,7 +200,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 });
         }
 
-        // Wait for active processes to finish
         if (activeCount > 0) {
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
@@ -213,7 +211,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi\n`);
 }
 
 async function countdownTimer(seconds) {
@@ -221,7 +219,7 @@ async function countdownTimer(seconds) {
         process.stdout.write(`\r${RED}Đang nghỉ ngơi còn lại ${YELLOW}${i} ${RED}giây`);
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    console.log(); // Move to the next line after countdown
+    console.log();
 }
 
 (async () => {
@@ -313,6 +311,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log(`Lỗi`);
+        console.log(`Bảo trì do lỗi...}`);
     }
 })();
