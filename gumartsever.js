@@ -130,7 +130,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
+        console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi: ${e.message}`);
         await logFailedAccount(accountNumber, e.message);
         return false; // Indicate that this account failed
     } finally {
@@ -170,6 +170,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             if (accountSuccess) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
+            console.error(`${RED}Lỗi trong khi xử lý tài khoản ${accountNumber}: ${error.message}`);
             totalFailureCount++;
         } finally {
             await browserContext.close();
@@ -187,13 +188,8 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
             activeCount++;
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .then(() => {
+                .finally(() => {
                     activeCount--;
-                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
-                })
-                .catch(() => {
-                    activeCount--;
-                    console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
                 });
         }
 
@@ -209,7 +205,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi \n`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi: ${errorMessage}\n`);
 }
 
 async function countdownTimer(seconds) {
@@ -309,6 +305,6 @@ async function countdownTimer(seconds) {
             console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
-        console.log(`Lỗi`);
+        console.error(`${RED}Lỗi không xác định: ${e.message}`);
     }
 })();
