@@ -133,7 +133,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.bg-\\[radial-gradient\\(\\#061a2c\\,_\\#061a2c79\\,_\\#061a2c10\\,_transparent\\)\\].text-white.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg';
         await page.waitForSelector(nextSVGSelector, { timeout: 4000 });
         await page.click(nextSVGSelector);
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(2500);
         const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
         try {
             await page.waitForSelector(claimpointButtonSelector, { timeout: 2000 });
