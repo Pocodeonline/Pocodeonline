@@ -130,7 +130,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.waitForTimeout(1500);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mhôm nay thành công`);
         } catch (error) {
-            console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mhôm nay điểm danh rồi`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mhôm nay điểm danh rồi`);
         }
 
         // Click on the next SVG icon to proceed
@@ -149,7 +149,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;10mclaim thành công`);
             }
         } catch (error) {
-            console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi...`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi...`);
         }
         await page.waitForTimeout(2500);
         const startminingButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
@@ -235,7 +235,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
                 .then(() => {
                     activeCount--;
-                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất tài khoản ${accountNumber}`);
                 })
                 .catch(() => {
                     activeCount--;
@@ -345,7 +345,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
