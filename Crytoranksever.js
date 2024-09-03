@@ -112,11 +112,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[35m là \x1b[33m: \x1b[33m${balanceText}`);
-
-        const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold';
-        await page.waitForSelector(claimButtonSelector, { timeout: 2000 });
+        await page.waitForTimeout(1500);
+        const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg';
+        await page.waitForSelector(claimButtonSelector, { timeout: 3000 });
         await page.click(claimButtonSelector);
-
+        await page.waitForTimeout(1500);
         const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
         try {
             await page.waitForSelector(successButtonSelector, { timeout: 3000 });
@@ -134,14 +134,16 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         await page.click(nextSVGSelector);
 
         const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
-        try {
-            await page.waitForSelector(claimpointButtonSelector, { timeout: 3000 });
-            const claimButton = await page.$(claimpointButtonSelector);
-            if (claimButton) {
+        const claimButton = await page.$(claimpointButtonSelector);
+        if (claimButton) {
+            try {
+                await page.waitForSelector(claimpointButtonSelector, { timeout: 3000 });
                 await claimButton.click();
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m claim thành công`);
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[31m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
             }
-        } catch (error) {
+        } else {
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[31m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
         }
 
