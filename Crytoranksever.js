@@ -124,7 +124,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         // Handle success button if present
         const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
         try {
-            await page.waitForSelector(successButtonSelector, { timeout: 2500 });
+            await page.waitForSelector(successButtonSelector, { timeout: 3000 });
             await page.click(successButtonSelector);
             await page.waitForTimeout(1500);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mhôm nay thành công`);
@@ -134,13 +134,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         // Click on the next SVG icon to proceed
         const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
-        await page.waitForSelector(nextSVGSelector, { timeout: 1200 });
+        await page.waitForSelector(nextSVGSelector, { timeout: 2500 });
         await page.click(nextSVGSelector);
 
         const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(claimpointButtonSelector, { timeout: 2000 });
+            await page.waitForSelector(claimpointButtonSelector, { timeout: 3000 });
             const claimButton = await page.$(claimpointButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -153,7 +153,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const startminingButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(startminingButtonSelector, { timeout: 2000 });
+            await page.waitForSelector(startminingButtonSelector, { timeout: 3000 });
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -243,7 +243,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
         // Wait for active processes to finish
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 25500));
+            await new Promise(resolve => setTimeout(resolve, 28000));
         }
     }
 
