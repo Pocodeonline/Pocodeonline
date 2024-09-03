@@ -113,7 +113,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[35m là \x1b[33m: \x1b[33m${balanceText}`);
         await page.waitForTimeout(1500);
-        const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg';
+        const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg > path:nth-child(1)';
         await page.waitForSelector(claimButtonSelector, { timeout: 3000 });
         await page.click(claimButtonSelector);
         await page.waitForTimeout(1500);
