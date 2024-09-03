@@ -255,7 +255,7 @@ async function countdownTimer(seconds) {
             if (userInput.toLowerCase() === 'all') {
                 numAccounts = links.length;
             } else if (!isNaN(userInput)) {
-                numAccounts = parseInt(userInput, 8);
+                numAccounts = parseInt(userInput, 10);
                 if (numAccounts <= 0) {
                     break;
                 }
