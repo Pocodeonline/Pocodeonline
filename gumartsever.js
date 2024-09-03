@@ -94,12 +94,12 @@ async function printCustomLogo(blink = false) {
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
     try {
-        console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
         await page.goto(accountUrl);
 
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
-        console.log(`${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
         await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2500 });
@@ -122,7 +122,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
             const timeElement = await page.waitForSelector(timeSelector);
             const time = await timeElement.evaluate(el => el.innerText);
-            console.log(`${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
 
         await page.waitForTimeout(600);
@@ -130,11 +130,10 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText);
-        console.log(`Đã claim point thành công ✅ Số dư : ${points}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã claim point thành công\x1b[38;5;11m, ${GREEN}Số dư : ${points}`);
 
-        console.log(`${GREEN}Đã làm xong acc ${accountNumber} ✅`);
     } catch (e) {
-        console.log(`Tài khoản số ${accountNumber} gặp lỗi`);
+        console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
         await logFailedAccount(accountNumber, e.message);
         return false;
     } finally {
@@ -192,7 +191,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
                 .then(() => {
                     activeCount--;
-                    console.log(`${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất tài khoản ${accountNumber}`);
                 })
                 .catch(() => {
                     activeCount--;
@@ -205,9 +204,9 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
     }
 
-    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản.`);
-    console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
-    console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
+    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231mTool \x1b[38;5;11m[ \x1b[38;5;231mGUMART \x1b[38;5;11m].`);
+    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
+    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
@@ -216,7 +215,7 @@ async function logFailedAccount(accountNumber, errorMessage) {
 
 async function countdownTimer(seconds) {
     for (let i = seconds; i >= 0; i--) {
-        process.stdout.write(`\r${RED}Đang nghỉ ngơi còn lại ${YELLOW}${i} ${RED}giây`);
+        process.stdout.write(`\r${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang nghỉ ngơi còn lại ${YELLOW}${i} ${RED}giây`);
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
     console.log();
@@ -241,7 +240,7 @@ async function countdownTimer(seconds) {
             }
 
             const links = await readAccounts(filePath);
-            console.log(`${SILVER}GUMART ${LIGHT_PINK}code by 🐮${RESET}`);
+            console.log(`${SILVER}GUMART ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
             console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản`);
 
@@ -250,7 +249,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${GREEN}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${GREEN}hoặc ${YELLOW}'all' ${GREEN}để chạy tất cả${YELLOW}, ${RED}0 ${GREEN}để thoát${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${GREEN}hoặc ${YELLOW}'all' ${GREEN}để chạy tất cả${YELLOW}, ${RED}0 ${GREEN}để thoát${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -277,7 +276,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}(${GREEN}Khuyên ${YELLOW}9000 ${GREEN}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}(${GREEN}Khuyên ${YELLOW}9000 ${GREEN}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -288,7 +287,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}(${GREEN}hoặc ${YELLOW}0 ${GREEN}để chạy một lần): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}(${GREEN}hoặc ${YELLOW}0 ${GREEN}để chạy một lần): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -308,7 +307,7 @@ async function countdownTimer(seconds) {
                 }
             }
 
-            console.log(`${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
         }
     } catch (e) {
         console.log(`Bảo trì do lỗi...}`);
