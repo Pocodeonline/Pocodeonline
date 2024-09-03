@@ -8,6 +8,8 @@ const PINK = '\x1b[38;5;13m';
 const YELLOW = '\x1b[38;5;11m';
 const GREEN = '\x1b[38;5;10m';
 const RED = '\x1b[38;5;9m';
+const LIGHT_BLUE = '\x1b[38;5;12m';
+const DARK_BLUE = '\x1b[38;5;19m';
 const RESET = '\x1b[0m';
 
 const ERROR_LOG_PATH = 'failed_accounts.txt';
@@ -94,8 +96,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     try {
         console.log(`${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
         await page.goto(accountUrl);
-
-        await page.reload({ waitUntil: 'networkidle0' });
 
         const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
         await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
@@ -205,13 +205,13 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
     }
 
-    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản `);
+    console.log(`${GREEN}Hoàn tất xử lý tất cả tài khoản.`);
     console.log(`${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
     console.log(`${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
-    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi \n`);
+    fs.appendFileSync(ERROR_LOG_PATH, `Tài khoản số ${accountNumber} gặp lỗi`);
 }
 
 async function countdownTimer(seconds) {
@@ -241,7 +241,7 @@ async function countdownTimer(seconds) {
             }
 
             const links = await readAccounts(filePath);
-            console.log(`${SILVER}GUMART 🛒 ${LIGHT_PINK}code by 🐮${RESET}`);
+            console.log(`${SILVER}GUMART ${LIGHT_PINK}code by 🐮${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
             console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản`);
 
@@ -301,7 +301,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
