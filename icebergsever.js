@@ -113,7 +113,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (err) {
         }
 
-        const startminingButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div';      
+        const startminingButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';      
 
         try {
             await page.waitForSelector(startminingButtonSelector, { timeout: 5000 });
