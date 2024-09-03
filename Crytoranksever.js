@@ -95,7 +95,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const skipButtonSelector = '#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full';
 
         try {
-            await page.waitForSelector(skipButtonSelector, { timeout: 15000 });
+            await page.waitForSelector(skipButtonSelector, { timeout: 16000 });
             const skipButton = await page.$(skipButtonSelector);
             if (skipButton) {
                 await skipButton.click();
@@ -111,27 +111,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mlà \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
-
-        // Click on the SVG icon to proceed
-        const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg';
-        await page.waitForSelector(claimButtonSelector, { timeout: 2500 });
-        await page.click(claimButtonSelector);
-
-        // Handle success button if present
-        const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
-        try {
-            await page.waitForSelector(successButtonSelector, { timeout: 3000 });
-            await page.click(successButtonSelector);
-            await page.waitForTimeout(1500);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mhôm nay thành công`);
-        } catch (error) {
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mhôm nay điểm danh rồi`);
-        }
-        await page.waitForTimeout(1500);
-        // Click on the next SVG icon to proceed
-        const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.bg-\\[radial-gradient\\(\\#061a2c\\,_\\#061a2c79\\,_\\#061a2c10\\,_transparent\\)\\].text-white.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg';
-        await page.waitForSelector(nextSVGSelector, { timeout: 4000 });
-        await page.click(nextSVGSelector);
 
         const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
         try {
@@ -158,9 +137,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstartmining rồi...`);
         }
 
+        const timenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
         const balancenowSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
+        const timenowElement = await page.waitForSelector(timenowSelector, { timeout: 6000 });
         const balancenowElement = await page.waitForSelector(balancenowSelector, { timeout: 6000 });
+        const timenowText = await timenowElement.evaluate(el => el.innerText);
         const balancenowText = await balancenowElement.evaluate(el => el.innerText);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Thời gian còn lại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mđào lại là \x1b[38;5;11m: \x1b[38;5;11m${timenowText}`);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12msau khi cày là \x1b[38;5;11m: \x1b[38;5;11m${balancenowText}`);
 
         success = true;
@@ -234,7 +217,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
         // Wait for active processes to finish
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 17000));
+            await new Promise(resolve => setTimeout(resolve, 18000));
         }
     }
 
