@@ -170,7 +170,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[36m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[36m sau khi cày là \x1b[33m: \x1b[33m${balancenowText}`);
 
     } catch (e) {
-        console.log(`\x1b[31mTài khoản số \x1b[33m${accountNumber} \x1b[31m gặp lỗi: ${e.message}`);
+        console.log(`\x1b[31mTài khoản số \x1b[33m${accountNumber} \x1b[31m gặp lỗi`);
         await logFailedAccount(accountNumber, e.message);
         return false;
     } finally {
@@ -337,7 +337,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
