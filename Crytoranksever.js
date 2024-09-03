@@ -113,6 +113,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mlà \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
 
+        await page.waitForTimeout(1500);
         // Click on the SVG icon to proceed
         const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg';
         await page.waitForSelector(claimButtonSelector, { timeout: 2000 });
@@ -128,7 +129,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mhôm nay điểm danh rồi`);
         }
-
+        await page.waitForTimeout(1500);
         // Click on the next SVG icon to proceed
         const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.bg-\\[radial-gradient\\(\\#061a2c\\,_\\#061a2c79\\,_\\#061a2c10\\,_transparent\\)\\].text-white.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg';
         await page.waitForSelector(nextSVGSelector, { timeout: 4000 });
