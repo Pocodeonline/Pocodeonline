@@ -119,6 +119,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${COLORS.RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
             }
         } catch (err) {
+            // Optional: Handle specific errors related to the skip button
+            console.log(`${COLORS.RED}Lỗi khi kiểm tra nút skip: ${err.message}`);
         }
 
         // Check for page load
@@ -164,50 +166,51 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.click(claimButtonSelector);
             console.log(`${COLORS.GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
-        // Confirm strartmining process
-        const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
-        let startminingButtonExists = false;
+            // Confirm startmining process
+            const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
+            let startminingButtonExists = false;
 
-        try {
-            claimButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 8000 });
-        } catch (err) {
-            console.log(`${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstart rồi hoặc không tồn tại.${COLORS.RESET}`);
-            return;
-        }
+            try {
+                startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 8000 });
+            } catch (err) {
+                console.log(`${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstart rồi hoặc không tồn tại.${COLORS.RESET}`);
+                return;
+            }
 
-        // Confirm strartmining process
-        if (startminingButtonnExists) {
-            await page.click(startminingButtonSelector);
-            console.log(`${COLORS.GREEN}Đã đào lại cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            // Confirm startmining process
+            if (startminingButtonExists) {
+                await page.click(startminingButtonSelector);
+                console.log(`${COLORS.GREEN}Đã đào lại cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
-            // Print remaining time
-            const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
-            const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
-            console.log(`${COLORS.GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${COLORS.RESET}`);
-            await page.waitForTimeout(800);
+                // Print remaining time
+                const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
+                const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
+                console.log(`${COLORS.GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${COLORS.RESET}`);
+                await page.waitForTimeout(800);
 
-            // Click on specific element
-            const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div";
-            await page.waitForSelector(clickItemSelector);
-            await page.click(clickItemSelector);
-            console.log(`${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-            await page.waitForTimeout(1000);
+                // Click on specific element
+                const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div";
+                await page.waitForSelector(clickItemSelector);
+                await page.click(clickItemSelector);
+                console.log(`${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.waitForTimeout(1000);
 
-            // Click on specific element
-            const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
-            await page.waitForSelector(clickx2Selector);
-            await page.click(clickx2Selector);
-            console.log(`${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-            await page.waitForTimeout(2000);
+                // Click on specific element
+                const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
+                await page.waitForSelector(clickx2Selector);
+                await page.click(clickx2Selector);
+                console.log(`${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.waitForTimeout(2000);
 
-            // Wait for final element and get its text
-            const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
-            await page.waitForSelector(finalPointsSelector);
-            const finalPoints = await page.textContent(finalPointsSelector);
-            console.log(`${COLORS.GREEN}-50 acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
+                // Wait for final element and get its text
+                const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
+                await page.waitForSelector(finalPointsSelector);
+                const finalPoints = await page.textContent(finalPointsSelector);
+                console.log(`${COLORS.GREEN}-50 acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
 
-            console.log(`${COLORS.GREEN}Mua x2 thành công cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-            success = true;
+                console.log(`${COLORS.GREEN}Mua x2 thành công cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                success = true;
+            }
         }
     } catch (error) {
         console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
