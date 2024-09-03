@@ -108,7 +108,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${RED}Lỗi skip `);
         }
 
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(300);
 
         // Continue with balance extraction
         const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
@@ -118,16 +118,16 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         // Click on the SVG icon to proceed
         const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold';
-        await page.waitForSelector(claimButtonSelector, { timeout: 4400 });
+        await page.waitForSelector(claimButtonSelector, { timeout: 2000 });
         await page.click(claimButtonSelector);
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(800);
 
         // Handle success button if present
         const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
         try {
-            await page.waitForSelector(successButtonSelector, { timeout: 4400 });
+            await page.waitForSelector(successButtonSelector, { timeout: 1300 });
             await page.click(successButtonSelector);
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(1000);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mhôm nay thành công`);
         } catch (error) {
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mhôm nay điểm danh rồi`);
@@ -135,14 +135,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         // Click on the next SVG icon to proceed
         const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
-        await page.waitForSelector(nextSVGSelector, { timeout: 10000 });
+        await page.waitForSelector(nextSVGSelector, { timeout: 800 });
         await page.click(nextSVGSelector);
-        await page.waitForTimeout(1500);
 
         const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(claimpointButtonSelector, { timeout: 1500 });
+            await page.waitForSelector(claimpointButtonSelector, { timeout: 1700 });
             const claimButton = await page.$(claimpointButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -151,11 +150,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi...`);
         }
-        await page.waitForTimeout(2500);
+
         const startminingButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(startminingButtonSelector, { timeout: 2000 });
+            await page.waitForSelector(startminingButtonSelector, { timeout: 2800 });
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
