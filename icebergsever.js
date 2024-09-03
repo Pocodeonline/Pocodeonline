@@ -97,7 +97,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balanceSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mSố dư hiện tại acc \x1b[33m${accountNumber} \x1b[38;5;12m là \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mSố dư hiện tại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12m là \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
 
         const claimButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > span > svg';
 
@@ -106,13 +106,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const claimButton = await page.$(claimButtonSelector);
             if (claimButton) {
                 await claimButton.click();
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mĐã claim acc \x1b[33m${accountNumber}`);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mĐã claim acc \x1b[38;5;11m${accountNumber}`);
             } else {
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12m Acc \x1b[33m${accountNumber} \x1b[38;5;12mclaim rồi...`);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12m Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mclaim rồi...`);
             }
         } catch (err) {
         }
-
+        await page.waitForTimeout(2500);
         const startminingButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';      
 
         try {
@@ -120,9 +120,9 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mĐã startmining acc \x1b[33m${accountNumber}`);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mĐã startmining acc \x1b[38;5;11m${accountNumber}`);
             } else {
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12m Acc \x1b[33m${accountNumber} \x1b[38;5;12mstartmining rồi...`);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12m Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mstartmining rồi...`);
             }
         } catch (err) {
         }
