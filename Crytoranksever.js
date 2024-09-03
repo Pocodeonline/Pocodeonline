@@ -96,7 +96,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const skipButtonSelector = "#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full";
         
         try {
-            await page.waitForSelector(skipButtonSelector, { timeout: 4000 });
+            await page.waitForSelector(skipButtonSelector, { timeout: 2500 });
             const skipButton = await page.$(skipButtonSelector);
             if (skipButton) {
                 await skipButton.click();
@@ -108,7 +108,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${RED}Lỗi skip `);
         }
 
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(1000);
 
         // Continue with balance extraction
         const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
@@ -140,7 +140,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(claimpointButtonSelector, { timeout: 2300 });
+            await page.waitForSelector(claimpointButtonSelector, { timeout: 1500 });
             const claimButton = await page.$(claimpointButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -153,7 +153,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const startminingButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
 
         try {
-            await page.waitForSelector(startminingButtonSelector, { timeout: 2000 });
+            await page.waitForSelector(startminingButtonSelector, { timeout: 1500 });
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -243,7 +243,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
         // Wait for active processes to finish
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 22000));
+            await new Promise(resolve => setTimeout(resolve, 14000));
         }
     }
 
