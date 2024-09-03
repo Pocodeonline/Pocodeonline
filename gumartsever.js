@@ -102,13 +102,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
 
         const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 1700 });
+        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
         await page.click(claimButtonSelector);
         const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
         let imgElementFound = true;
 
         try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 1700 });
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
             await page.click(imgSelector);
             await page.waitForTimeout(1000);
             imgElementFound = false;
@@ -196,7 +196,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 9200));
+            await new Promise(resolve => setTimeout(resolve, 10500));
         }
     }
 
