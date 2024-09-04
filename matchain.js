@@ -243,7 +243,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         });
 
         const browserContext = await browser.newContext({
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36 OPR/76.0.4017.177',
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
             httpCredentials: {
                 storageState: null,
                 username: proxy.username,
