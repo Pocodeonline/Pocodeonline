@@ -96,8 +96,8 @@ async function printCustomLogo(LIGHT_BLUE = true) {
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
     let success = false;
-    const maxRetries = 10; // Số lần tối đa để thử lại
-    const retryDelay = 5000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
+    const maxRetries = 3; // Số lần tối đa để thử lại
+    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
     const maxUpdateAttempts = 3; // Số lần tối đa để thử cập nhật điểm
 
     const loadPage = async () => {
@@ -296,7 +296,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 38000));
+            await new Promise(resolve => setTimeout(resolve, 27000));
         }
     }
 
