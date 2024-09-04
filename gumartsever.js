@@ -180,7 +180,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
-                '--disable-features=site-per-process',
                 `--proxy-server=${proxy.server}`
             ]
         });
@@ -191,8 +190,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 username: proxy.username,
                 password: proxy.password
             },
-            viewport: { width: 1280, height: 800 },
-            ignoreHTTPSErrors: true,
             bypassCSP: true,
         });
 
