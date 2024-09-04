@@ -179,7 +179,8 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             args: [
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-features=site-per-process', // Tắt một số tính năng có thể làm chậm
+                '--disable-gpu',
+                '--disable-features=site-per-process',
                 `--proxy-server=${proxy.server}`
             ]
         });
@@ -187,10 +188,12 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         const browserContext = await browser.newContext({
             httpCredentials: {
                 storageState: null,
-                 userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:17.0) Gecko/20100101 Safari/537.36',
                 username: proxy.username,
                 password: proxy.password
-            }
+            },
+            viewport: { width: 1280, height: 800 },
+            ignoreHTTPSErrors: true,
+            bypassCSP: true,
         });
 
         let accountSuccess = false;
