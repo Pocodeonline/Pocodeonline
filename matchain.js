@@ -242,9 +242,9 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         const browserContext = await browser.newContext({
             httpCredentials: {
                 username: proxy.username,
-                password: proxy.password
-            },
-            storageState: null
+                password: proxy.password,
+                storageState: null
+            }
         });
 
         let accountSuccess = false;
