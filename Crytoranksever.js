@@ -196,7 +196,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             args: [
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu',
                 `--proxy-server=${proxy.server}`
             ]
         });
