@@ -99,7 +99,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
     try {
         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${COLORS.RESET}`);
-        await page.goto(accountUrl);
+        await page.goto(accountUrl, { waitUntil: 'Ip Lỗi hoặc acc không hoạt động' });
 
         // Handle optional skip button
         const skipButtonSelector = "body > div:nth-child(6) > div > div.ant-modal-wrap.ant-modal-centered > div > div:nth-child(2) > div > button";
