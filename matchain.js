@@ -243,7 +243,8 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             httpCredentials: {
                 username: proxy.username,
                 password: proxy.password
-            }
+            },
+            storageState: null
         });
 
         let accountSuccess = false;
