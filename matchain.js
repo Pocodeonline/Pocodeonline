@@ -208,7 +208,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             } catch (error) {
                 console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
                 if (attempt < maxRetries) {
-                    console.log(${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;9mĐang làm lại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mlần \x1b[38;5;11m${attempt + 1}  ${COLORS.RESET}`);
                     await page.waitForTimeout(retryDelay);
                 } else {
                     await logFailedAccount(accountNumber, error.message);
