@@ -93,49 +93,69 @@ async function printCustomLogo(blink = false) {
 
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
+    const maxRetries = 10; // Số lần tối đa để thử lại
+    const retryDelay = 2000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
+    let success = false;
+
+    const loadPage = async () => {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
+                await page.goto(accountUrl, { waitUntil: 'networkidle0' });
+
+                const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
+                await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
+
+                const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
+                await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
+                await page.click(claimButtonSelector);
+
+                const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
+                let imgElementFound = true;
+
+                try {
+                    await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+                    await page.click(imgSelector);
+                    await page.waitForTimeout(1000);
+                    imgElementFound = false;
+                } catch (error) {
+                    imgElementFound = true;
+                }
+
+                if (!imgElementFound) {
+                    const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
+                    const timeElement = await page.waitForSelector(timeSelector);
+                    const time = await timeElement.evaluate(el => el.innerText);
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
+                }
+
+                const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
+                const pointsElement = await page.waitForSelector(pointsSelector);
+                const points = await pointsElement.evaluate(el => el.innerText);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã claim point thành công\x1b[38;5;11m, ${GREEN}Số dư : ${points}`);
+
+                success = true; // Đánh dấu thành công
+                break; // Thoát khỏi vòng lặp retry khi thành công
+            } catch (error) {
+                console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
+                if (attempt < maxRetries) {
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
+                    await page.waitForTimeout(retryDelay);
+                } else {
+                    await logFailedAccount(accountNumber, error.message);
+                }
+            }
+        }
+    };
+
     try {
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
-        await page.goto(accountUrl);
-
-        const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
-        await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
-
-        const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-        await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
-        await page.click(claimButtonSelector);
-        const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
-        let imgElementFound = true;
-
-        try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
-            await page.click(imgSelector);
-            await page.waitForTimeout(1000);
-            imgElementFound = false;
-        } catch (error) {
-            imgElementFound = true;
-        }
-
-        if (!imgElementFound) {
-            const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
-            const timeElement = await page.waitForSelector(timeSelector);
-            const time = await timeElement.evaluate(el => el.innerText);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
-        }
-
-        const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
-        const pointsElement = await page.waitForSelector(pointsSelector);
-        const points = await pointsElement.evaluate(el => el.innerText);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã claim point thành công\x1b[38;5;11m, ${GREEN}Số dư : ${points}`);
-
-    } catch (e) {
-        console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
-        await logFailedAccount(accountNumber, e.message);
-        return false;
+        await loadPage();
     } finally {
         await page.close();
     }
-    return true;
+
+    return success;
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
