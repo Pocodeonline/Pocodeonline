@@ -97,7 +97,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     const page = await browserContext.newPage();
     let success = false;
     const maxRetries = 10; // Số lần tối đa để thử lại
-    const retryDelay = 2000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
+    const retryDelay = 5000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
 
     const loadPage = async () => {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -206,10 +206,10 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 }
                 break; // Exit retry loop if successful
             } catch (error) {
-                console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
                 if (attempt < maxRetries) {
                     await page.waitForTimeout(retryDelay);
                 } else {
+                    console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
                     await logFailedAccount(accountNumber, error.message);
                 }
             }
