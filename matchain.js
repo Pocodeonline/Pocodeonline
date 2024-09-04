@@ -172,7 +172,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             let startminingButtonExists = false;
 
             try {
-                startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 8000 });
+                startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 10000 });
             } catch (err) {
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstart rồi hoặc không tồn tại.${COLORS.RESET}`);
                 return;
@@ -200,7 +200,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 await page.waitForSelector(clickx2Selector);
                 await page.click(clickx2Selector);
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                await page.waitForTimeout(2500);
+                await page.waitForTimeout(3000);
 
                 // Wait for final element and get its text
                 const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
@@ -280,7 +280,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 37000));
+            await new Promise(resolve => setTimeout(resolve, 38000));
         }
     }
 
