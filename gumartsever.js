@@ -94,7 +94,7 @@ async function printCustomLogo(blink = false) {
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
     const maxRetries = 10; // Số lần tối đa để thử lại
-    const retryDelay = 2000; // Thời gian chờ giữa các lần thử lại (2000ms = 2 giây)
+    const retryDelay = 5000; // Thời gian chờ giữa các lần thử lại (2000ms = 2 giây)
     let success = false;
 
     // Thực hiện các thử lại
