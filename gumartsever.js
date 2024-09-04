@@ -180,17 +180,17 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
+                '--disable-features=site-per-process', // Tắt một số tính năng có thể làm chậm
                 `--proxy-server=${proxy.server}`
             ]
         });
 
         const browserContext = await browser.newContext({
-            httpCredentials: {
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                storageState: null,
-                username: proxy.username,
-                password: proxy.password
-            }
+            // Đảm bảo chế độ ẩn danh và không lưu dữ liệu
+            ignoreHTTPSErrors: true,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            // Không lưu trữ thông tin từ các phiên trước
+            storageState: null,
         });
 
         let accountSuccess = false;
@@ -199,6 +199,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             if (accountSuccess) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
+            console.error('Error processing account:', error);
             totalFailureCount++;
         } finally {
             await browserContext.close();
