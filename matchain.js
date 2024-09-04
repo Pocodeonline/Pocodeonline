@@ -98,6 +98,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     let success = false;
     const maxRetries = 10; // Số lần tối đa để thử lại
     const retryDelay = 5000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
+    const maxUpdateAttempts = 3; // Số lần tối đa để thử cập nhật điểm
 
     const loadPage = async () => {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -125,7 +126,9 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 // Wait for random number to be different from 0.0000
                 const randomNumberSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_rewards_mining___u39zf > div > span:nth-child(1)";
                 let randomNumber;
-                do {
+                let updateAttempts = 0;
+
+                while (updateAttempts < maxUpdateAttempts) {
                     try {
                         randomNumber = await page.textContent(randomNumberSelector);
                     } catch (err) {
@@ -135,8 +138,16 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     if (randomNumber === '0.0000') {
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.CYAN}Chờ để số điểm cập nhật ở acc \x1b[38;5;11m${accountNumber}...${COLORS.RESET}`);
                         await page.waitForTimeout(5000);
+                        updateAttempts++;
+                    } else {
+                        break; // Exit loop if successful
                     }
-                } while (randomNumber === '0.0000');
+                }
+
+                if (randomNumber === '0.0000') {
+                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không cập nhật số điểm cho acc \x1b[38;5;11m${accountNumber} sau ${maxUpdateAttempts} lần thử.${COLORS.RESET}`);
+                    return; // Skip this account
+                }
 
                 const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
                 const currentBalance = await page.textContent(currentBalanceSelector);
