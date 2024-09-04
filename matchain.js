@@ -209,7 +209,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 }
                 break; // Exit retry loop if successful
             } catch (error) {
-                console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}: ${error.message}${COLORS.RESET}`);
+                console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
                 if (attempt < maxRetries) {
                     console.log(`${COLORS.YELLOW}Thử lại lần ${attempt + 1}/${maxRetries} sau ${retryDelay / 1000} giây...${COLORS.RESET}`);
                     await page.waitForTimeout(retryDelay);
@@ -247,7 +247,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         });
 
         const browserContext = await browser.newContext({
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.29 Safari/537.36',
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36 OPR/76.0.4017.177',
             httpCredentials: {
                 storageState: null,
                 username: proxy.username,
