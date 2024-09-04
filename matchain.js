@@ -165,7 +165,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.click(claimButtonSelector);
             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(3000);
 
             // Confirm startmining process
             const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
@@ -189,11 +189,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${COLORS.RESET}`);
 
                 // Click on specific element
-                const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div";
+                const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_top___biYaq > div:nth-child(1) > img";
                 await page.waitForSelector(clickItemSelector);
                 await page.click(clickItemSelector);
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                await page.waitForTimeout(2000);
+                await page.waitForTimeout(2200);
 
                 // Click on specific element
                 const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
