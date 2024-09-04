@@ -119,7 +119,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
                 // Check for page load
                 const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_balance___ClINX";
-                await page.waitForSelector(pageLoadedSelector, { timeout: 30000 });
+                await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
                 // Wait for random number to be different from 0.0000
