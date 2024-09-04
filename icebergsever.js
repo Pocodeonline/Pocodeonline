@@ -91,7 +91,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         await page.goto(accountUrl);
 
         const pageLoadedSelector = '#root > div > div.css-5bbctu > div > div.css-9c836o > img';
-        await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
+        await page.waitForSelector(pageLoadedSelector, { timeout: 16000 });
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Đã vào giao diện Iceberg Acc ${YELLOW}${accountNumber}`);
 
         const balanceSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
@@ -205,7 +205,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 16000));
+            await new Promise(resolve => setTimeout(resolve, 21000));
         }
     }
 
