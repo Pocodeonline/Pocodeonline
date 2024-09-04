@@ -96,8 +96,8 @@ async function printCustomLogo(LIGHT_BLUE = true) {
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
     let success = false;
-    const maxRetries = 5; // Số lần tối đa để thử lại
-    const retryDelay = 8000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
+    const maxRetries = 10; // Số lần tối đa để thử lại
+    const retryDelay = 2000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
 
     const loadPage = async () => {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -142,7 +142,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 const currentBalance = await page.textContent(currentBalanceSelector);
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Số điểm đã đào của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${randomNumber}${COLORS.RESET}`);
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance}${COLORS.RESET}`);
-                await page.waitForTimeout(2000);
 
                 // Check if claim button exists
                 const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
@@ -159,8 +158,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 if (claimButtonExists) {
                     await page.click(claimButtonSelector);
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
-                    await page.waitForTimeout(3000);
 
                     // Confirm startmining process
                     const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
@@ -188,14 +185,14 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                         await page.waitForSelector(clickItemSelector);
                         await page.click(clickItemSelector);
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        await page.waitForTimeout(2200);
+                        await page.waitForTimeout(1500);
 
                         // Click on specific element
                         const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
                         await page.waitForSelector(clickx2Selector);
                         await page.click(clickx2Selector);
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        await page.waitForTimeout(3000);
+                        await page.waitForTimeout(2500);
 
                         // Wait for final element and get its text
                         const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
@@ -211,7 +208,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             } catch (error) {
                 console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
                 if (attempt < maxRetries) {
-                    console.log(`${COLORS.YELLOW}Thử lại lần ${attempt + 1}/${maxRetries} sau ${retryDelay / 1000} giây...${COLORS.RESET}`);
+                    console.log(${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;9mĐang làm lại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mlần \x1b[38;5;11m${attempt + 1}  ${COLORS.RESET}`);
                     await page.waitForTimeout(retryDelay);
                 } else {
                     await logFailedAccount(accountNumber, error.message);
