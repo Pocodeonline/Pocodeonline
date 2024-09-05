@@ -100,7 +100,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const skipButton = await page.$(skipButtonSelector);
             if (skipButton) {
                 await skipButton.click();
-                console.log(`\x1b[34mskip acc \x1b[33m${accountNumber}`);
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[34mskip acc \x1b[33m${accountNumber}`);
             } else {
                 console.log(`\x1b[31mKhông thấy skip \x1b[33m${accountNumber}`);
             }
