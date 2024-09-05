@@ -91,18 +91,18 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         await page.goto(accountUrl);
 
         const pageLoadedSelector = '#root > div > div.css-5bbctu > div > div.css-9c836o > img';
-        await page.waitForSelector(pageLoadedSelector, { timeout: 16000 });
+        await page.waitForSelector(pageLoadedSelector, { timeout: 12000 });
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Đã vào giao diện Iceberg Acc ${YELLOW}${accountNumber}`);
 
         const balanceSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
-        const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
+        const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 3000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mSố dư hiện tại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12m là \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
 
         const claimButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > span > svg';
 
         try {
-            await page.waitForSelector(claimButtonSelector, { timeout: 5000 });
+            await page.waitForSelector(claimButtonSelector, { timeout: 2000 });
             const claimButton = await page.$(claimButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -116,7 +116,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const startminingButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';      
 
         try {
-            await page.waitForSelector(startminingButtonSelector, { timeout: 5000 });
+            await page.waitForSelector(startminingButtonSelector, { timeout: 2500 });
             const claimButton = await page.$(startminingButtonSelector);
             if (claimButton) {
                 await claimButton.click();
