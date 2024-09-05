@@ -114,8 +114,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[35m là \x1b[33m: \x1b[33m${balanceText}`);
         await page.waitForTimeout(1500);
 
-        const claimButtonSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.after\\:bg-red.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.text-gray-3.relative.flex.w-14.flex-col.items-center.justify-center.gap-2.text-xs.font-semibold > svg > path:nth-child(1)';
-        await page.waitForSelector(claimButtonSelector, { timeout: 3000 });
+        const claimButtonSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.relative.flex.w-auto.min-w-\\[54px\\].flex-col.items-center.justify-center.gap-2.text-xs.font-semibold.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.after\\:bg-red.text-gray-3';
+        await page.waitForSelector(claimButtonSelector, { timeout: 4000 });
         await page.click(claimButtonSelector);
         await page.waitForTimeout(2500);
 
@@ -131,8 +131,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
         await page.waitForTimeout(1500);
 
-        const nextSVGSelector = '#root > div > div.relative.z-10.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1) > svg > g > path:nth-child(2)';
-        await page.waitForSelector(nextSVGSelector, { timeout: 2000 });
+        const nextSVGSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
+        await page.waitForSelector(nextSVGSelector, { timeout: 4000 });
         await page.click(nextSVGSelector);
 
         await page.waitForTimeout(2000);
