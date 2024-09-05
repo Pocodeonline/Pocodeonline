@@ -112,7 +112,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             }
         } catch (err) {
         }
-        await page.waitForTimeout(2500);
+
         const startminingButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';      
 
         try {
@@ -127,7 +127,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             }
         } catch (err) {
         }
-        await page.waitForTimeout(3500);
+        await page.waitForTimeout(1500);
         const pointsSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText);
@@ -160,13 +160,13 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
+                '--disable-cpu',
                 `--proxy-server=${proxy.server}`
             ]
         });
 
         const browserContext = await browser.newContext({
             httpCredentials: {
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
                 storageState: null,
                 username: proxy.username,
                 password: proxy.password
