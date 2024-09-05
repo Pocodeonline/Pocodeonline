@@ -137,7 +137,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     }
                     if (randomNumber === '0.0000') {
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.CYAN}Chờ để số điểm cập nhật ở acc \x1b[38;5;11m${accountNumber}...${COLORS.RESET}`);
-                        await page.waitForTimeout(5000);
+                        await page.waitForTimeout(6000);
                         updateAttempts++;
                     } else {
                         break; // Exit loop if successful
@@ -148,12 +148,12 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không cập nhật số điểm cho acc \x1b[38;5;11m${accountNumber} sau ${maxUpdateAttempts} lần thử.${COLORS.RESET}`);
                     return; // Skip this account
                 }
-
+                await page.waitForTimeout(1500);
                 const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
                 const currentBalance = await page.textContent(currentBalanceSelector);
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Số điểm đã đào của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${randomNumber}${COLORS.RESET}`);
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance}${COLORS.RESET}`);
-
+                await page.waitForTimeout(1500);
                 // Check if claim button exists
                 const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
                 let claimButtonExists = false;
@@ -164,12 +164,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi hoặc không tồn tại.${COLORS.RESET}`);
                     return;
                 }
-
                 // Click claim button
                 if (claimButtonExists) {
                     await page.click(claimButtonSelector);
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
+                    await page.waitForTimeout(1500);
                     // Confirm startmining process
                     const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
                     let startminingButtonExists = false;
@@ -196,13 +195,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                         await page.waitForSelector(clickItemSelector, { timeout: 4500 });
                         await page.click(clickItemSelector);
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
+                        await page.waitForTimeout(1500);
                         // Click on specific element
                         const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
                         await page.waitForSelector(clickx2Selector, { timeout: 4500 });
                         await page.click(clickx2Selector);
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        await page.waitForTimeout(4000);
+                        await page.waitForTimeout(1500);
 
                         // Wait for final element and get its text
                         const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
