@@ -229,7 +229,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 18000));
+            await new Promise(resolve => setTimeout(resolve, 14000));
         }
     }
 
@@ -329,7 +329,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
