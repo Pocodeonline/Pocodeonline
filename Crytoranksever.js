@@ -332,7 +332,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 6);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 8);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
