@@ -109,12 +109,12 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
             await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
-            await page.waitForTimeout(1000);
+
             // Tìm và nhấn nút claim
             const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
             await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
             await page.click(claimButtonSelector);
-            await page.waitForTimeout(1000);
+
             // Kiểm tra xem phần tử img có xuất hiện hay không
             const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
             let imgElementFound = true;
@@ -122,7 +122,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             try {
                 await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
                 await page.click(imgSelector);
-                await page.waitForTimeout(1000);
+                await page.waitForTimeout(600);
                 imgElementFound = false;
             } catch (error) {
                 imgElementFound = true;
