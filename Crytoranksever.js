@@ -162,6 +162,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m startmining rồi...`);
         }
 
+        const pointsSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
+        const pointsElement = await page.waitForSelector(pointsSelector, { timeout: 5000 } );
+        const points = await pointsElement.evaluate(el => el.innerText);
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}vui lòng chờ thời gian còn lại acc\x1b[38;5;11m: ${points} ${LIGHT_BLUE}để làm tiếp...`);
+     
 
     } catch (e) {
         console.log(`\x1b[31mTài khoản số \x1b[33m${accountNumber} \x1b[31m gặp lỗi`);
