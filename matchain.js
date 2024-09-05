@@ -193,17 +193,16 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
                         // Click on specific element
                         const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_top___biYaq > div:nth-child(1) > img";
-                        await page.waitForSelector(clickItemSelector);
+                        await page.waitForSelector(clickItemSelector, { timeout: 4500 });
                         await page.click(clickItemSelector);
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        await page.waitForTimeout(1500);
 
                         // Click on specific element
                         const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
-                        await page.waitForSelector(clickx2Selector);
+                        await page.waitForSelector(clickx2Selector, { timeout: 4500 });
                         await page.click(clickx2Selector);
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        await page.waitForTimeout(2500);
+                        await page.waitForTimeout(4000);
 
                         // Wait for final element and get its text
                         const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
@@ -249,6 +248,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
+                '--disable-cpu',
                 `--proxy-server=${proxy.server}`
             ]
         });
