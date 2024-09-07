@@ -390,7 +390,7 @@ async function countdownTimer(seconds) {
 
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${COLORS.SILVER}Chạy lần ${COLORS.GREEN}${i + 1}${COLORS.RESET}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 15);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 20);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
