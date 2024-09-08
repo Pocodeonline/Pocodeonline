@@ -187,7 +187,11 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 '--disable-gpu',
                 '--disable-cpu',
                 `--proxy-server=${proxy.server}`
-            ]
+            ],
+            defaultViewport: {
+                width: 800,
+                height: 600
+            }
         });
 
         const browserContext = await browser.newContext({
