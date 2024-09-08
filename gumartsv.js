@@ -300,45 +300,35 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
-            const restTime = parseInt(await new Promise(resolve => {
+            // Thêm đoạn mã yêu cầu số lượng trong hàm runPlaywrightInstances
+            const instancesCount = parseInt(await new Promise(resolve => {
                 const rl = readline.createInterface({
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}(${GREEN}Khuyên ${YELLOW}9000 ${GREEN}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
             }), 10);
 
-            const repeatCount = parseInt(await new Promise(resolve => {
-                const rl = readline.createInterface({
-                    input: process.stdin,
-                    output: process.stdout
-                });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}(${GREEN}hoặc ${YELLOW}0 ${GREEN}để chạy một lần): `, (answer) => {
-                    rl.close();
-                    resolve(answer.trim());
-                });
-            }), 10);
-
-            if (isNaN(repeatCount) || repeatCount < 0) {
-                console.log(`${RED}Nhập không hợp lệ!`);
+            if (isNaN(instancesCount) || instancesCount <= 0) {
+                console.log(`${RED}Nhập không hợp lệ!${RESET}`);
                 continue;
             }
 
             for (let i = 0; i <= repeatCount; i++) {
-                console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 15);
+                console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}${RESET}`);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, instancesCount);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
                 }
             }
 
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các vòng lặp.`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.${RESET}`);
         }
     } catch (e) {
-        console.log(`Bảo trì do lỗi...}`);
+        console.log(`${RED}Lỗi${RESET}`);
     }
 })();
