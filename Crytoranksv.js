@@ -112,18 +112,18 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[35m là \x1b[33m: \x1b[33m${balanceText}`);
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(1000);
 
         const claimButtonSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.relative.flex.w-auto.min-w-\\[54px\\].flex-col.items-center.justify-center.gap-2.text-xs.font-semibold.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.after\\:bg-red.text-gray-3';
         await page.waitForSelector(claimButtonSelector, { timeout: 4000 });
         await page.click(claimButtonSelector);
-        await page.waitForTimeout(2500);
+        await page.waitForTimeout(2000);
 
         const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
         try {
-            await page.waitForSelector(successButtonSelector, { timeout: 3000 });
+            await page.waitForSelector(successButtonSelector, { timeout: 2500 });
             await page.click(successButtonSelector);
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(2000);
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mĐiểm danh Acc \x1b[33m${accountNumber} \x1b[35m hôm nay thành công`);
         } catch (error) {
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m hôm nay điểm danh rồi`);
