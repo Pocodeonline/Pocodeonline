@@ -148,15 +148,15 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
         }
 
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(3000);
 
         const imgSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
         let imgElementFound = true;
 
         try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 4000 });
             await page.click(imgSelector);
-            await page.waitForTimeout(600);
+            await page.waitForTimeout(1500);
             imgElementFound = false;
         } catch (error) {
             imgElementFound = true;
@@ -244,7 +244,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 18000));
+            await new Promise(resolve => setTimeout(resolve, 25000));
         }
     }
 
