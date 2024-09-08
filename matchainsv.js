@@ -163,7 +163,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     claimButtonExists = await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 8000 });
                 } catch (err) {
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi hoặc không tồn tại.${COLORS.RESET}`);
-                    return;
                 }
                 // Click claim button
                 if (claimButtonExists) {
