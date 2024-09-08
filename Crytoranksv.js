@@ -136,30 +136,38 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         await page.click(nextSVGSelector);
 
         await page.waitForTimeout(2000);
-        const claimpointButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
-        const claimButton = await page.$(claimpointButtonSelector);
-        if (claimButton) {
-            try {
-                await page.waitForSelector(claimpointButtonSelector, { timeout: 3000 });
-                await claimButton.click();
-                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m claim thành công`);
-            } catch (error) {
-                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[31m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
-            }
-        } else {
-            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[31m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
-        }
-
-        const startminingButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
+        const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
         try {
-            await page.waitForSelector(startminingButtonSelector, { timeout: 4500 });
-            const startButton = await page.$(startminingButtonSelector);
-            if (startButton) {
-                await startButton.click();
-                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m Đào lại thành công`);
+            await page.waitForSelector(claimpointsButtonSelector, { timeout: 4500 });
+            const claimButton = await page.$(claimpointsButtonSelector);
+            if (claimButton) {
+                await claimButton.click();
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m claim thành công `);
             }
         } catch (error) {
-            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m startmining rồi...`);
+            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
+        }
+
+        await page.waitForTimeout(2000);
+
+        const imgSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
+        let imgElementFound = true;
+
+        try {
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+            await page.click(imgSelector);
+            await page.waitForTimeout(600);
+            imgElementFound = false;
+        } catch (error) {
+            imgElementFound = true;
+        }
+
+        // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
+        if (!imgElementFound) {
+            const timeSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
+            const timeElement = await page.waitForSelector(timeSelector);
+            const time = await timeElement.evaluate(el => el.innerText);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
      
     } catch (e) {
