@@ -388,9 +388,26 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
+            // Thêm đoạn mã yêu cầu số lượng trong hàm runPlaywrightInstances
+            const instancesCount = parseInt(await new Promise(resolve => {
+                const rl = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+                rl.question(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy (${COLORS.GREEN}Ai máy yếu khuyên  ${COLORS.YELLOW}6 ${COLORS.GREEN}nha${COLORS.YELLOW}): `, (answer) => {
+                    rl.close();
+                    resolve(answer.trim());
+                });
+            }), 10);
+
+            if (isNaN(instancesCount) || instancesCount <= 0) {
+                console.log(`${COLORS.RED}Nhập không hợp lệ!${COLORS.RESET}`);
+                continue;
+            }
+
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${COLORS.SILVER}Chạy lần ${COLORS.GREEN}${i + 1}${COLORS.RESET}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, 20);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, instancesCount);
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
