@@ -113,6 +113,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (err) {
         }
 
+        await page.waitForTimeout(2000);
         const startminingButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';      
 
         try {
@@ -127,7 +128,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             }
         } catch (err) {
         }
-        await page.waitForTimeout(1500);
+        await page.waitForTimeout(2000);
         const pointsSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText);
