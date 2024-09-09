@@ -148,6 +148,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             if (attempt < maxRetries) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
+                await page.reload();
                 await page.waitForTimeout(retryDelay);
             } else {
                 // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
