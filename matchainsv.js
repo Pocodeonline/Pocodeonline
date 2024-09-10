@@ -318,7 +318,7 @@ async function countdownTimer(seconds) {
 
 (async () => {
     await printCustomLogo(true);
-    const filePath = 'gumart.txt';
+    const filePath = 'matchain.txt';
 
     try {
         const proxies = await readProxies(PROXIES_FILE_PATH);
