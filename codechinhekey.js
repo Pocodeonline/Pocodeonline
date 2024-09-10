@@ -1,18 +1,17 @@
 const https = require('https');
 const fs = require('fs');
 const readline = require('readline');
-const path = require('path');
 const os = require('os');
 const axios = require('axios');
 
 // URL chứa mã nguồn Node.js và danh sách Key
-const codeUrl = 'https://raw.githubusercontent.com/Pocodeonline/Pocodeonline/main/gumartsv.js';
-const keyFilePath = 'gumartkey.txt'; // Tên tệp tin trên GitHub để lấy danh sách key
+const codeUrl = 'https://raw.githubusercontent.com/Pocodeonline/Pocodeonline/main/matchainsv.js';
+const keyFilePath = 'matchainkeyy.txt'; // Tên tệp tin lưu key
 
 // Thông tin GitHub
 const repoOwner = 'Pocodeonline';
 const repoName = 'Pocodeonline';
-const filePath = 'gumartkey.txt'; // Tên tệp tin trong repository
+const filePath = 'matchainkeyy.txt'; // Tên tệp tin trong repository
 const githubToken = ''; // Thay thế bằng token GitHub cá nhân của bạn
 
 // Tạo readline interface để nhập key từ người dùng
@@ -54,21 +53,24 @@ async function checkAndUpdateKey(inputKey) {
         const deviceName = getDeviceName();
 
         // Kiểm tra Key
-        const keyEntry = keys.find(line => line.startsWith(inputKey));
-        if (keyEntry) {
-            // Kiểm tra xem Key đã được sử dụng chưa
+        const keyEntryIndex = keys.findIndex(line => line.startsWith(inputKey));
+        if (keyEntryIndex !== -1) {
+            const keyEntry = keys[keyEntryIndex];
             if (keyEntry.includes(`IP: ${ip}`) && keyEntry.includes(`Device: ${deviceName}`)) {
-                console.log('\x1b[31mKey đã được sử dụng từ IP và Device này\x1b[0m');
-                return false;
-            } else if (keyEntry.includes(`IP:`) || keyEntry.includes(`Device:`)) {
-                console.log('\x1b[31mKey đã được sử dụng, vui lòng liên hệ tele : @tphuc_0 mua key nhé \x1b[0m');
+                console.log('\x1b[32mKey đã được sử dụng từ IP và Device này\x1b[0m');
+                return true; // Key đã được sử dụng từ IP và Device này
+            } else if (keyEntry.includes('IP:') || keyEntry.includes('Device:')) {
+                console.log('\x1b[31mKey đã được sử dụng, vui lòng nhập Key khác\x1b[0m');
                 return false;
             }
+        } else {
+            console.log('\x1b[31mKey không tồn tại trong danh sách\x1b[0m');
+            return false;
         }
 
         // Cập nhật Key với thông tin IP và thiết bị
-        const updatedKeysContent = keys.map(line => {
-            if (line.startsWith(inputKey)) {
+        const updatedKeysContent = keys.map((line, index) => {
+            if (index === keyEntryIndex) {
                 return `${line} - IP: ${ip}, Device: ${deviceName}`;
             }
             return line;
@@ -79,11 +81,11 @@ async function checkAndUpdateKey(inputKey) {
 
         // Lưu Key vào tệp tin
         fs.writeFileSync(keyFilePath, inputKey);
-        console.log('\x1b[32mNhập key thành công...\x1b[0m');
+        console.log('\x1b[32mNhập Key thành công...\x1b[0m');
 
         return true;
     } catch (error) {
-        console.error('\x1b[31mLỗi khi xử lý Key...\x1b[0m');
+        console.error('\x1b[31mLỗi khi xử lý Key...\x1b[0m', error.message);
         return false;
     }
 }
@@ -130,9 +132,9 @@ async function updateUsedKeysFile(newContent) {
                 'Authorization': `token ${githubToken}`
             }
         });
-        
+
     } catch (error) {
-        console.error('Lỗi khi cập nhật tệp tin trên GitHub');
+        console.error('\x1b[31mLỗi khi cập nhật tệp tin trên GitHub\x1b[0m', error.message);
     }
 }
 
@@ -157,7 +159,7 @@ async function checkKeySaved() {
         const regex = new RegExp(`^${key} - IP: ${ip}, Device: ${deviceName}`, 'm');
         return regex.test(fileContent);
     } catch (error) {
-        console.error('\x1b[31mLỗi khi kiểm tra Key...\x1b[0m');
+        console.error('\x1b[31mLỗi khi kiểm tra Key...\x1b[0m', error.message);
         return false;
     }
 }
@@ -166,7 +168,7 @@ async function checkKeySaved() {
 function runCodeFromUrl(url) {
     https.get(url, (res) => {
         if (res.statusCode !== 200) {
-            return;
+            return console.error('\x1b[31mLỗi khi tải mã nguồn\x1b[0m');
         }
 
         let data = '';
@@ -176,11 +178,11 @@ function runCodeFromUrl(url) {
                 console.log('\x1b[34mĐang vào tool...\x1b[0m');
                 eval(data);
             } catch (err) {
-                console.error('\x1b[31mĐang bảo trì...\x1b[0m');
+                console.error('\x1b[31mLỗi khi thực thi mã nguồn\x1b[0m', err.message);
             }
         });
     }).on('error', (err) => {
-        console.error('\x1b[31mLỗi kết nối mạng\x1b[0m');
+        console.error('\x1b[31mLỗi kết nối mạng\x1b[0m', err.message);
     });
 }
 
