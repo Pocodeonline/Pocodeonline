@@ -113,14 +113,15 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (err) {
         }
 
+        await page.waitForTimeout(2000);
         // Kiểm tra xem phần tử img có xuất hiện hay không
         const imgSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';
         let imgElementFound = true;
 
         try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 5000 });
             await page.click(imgSelector);
-            await page.waitForTimeout(600);
+            await page.waitForTimeout(2000);
             imgElementFound = false;
         } catch (error) {
             imgElementFound = true;
@@ -133,6 +134,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const time = await timeElement.evaluate(el => el.innerText);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Startmining của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
+
         await page.waitForTimeout(2000);
         const pointsSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const pointsElement = await page.waitForSelector(pointsSelector);
@@ -209,7 +211,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 18000));
+            await new Promise(resolve => setTimeout(resolve, 21000));
         }
     }
 
