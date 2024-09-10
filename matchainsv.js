@@ -126,30 +126,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
                 // Wait for random number to be different from 0.0000
                 const randomNumberSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_rewards_mining___u39zf > div > span:nth-child(1)";
-                let randomNumber;
-                let updateAttempts = 0;
-
-                while (updateAttempts < maxUpdateAttempts) {
-                    try {
-                        randomNumber = await page.textContent(randomNumberSelector);
-                    } catch (err) {
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không thể tìm thấy số điểm đã đào ở acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        randomNumber = '0.0000'; // Ensure the loop continues if the number is not found
-                    }
-                    if (randomNumber === '0.0000') {
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.CYAN}Chờ để số điểm cập nhật ở acc \x1b[38;5;11m${accountNumber}...${COLORS.RESET}`);
-                        await page.waitForTimeout(8000);
-                        updateAttempts++;
-                        await page.reload();
-                    } else {
-                        break; // Exit loop if successful
-                    }
-                }
-
-                if (randomNumber === '0.0000') {
-                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không cập nhật số điểm cho acc \x1b[38;5;11m${accountNumber} sau ${maxUpdateAttempts} lần thử.${COLORS.RESET}`);
-                    return; // Skip this account
-                }
                 await page.waitForTimeout(1500);
                 const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
                 const currentBalance = await page.textContent(currentBalanceSelector);
