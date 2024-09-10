@@ -152,9 +152,10 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số điểm đã đào của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${randomNumber}${RESET}`);
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance}${RESET}`);
                 await page.waitForTimeout(1500);
-                // Check if claim button exists
+
+                // Check if claim button 
                 const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
-                let claimButtonExists = false;
+                let claimButtonExists = true;
 
                 try {
                     claimButtonExists = await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 8000 });
@@ -167,6 +168,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     await page.click(claimButtonSelector);
                     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${RESET}`);
                     await page.waitForTimeout(1500);
+
                     // Confirm startmining process
                     const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
                     let startminingButtonExists = false;
