@@ -113,30 +113,31 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (err) {
         }
 
-        await page.waitForTimeout(2000);
-        const startminingButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';      
+        // Kiểm tra xem phần tử img có xuất hiện hay không
+        const imgSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';
+        let imgElementFound = true;
 
         try {
-            await page.waitForSelector(startminingButtonSelector, { timeout: 2500 });
-            const claimButton = await page.$(startminingButtonSelector);
-            if (claimButton) {
-                await claimButton.click();
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mĐã startmining acc \x1b[38;5;11m${accountNumber}`);
-            } else {
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12m Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12mstartmining rồi...`);
+            await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+            await page.click(imgSelector);
+            await page.waitForTimeout(600);
+            imgElementFound = false;
+        } catch (error) {
+            imgElementFound = true;
+        }
 
-            }
-        } catch (err) {
+            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
+        if (!imgElementFound) {
+            const timeSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
+            const timeElement = await page.waitForSelector(timeSelector);
+            const time = await timeElement.evaluate(el => el.innerText);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Startmining của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
         await page.waitForTimeout(2000);
         const pointsSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư khi làm xong acc\x1b[38;5;11m: ${points}`);
-        const points2Selector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
-        const points2Element = await page.waitForSelector(points2Selector, { timeout: 5000 });
-        const points2 = await points2Element.evaluate(el => el.innerText);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}thời gian còn lại acc acc\x1b[38;5;11m: ${points2}`);
 
     } catch (e) {
         console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
