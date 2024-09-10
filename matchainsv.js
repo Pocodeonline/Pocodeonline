@@ -159,7 +159,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
                 try {
                     // Wait for the claim button up to 20 seconds
-                    await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 20000 });
+                    await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 7000 });
                     claimButtonExists = true;
                 } catch (err) {
                     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi hoặc không tồn tại.${RESET}`);
@@ -177,7 +177,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     let startminingButtonExists = false;
 
                     try {
-                        startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 10000 });
+                        startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 7000 });
                     } catch (err) {
                         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstart rồi hoặc không tồn tại.${RESET}`);
                         continue;
