@@ -138,9 +138,9 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     }
                     if (randomNumber === '0.0000') {
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.CYAN}Chờ để số điểm cập nhật ở acc \x1b[38;5;11m${accountNumber}...${COLORS.RESET}`);
-                        await page.reload();
-                        await page.waitForTimeout(4000);
+                        await page.waitForTimeout(8000);
                         updateAttempts++;
+                        await page.reload();
                     } else {
                         break; // Exit loop if successful
                     }
