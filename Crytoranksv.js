@@ -87,7 +87,7 @@ async function printCustomLogo(LIGHT_BLUE = true) {
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
     const maxRetries = 3; // Số lần tối đa để thử lại
-    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (2000ms = 2 giây)
+    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (3000ms = 3 giây)
     let success = false;
 
     // Thực hiện các thử lại
@@ -109,9 +109,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     console.log(`\x1b[31mKhông thấy skip \x1b[33m${accountNumber}`);
                 }
             } catch (err) {
-                console.error(`\x1b[31mError while waiting for skip button: ${err.message}`);
+                // Có thể thêm log lỗi nếu cần
             }
-    
     
             const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
             const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
@@ -138,7 +137,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.waitForSelector(nextSVGSelector, { timeout: 5000 });
             await page.click(nextSVGSelector);
     
-           await page.waitForTimeout(2000);
+            await page.waitForTimeout(2000);
             const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
             try {
                 await page.waitForSelector(claimpointsButtonSelector, { timeout: 5000 });
@@ -180,6 +179,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             if (attempt < maxRetries) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
                 await page.waitForTimeout(retryDelay);
+                await page.reload(); // Tải lại trang nếu gặp lỗi
             } else {
                 // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
                 console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
