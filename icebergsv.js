@@ -90,7 +90,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
         await page.goto(accountUrl);
 
-        const pageLoadedSelector = '#root > div > div.css-5bbctu > div > div.css-9c836o > img';
+        const pageLoadedSelector = '#root > div > div.css-g6euby > div > a.navlink.active > button';
         await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Đã vào giao diện Iceberg Acc ${YELLOW}${accountNumber}`);
 
