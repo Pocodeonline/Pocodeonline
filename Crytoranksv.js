@@ -86,97 +86,116 @@ async function printCustomLogo(LIGHT_BLUE = true) {
 
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
+    const maxRetries = 3; // Số lần tối đa để thử lại
+    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (2000ms = 2 giây)
     let success = false;
 
-    try {
-        console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[35m🐮 Đang chạy tài khoản \x1b[33m${accountNumber} \x1b[31mIP \x1b[33m: \x1b[35m${proxy.server}`);
-
-        await page.goto(accountUrl);
-
-        const skipButtonSelector = '#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full';
-        
+    // Thực hiện các thử lại
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            await page.waitForSelector(skipButtonSelector, { timeout: 13000 });
-            const skipButton = await page.$(skipButtonSelector);
-            if (skipButton) {
-                await skipButton.click();
-                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[34mskip acc \x1b[33m${accountNumber}`);
+            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[35m🐮 Đang chạy tài khoản \x1b[33m${accountNumber} \x1b[31mIP \x1b[33m: \x1b[35m${proxy.server}`);
+
+            await page.goto(accountUrl);
+    
+            const skipButtonSelector = '#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full';
+            
+            try {
+                await page.waitForSelector(skipButtonSelector, { timeout: 13000 });
+                const skipButton = await page.$(skipButtonSelector);
+                if (skipButton) {
+                    await skipButton.click();
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[34mskip acc \x1b[33m${accountNumber}`);
+                } else {
+                    console.log(`\x1b[31mKhông thấy skip \x1b[33m${accountNumber}`);
+                }
+            } catch (err) {
+                console.error(`\x1b[31mError while waiting for skip button: ${err.message}`);
+            }
+    
+    
+            const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
+            const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
+            const balanceText = await balanceElement.evaluate(el => el.innerText);
+            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[35m là \x1b[33m: \x1b[33m${balanceText}`);
+            await page.waitForTimeout(1000);
+    
+            const claimButtonSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.relative.flex.w-auto.min-w-\\[54px\\].flex-col.items-center.justify-center.gap-2.text-xs.font-semibold.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.after\\:bg-red.text-gray-3';
+            await page.waitForSelector(claimButtonSelector, { timeout: 5000 });
+            await page.click(claimButtonSelector);
+            await page.waitForTimeout(2000);
+    
+            const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
+            try {
+                await page.waitForSelector(successButtonSelector, { timeout: 3000 });
+                await page.click(successButtonSelector);
+                await page.waitForTimeout(2000);
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mĐiểm danh Acc \x1b[33m${accountNumber} \x1b[35m hôm nay thành công`);
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m hôm nay điểm danh rồi`);
+            }
+    
+            const nextSVGSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
+            await page.waitForSelector(nextSVGSelector, { timeout: 5000 });
+            await page.click(nextSVGSelector);
+    
+           await page.waitForTimeout(2000);
+            const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
+            try {
+                await page.waitForSelector(claimpointsButtonSelector, { timeout: 5000 });
+                const claimButton = await page.$(claimpointsButtonSelector);
+                if (claimButton) {
+                    await claimButton.click();
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m claim thành công `);
+                }
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
+            }
+    
+            await page.waitForTimeout(2000);
+    
+            const imgSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
+            let imgElementFound = true;
+    
+            try {
+                await page.waitForSelector(imgSelector, { visible: true, timeout: 4000 });
+                await page.click(imgSelector);
+                await page.waitForTimeout(2000);
+                imgElementFound = false;
+            } catch (error) {
+                imgElementFound = true;
+            }
+    
+            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
+            if (!imgElementFound) {
+                const timeSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
+                const timeElement = await page.waitForSelector(timeSelector, { timeout: 6000 });
+                const time = await timeElement.evaluate(el => el.innerText);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Startmining của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
+            }
+            
+            // Đánh dấu thành công và thoát khỏi vòng lặp
+            success = true;
+            break;
+        } catch (error) {
+            if (attempt < maxRetries) {
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
+                await page.waitForTimeout(retryDelay);
             } else {
-                console.log(`\x1b[31mKhông thấy skip \x1b[33m${accountNumber}`);
+                // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
+                console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
+                await logFailedAccount(accountNumber, error.message);
             }
-        } catch (err) {
-            console.error(`\x1b[31mError while waiting for skip button: ${err.message}`);
         }
-
-
-        const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
-        const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
-        const balanceText = await balanceElement.evaluate(el => el.innerText);
-        console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[35m là \x1b[33m: \x1b[33m${balanceText}`);
-        await page.waitForTimeout(1000);
-
-        const claimButtonSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.relative.flex.w-auto.min-w-\\[54px\\].flex-col.items-center.justify-center.gap-2.text-xs.font-semibold.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.after\\:bg-red.text-gray-3';
-        await page.waitForSelector(claimButtonSelector, { timeout: 5000 });
-        await page.click(claimButtonSelector);
-        await page.waitForTimeout(2000);
-
-        const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
-        try {
-            await page.waitForSelector(successButtonSelector, { timeout: 3000 });
-            await page.click(successButtonSelector);
-            await page.waitForTimeout(2000);
-            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mĐiểm danh Acc \x1b[33m${accountNumber} \x1b[35m hôm nay thành công`);
-        } catch (error) {
-            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m hôm nay điểm danh rồi`);
-        }
-
-        const nextSVGSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
-        await page.waitForSelector(nextSVGSelector, { timeout: 5000 });
-        await page.click(nextSVGSelector);
-
-       await page.waitForTimeout(1500);
-        const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
-        try {
-            await page.waitForSelector(claimpointsButtonSelector, { timeout: 5000 });
-            const claimButton = await page.$(claimpointsButtonSelector);
-            if (claimButton) {
-                await claimButton.click();
-                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m claim thành công `);
-            }
-        } catch (error) {
-            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
-        }
-
-        await page.waitForTimeout(1500);
-
-        const imgSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
-        let imgElementFound = true;
-
-        try {
-            await page.waitForSelector(imgSelector, { visible: true, timeout: 4000 });
-            await page.click(imgSelector);
-            await page.waitForTimeout(2000);
-            imgElementFound = false;
-        } catch (error) {
-            imgElementFound = true;
-        }
-
-        // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
-        if (!imgElementFound) {
-            const timeSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
-            const timeElement = await page.waitForSelector(timeSelector, { timeout: 6000 });
-            const time = await timeElement.evaluate(el => el.innerText);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
-        }
-     
-    } catch (e) {
-        console.log(`\x1b[31mTài khoản số \x1b[33m${accountNumber} \x1b[31m gặp lỗi`);
-        await logFailedAccount(accountNumber, e.message);
-        return false;
-    } finally {
-        await page.close();
     }
-    return true;
+
+    try {
+        // Đảm bảo đóng trang sau khi hoàn thành
+        await page.close();
+    } catch (closeError) {
+        console.error(`${RED}Không thể đóng trang: ${closeError.message}`);
+    }
+
+    return success;
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
