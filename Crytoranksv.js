@@ -108,7 +108,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.error(`\x1b[31mError while waiting for skip button: ${err.message}`);
         }
 
-        await page.waitForTimeout(2000);
+
         const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
@@ -116,13 +116,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         await page.waitForTimeout(1000);
 
         const claimButtonSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.relative.flex.w-auto.min-w-\\[54px\\].flex-col.items-center.justify-center.gap-2.text-xs.font-semibold.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.after\\:bg-red.text-gray-3';
-        await page.waitForSelector(claimButtonSelector, { timeout: 4000 });
+        await page.waitForSelector(claimButtonSelector, { timeout: 5000 });
         await page.click(claimButtonSelector);
         await page.waitForTimeout(2000);
 
         const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
         try {
-            await page.waitForSelector(successButtonSelector, { timeout: 2500 });
+            await page.waitForSelector(successButtonSelector, { timeout: 3000 });
             await page.click(successButtonSelector);
             await page.waitForTimeout(2000);
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mĐiểm danh Acc \x1b[33m${accountNumber} \x1b[35m hôm nay thành công`);
@@ -130,16 +130,14 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m hôm nay điểm danh rồi`);
         }
 
-        await page.waitForTimeout(1500);
-
         const nextSVGSelector = '#root > div > div.fixed.z-20.left-0.right-0.bottom-0.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
-        await page.waitForSelector(nextSVGSelector, { timeout: 4000 });
+        await page.waitForSelector(nextSVGSelector, { timeout: 5000 });
         await page.click(nextSVGSelector);
 
-        await page.waitForTimeout(2000);
+       await page.waitForTimeout(1500);
         const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
         try {
-            await page.waitForSelector(claimpointsButtonSelector, { timeout: 4500 });
+            await page.waitForSelector(claimpointsButtonSelector, { timeout: 5000 });
             const claimButton = await page.$(claimpointsButtonSelector);
             if (claimButton) {
                 await claimButton.click();
@@ -149,7 +147,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi...`);
         }
 
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(1500);
 
         const imgSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
         let imgElementFound = true;
@@ -157,7 +155,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         try {
             await page.waitForSelector(imgSelector, { visible: true, timeout: 4000 });
             await page.click(imgSelector);
-            await page.waitForTimeout(1500);
+            await page.waitForTimeout(2000);
             imgElementFound = false;
         } catch (error) {
             imgElementFound = true;
@@ -166,7 +164,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
         if (!imgElementFound) {
             const timeSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > div > div';
-            const timeElement = await page.waitForSelector(timeSelector);
+            const timeElement = await page.waitForSelector(timeSelector, { timeout: 6000 });
             const time = await timeElement.evaluate(el => el.innerText);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
@@ -241,7 +239,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 25000));
+            await new Promise(resolve => setTimeout(resolve, 23000));
         }
     }
 
