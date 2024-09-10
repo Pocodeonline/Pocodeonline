@@ -1,3 +1,41 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
@@ -110,7 +148,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 // Handle optional skip button
                 const skipButtonSelector = "body > div:nth-child(6) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.btn_box___Az8hH > div.btn_style___CgrXw.btn_style_cancel___ZHjYK";
                 try {
-                    const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 8000 });
+                    const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 10000 });
                     if (skipButton) {
                         await skipButton.click();
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Skip bỏ qua mainet matchain acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
@@ -121,12 +159,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
                 // Check for page load
                 const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_balance___ClINX";
-                await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
+                await page.waitForSelector(pageLoadedSelector, { timeout: 10000 });
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
                 // Wait for random number to be different from 0.0000
                 const randomNumberSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_rewards_mining___u39zf > div > span:nth-child(1)";
-                await page.waitForTimeout(1500);
                 const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
                 const currentBalance = await page.textContent(currentBalanceSelector);
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Số điểm đã đào của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${randomNumber}${COLORS.RESET}`);
@@ -353,7 +390,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 25000));
+            await new Promise(resolve => setTimeout(resolve, 35000));
         }
     }
 
