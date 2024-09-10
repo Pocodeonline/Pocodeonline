@@ -134,9 +134,9 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     }
                     if (randomNumber === '0.0000') {
                         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${CYAN}Chờ để số điểm cập nhật ở acc \x1b[38;5;11m${accountNumber}...${RESET}`);
-                        await page.reload();
-                        await page.waitForTimeout(4000);
+                        await page.waitForTimeout(8000);
                         updateAttempts++;
+                        await page.reload();
                     } else {
                         break; // Exit loop if successful
                     }
@@ -295,11 +295,11 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 26000));
+            await new Promise(resolve => setTimeout(resolve, 30000));
         }
     }
 
-    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231mTool \x1b[38;5;11m[ \x1b[38;5;231mGUMART \x1b[38;5;11m].`);
+    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231mTool \x1b[38;5;11m[ \x1b[38;5;231mMATCHAIN \x1b[38;5;11m].`);
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
 }
@@ -335,7 +335,7 @@ async function countdownTimer(seconds) {
             }
 
             const links = await readAccounts(filePath);
-            console.log(`${SILVER}GUMART ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
+            console.log(`${SILVER}MATCHAIN ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
             console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản`);
 
@@ -371,7 +371,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9200 ${GREEN}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}28800 ${GREEN}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -399,7 +399,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha max ${YELLOW} 25 ${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
