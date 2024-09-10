@@ -94,7 +94,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     const page = await browserContext.newPage();
     let success = false;
     const maxRetries = 3; // Số lần tối đa để thử lại
-    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
+    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (3000ms = 3 giây)
     const maxUpdateAttempts = 3; // Số lần tối đa để thử cập nhật điểm
 
     const loadPage = async () => {
@@ -155,15 +155,19 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
                 // Check if claim button 
                 const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
-                let claimButtonExists = true;
+                let claimButtonExists = false;
 
                 try {
-                    claimButtonExists = await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 8000 });
+                    // Thử kiểm tra sự tồn tại của nút claim với timeout 20 giây
+                    const claimButton = await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 20000 });
+                    if (claimButton) {
+                        claimButtonExists = true;
+                    }
                 } catch (err) {
-                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi hoặc không tồn tại.${RESET}`);
-                    continue;
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi, hoặc không tồn tại.${RESET}`);
                 }
-                // Click claim button
+
+                // Tiếp tục nếu nút claim tồn tại, hoặc báo lỗi và tiếp tục bước tiếp theo
                 if (claimButtonExists) {
                     await page.click(claimButtonSelector);
                     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${RESET}`);
@@ -185,7 +189,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                         await page.click(startminingButtonSelector);
                         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã đào lại cho acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
-                        // Print remaining time
+                        // Wait for countdown and get text
                         const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
                         const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
                         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${RESET}`);
@@ -196,6 +200,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                         await page.click(clickItemSelector);
                         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${RESET}`);
                         await page.waitForTimeout(1500);
+
                         // Click on specific element
                         const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
                         await page.waitForSelector(clickx2Selector, { timeout: 4500 });
@@ -213,26 +218,33 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Mua x2 thành công cho acc \x1b[38;5;11m${accountNumber}${RESET}`);
                         success = true;
                     }
+                } else {
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không thấy nút claim cho acc \x1b[38;5;11m${accountNumber}. Tiếp tục bước tiếp theo.${RESET}`);
                 }
-                break; // Exit retry loop if successful
-            } catch (error) {
+                
+                // Xử lý thành công hay thất bại
+                if (success) {
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Xử lý thành công cho acc \x1b[38;5;11m${accountNumber}${RESET}`);
+                } else {
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Xử lý thất bại cho acc \x1b[38;5;11m${accountNumber}${RESET}`);
+                }
+                break; // Kết thúc vòng lặp thử lại nếu thành công
+
+            } catch (err) {
+                console.error(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Lỗi khi xử lý acc \x1b[38;5;11m${accountNumber}: ${err.message}${RESET}`);
                 if (attempt < maxRetries) {
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${CYAN}Thử lại (${attempt}/${maxRetries}) cho acc \x1b[38;5;11m${accountNumber}${RESET}`);
                     await page.waitForTimeout(retryDelay);
                 } else {
-                    console.error(`${RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${RESET}`);
-                    await logFailedAccount(accountNumber, error.message);
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không thể xử lý acc \x1b[38;5;11m${accountNumber} sau ${maxRetries} lần thử.${RESET}`);
                 }
             }
         }
+        await page.close();
+        return success; // Trả về giá trị success
     };
 
-    try {
-        await loadPage();
-    } finally {
-        await page.close();
-    }
-
-    return success;
+    await loadPage();
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
