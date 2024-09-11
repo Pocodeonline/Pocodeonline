@@ -1,4 +1,4 @@
 JFSBDJS4 - IP: 125.235.237.158, Device: Admin-PC, Username: @tphuc_0
 S3HSDV33 - IP: 125.235.237.81, Device: Admin-PC, Username: @tphuc_0
-KDSHQB22
+KDSHQB22 - IP: 171.252.188.187, Device: DESKTOP-080VBRN, Username: @Narso Leo
 12NKASML
