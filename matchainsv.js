@@ -96,194 +96,180 @@ async function printCustomLogo(LIGHT_BLUE = true) {
 
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
-    let success = false;
     const maxRetries = 3; // Số lần tối đa để thử lại
-    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (5000ms = 5 giây)
-    const maxUpdateAttempts = 3; // Số lần tối đa để thử cập nhật điểm
+    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (3000ms = 3 giây)
+    let success = false;
 
-    const loadPage = async () => {
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${COLORS.RESET}`);
+
+            await page.goto(accountUrl, { waitUntil: 'networkidle0' });
+
+            // Handle optional skip button
+            const skipButtonSelector = "body > div:nth-child(6) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.btn_box___Az8hH > div.btn_style___CgrXw.btn_style_cancel___ZHjYK";
             try {
-                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${COLORS.RESET}`);
-                await page.goto(accountUrl, { waitUntil: 'networkidle0' });
-
-                // Handle optional skip button
-                const skipButtonSelector = "body > div:nth-child(6) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.btn_box___Az8hH > div.btn_style___CgrXw.btn_style_cancel___ZHjYK";
-                try {
-                    const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 10000 });
-                    if (skipButton) {
-                        await skipButton.click();
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Skip bỏ qua mainet matchain acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                    }
-                } catch (err) {
-                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 10000 });
+                if (skipButton) {
+                    await skipButton.click();
+                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Skip bỏ qua mainet matchain acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                 }
+            } catch (err) {
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            }
 
-                // Check for page load
-                const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_balance___ClINX";
-                await page.waitForSelector(pageLoadedSelector, { timeout: 10000 });
-                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            // Check for page load
+            const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_balance___ClINX";
+            await page.waitForSelector(pageLoadedSelector, { timeout: 10000 });
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
+            const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
+            const currentBalance = await page.textContent(currentBalanceSelector, { timeout: 8000 });
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance}${COLORS.RESET}`);
 
-                const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
-                const currentBalance = await page.textContent(currentBalanceSelector);
-                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance}${COLORS.RESET}`);
-                await page.waitForTimeout(1500);
-                // Check if claim button exists
-                const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
-                let claimButtonExists = false;
-
-                try {
-                    claimButtonExists = await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 8000 });
-                } catch (err) {
-                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mclaim rồi hoặc không tồn tại.${COLORS.RESET}`);
-                    return;
+            const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
+            try {
+                const claimButton = await page.waitForSelector(claimButtonSelector, { timeout: 10000 });
+                if (claimButton) {
+                    await claimButton.click();
+                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Claim acc \x1b[38;5;11m${accountNumber} ${COLORS.GREEN}thành công...${COLORS.RESET}`);
                 }
-                // Click claim button
-                if (claimButtonExists) {
-                    await page.click(claimButtonSelector);
-                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang claim acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                    await page.waitForTimeout(1500);
-                    // Confirm startmining process
-                    const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
-                    let startminingButtonExists = false;
+            } catch (err) {
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} ${COLORS.RED}claim rồi...${COLORS.RESET}`);
+            }
 
-                    try {
-                        startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 10000 });
-                    } catch (err) {
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstart rồi hoặc không tồn tại.${COLORS.RESET}`);
-                        return;
-                    }
+            await page.waitForTimeout(2000);
 
-                    // Confirm startmining process
-                    if (startminingButtonExists) {
-                        await page.click(startminingButtonSelector);
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã đào lại cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
-                        // Print remaining time
-                        const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
-                        const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${COLORS.RESET}`);
-
-                        // Click on specific element
-                        const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_top___biYaq > div:nth-child(1) > img";
-                        await page.waitForSelector(clickItemSelector, { timeout: 4500 });
-                        await page.click(clickItemSelector);
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
-                        // Click on specific element
-                        const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
-                        await page.waitForSelector(clickx2Selector, { timeout: 4500 });
-                        await page.click(clickx2Selector);
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        await page.waitForTimeout(3600);
-
-                        // Wait for final element and get its text
-                        const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
-                        await page.waitForSelector(finalPointsSelector);
-                        const finalPoints = await page.textContent(finalPointsSelector);
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}-50 point mua x2 acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
-
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Mua x2 thành công cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        // Click on specific element to start task
-
-                        const taskStartSelector = "#root > div > div > ul > li:nth-child(2) > img";
-                        await page.waitForSelector(taskStartSelector, { timeout: 3000 });
-                        await page.click(taskStartSelector);
-                        console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Bắt đầu làm nhiệm vụ cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        
-                        // Wait for the task 1 button to be clickable
-                        const task1ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(1) > div.btn___xz27R";
-                        const claimtask1ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(1) > div.btn___xz27R.claim___VQBtK";
-                        try {
-                            await page.waitForSelector(task1ButtonSelector, { timeout: 6000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 1 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(task1ButtonSelector);
-                            await page.waitForTimeout(2000);
-                            await page.waitForSelector(claimtask1ButtonSelector, { timeout: 6000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 1 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(claimtask1ButtonSelector);
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 1 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
-                        } catch (error) {
-                            // If the task button is not found, log a message and continue
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 1 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            // Continue with the next part of the code
-                        }
-
-                        // Wait for the task 2 button to be clickable
-                        const task2ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(2) > div.btn___xz27R";
-                        const claimtask2ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(2) > div.btn___xz27R.claim___VQBtK";
-                        try {
-                            await page.waitForSelector(task2ButtonSelector, { timeout: 6000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(task2ButtonSelector);
-                            await page.waitForTimeout(2000);
-                            await page.waitForSelector(claimtask2ButtonSelector, { timeout: 6000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(claimtask2ButtonSelector);
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 2 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
-                        } catch (error) {
-                            // If the task button is not found, log a message and continue
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 2 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            // Continue with the next part of the code
-                        }
-
-                        // Wait for the task 3 button to be clickable
-                        const task3ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(3) > div.btn___xz27R";
-                        const claimtask3ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(3) > div.btn___xz27R.claim___VQBtK";
-                        try {
-                            await page.waitForSelector(task3ButtonSelector, { timeout: 6000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 3 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(task3ButtonSelector);
-                            await page.waitForTimeout(2000);
-                            await page.waitForSelector(claimtask3ButtonSelector, { timeout: 6000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 3 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(claimtask3ButtonSelector);
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 3 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                        } catch (error) {
-                            // If the task button is not found, log a message and continue
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 3 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            // Continue with the next part of the code
-                        }
-
-                        // Wait for the task 4 button to be clickable
-                        const task4ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(4) > div.btn___xz27R";
-                        const claimtask4ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(4) > div.btn___xz27R.claim___VQBtK";
-                        try {
-                            await page.waitForSelector(task4ButtonSelector, { timeout: 5000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 4 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(task4ButtonSelector);
-                            await page.waitForTimeout(2000);
-                            await page.waitForSelector(claimtask4ButtonSelector, { timeout: 5000 });
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 4 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            await page.click(claimtask4ButtonSelector);
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 4 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-
-                        } catch (error) {
-                            // If the task button is not found, log a message and continue
-                            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 4 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
-                            // Continue with the next part of the code
-                        }
-                        
-                        success = true;
-                    }
+            const startButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
+            const timeSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul';
+            try {
+                const startButton = await page.waitForSelector(startButtonSelector, { timeout: 10000 });
+                if (startButton) {
+                    await startButton.click();
+                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đào lại acc \x1b[38;5;11m${accountNumber} ${COLORS.GREEN}thành công...${COLORS.RESET}`);
+                    const timeElement = await page.waitForSelector(timeSelector, { timeout: 8000 });
+                    const timeText = await timeElement.evaluate(el => el.innerText);
+                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Giờ còn lại acc \x1b[38;5;11m${accountNumber} ${COLORS.GREEN}để đào tiếp  ${COLORS.GREEN}là \x1b[38;5;11m: \x1b[38;5;11m${timeText}`);
                 }
-                break; // Exit retry loop if successful
+            } catch (err) {
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} ${COLORS.RED}đào rồi...${COLORS.RESET}`);
+            }
+
+            await page.waitForTimeout(2000);
+
+            // Print remaining time
+            const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
+            const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${COLORS.RESET}`);
+
+            // Click on specific element
+            const clickItemSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_top___biYaq > div:nth-child(1) > img";
+            await page.waitForSelector(clickItemSelector, { timeout: 4500 });
+            await page.click(clickItemSelector);
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đang mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+
+            // Click on specific element
+            const clickx2Selector = "#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE";
+            await page.waitForSelector(clickx2Selector, { timeout: 4500 });
+            await page.click(clickx2Selector);
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã mua x2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            await page.waitForTimeout(3600);
+
+            // Wait for final element and get its text
+            const finalPointsSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container___Joeqw > div.item___aAzf7.left_item___po1MT > div > div.content_bottom___dCWi7 > div > div.points___ya4CK";
+            await page.waitForSelector(finalPointsSelector);
+            const finalPoints = await page.textContent(finalPointsSelector);
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}-50 point mua x2 acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${finalPoints}${COLORS.RESET}`);
+
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Mua x2 thành công cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+
+            const taskStartSelector = "#root > div > div > ul > li:nth-child(2) > img";
+            await page.waitForSelector(taskStartSelector, { timeout: 3000 });
+            await page.click(taskStartSelector);
+            console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Bắt đầu làm nhiệm vụ cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                            
+            // Wait for the task 1 button to be clickable
+            const task1ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(1) > div.btn___xz27R";
+            const claimtask1ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(1) > div.btn___xz27R.claim___VQBtK";
+            try {
+                await page.waitForSelector(task1ButtonSelector, { timeout: 6000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 1 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(task1ButtonSelector);
+                await page.waitForTimeout(2000);
+                await page.waitForSelector(claimtask1ButtonSelector, { timeout: 6000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 1 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(claimtask1ButtonSelector);
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 1 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            
             } catch (error) {
-                if (attempt < maxRetries) {
-                    await page.waitForTimeout(retryDelay);
-                } else {
-                    console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}${COLORS.RESET}`);
-                    await logFailedAccount(accountNumber, error.message);
-                }
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 1 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            }
+            
+            const task2ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(2) > div.btn___xz27R";
+            const claimtask2ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(2) > div.btn___xz27R.claim___VQBtK";
+            try {
+                await page.waitForSelector(task2ButtonSelector, { timeout: 6000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(task2ButtonSelector);
+                await page.waitForTimeout(2000);
+                await page.waitForSelector(claimtask2ButtonSelector, { timeout: 6000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(claimtask2ButtonSelector);
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 2 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            
+            } catch (error) {
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 2 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            }
+            
+            // Wait for the task 3 button to be clickable
+            const task3ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(3) > div.btn___xz27R";
+            const claimtask3ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(3) > div.btn___xz27R.claim___VQBtK";
+            try {
+                await page.waitForSelector(task3ButtonSelector, { timeout: 6000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 3 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(task3ButtonSelector);
+                await page.waitForTimeout(2000);
+                await page.waitForSelector(claimtask3ButtonSelector, { timeout: 6000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 3 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(claimtask3ButtonSelector);
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 3 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            } catch (error) {
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 3 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            }
+            
+            // Wait for the task 4 button to be clickable
+            const task4ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(4) > div.btn___xz27R";
+            const claimtask4ButtonSelector = "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(4) > div.btn___xz27R.claim___VQBtK";
+            try {
+                await page.waitForSelector(task4ButtonSelector, { timeout: 5000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 4 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(task4ButtonSelector);
+                await page.waitForTimeout(2000);
+                await page.waitForSelector(claimtask4ButtonSelector, { timeout: 5000 });
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 4 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+                await page.click(claimtask4ButtonSelector);
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}đã làm task 4 \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            
+            } catch (error) {
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}task 4 làm rồi \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+            }
+
+            // Mark as successful
+            success = true;
+            break; // Exit retry loop if successful
+        } catch (error) {
+            if (attempt < maxRetries) {
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Lỗi khi xử lý tài khoản ${accountNumber}. Thử lại sau ${retryDelay / 1000} giây...${COLORS.RESET}`);
+                await page.waitForTimeout(retryDelay);
+            } else {
+                console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}: ${error.message}${COLORS.RESET}`);
+                await logFailedAccount(accountNumber, error.message);
             }
         }
-    };
+    }
 
     try {
-        await loadPage();
+    
     } finally {
         await page.close();
     }
