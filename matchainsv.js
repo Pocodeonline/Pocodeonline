@@ -119,8 +119,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             }
 
             // Check for page load
-            const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_balance___ClINX";
-            await page.waitForSelector(pageLoadedSelector, { timeout: 10000 });
+            const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > img";
+            await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
             const claimButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka";
@@ -143,9 +143,10 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 if (startButton) {
                     await startButton.click();
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đào lại acc \x1b[38;5;11m${accountNumber} ${COLORS.GREEN}thành công...${COLORS.RESET}`);
+                    await page.waitForTimeout(1500);
                     const timeElement = await page.waitForSelector(timeSelector, { timeout: 8000 });
                     const timeText = await timeElement.evaluate(el => el.innerText);
-                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Giờ còn lại acc \x1b[38;5;11m${accountNumber} ${COLORS.GREEN}để đào tiếp  ${COLORS.GREEN}là \x1b[38;5;11m: \x1b[38;5;11m${timeText}`);
+                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Giờ còn lại acc \x1b[38;5;11m${accountNumber} ${COLORS.GREEN}để đào tiếp  ${COLORS.GREEN}là \x1b[38;5;11m:${timeText}`);
                 }
             } catch (err) {
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} ${COLORS.RED}đào rồi...${COLORS.RESET}`);
@@ -262,7 +263,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Lỗi khi xử lý tài khoản ${accountNumber}. Thử lại sau ${retryDelay / 1000} giây...${COLORS.RESET}`);
                 await page.waitForTimeout(retryDelay);
             } else {
-                console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber}: ${error.message}${COLORS.RESET}`);
+                console.error(`${COLORS.RED}Xảy ra lỗi khi xử lý tài khoản ${accountNumber} ${COLORS.RESET}`);
                 await logFailedAccount(accountNumber, error.message);
             }
         }
