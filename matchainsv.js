@@ -337,7 +337,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 8000));
+            await new Promise(resolve => setTimeout(resolve, 40000));
         }
     }
 
