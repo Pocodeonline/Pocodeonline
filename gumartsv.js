@@ -111,8 +111,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
 
             // Tìm và nhấn nút claim
-            const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button';
-            await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 2000 });
+            const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all';
+            await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 4000 });
             await page.click(claimButtonSelector);
 
             // Kiểm tra xem phần tử img có xuất hiện hay không
