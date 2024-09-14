@@ -167,7 +167,9 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 } catch (error) {
                     console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi`);
                 }
+                if (claimmatchainButtonSelector) {
 
+                    await page.waitForTimeout(1500);
                     // Confirm startmining process
                     const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
                     let startminingButtonExists = false;
