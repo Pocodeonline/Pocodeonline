@@ -147,6 +147,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 }
 
                 if (randomNumber === '0.0000') {
+                    await page.reload({ waitUntil: 'networkidle0' });
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không cập nhật số điểm cho acc \x1b[38;5;11m${accountNumber} sau ${maxUpdateAttempts} lần thử.${COLORS.RESET}`);
                     return; // Skip this account
                 }
