@@ -131,17 +131,16 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 await page.waitForTimeout(1500);
                 // Check if claim button exists
                 
-                const claimmatchainButtonSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka';
-                try {
-                    await page.waitForSelector(claimmatchainButtonSelector, { timeout: 4500 });
-                    await page.waitForTimeout(1000);
-                } catch (error) {
-                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi`);
-                }
                 if (claimmatchainButtonSelector) {
-                    await page.click(claimmatchainButtonSelector);
-                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mClaim Acc \x1b[33m${accountNumber} \x1b[35m thành công...`);
-                    await page.waitForTimeout(1500);
+                    const claimmatchainButtonSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka';
+                    try {
+                        await page.waitForSelector(claimmatchainButtonSelector, { timeout: 4500 });
+                        await page.click(claimmatchainButtonSelector);
+                        console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mClaim Acc \x1b[33m${accountNumber} \x1b[35m thành công...`);
+                        await page.waitForTimeout(1000);
+                    } catch (error) {
+                        console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi`);
+                    }
                     // Confirm startmining process
                     const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
                     let startminingButtonExists = false;
@@ -197,6 +196,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task1ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 1 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task1ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask1ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 1 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask1ButtonSelector);
@@ -215,6 +215,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task2ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task2ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask2ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 2 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask2ButtonSelector);
@@ -233,6 +234,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task3ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 3 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task3ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask3ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 3 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask3ButtonSelector);
@@ -250,6 +252,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task4ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 4 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task4ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask4ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 4 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask4ButtonSelector);
@@ -268,6 +271,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task5ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 5 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task5ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask5ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 5 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask5ButtonSelector);
@@ -286,6 +290,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task6ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 6 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task6ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask6ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 6 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask6ButtonSelector);
@@ -304,6 +309,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task7ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 7 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task7ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask7ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 7 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask7ButtonSelector);
@@ -322,6 +328,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task8ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 8 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task8ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask8ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 8 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask8ButtonSelector);
@@ -340,6 +347,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task9ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 9 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task9ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask9ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 9 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask9ButtonSelector);
@@ -357,6 +365,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task10ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 10 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task10ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask10ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 10 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask10ButtonSelector);
@@ -374,6 +383,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task11ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 11 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task11ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask11ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 11 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask11ButtonSelector);
@@ -391,6 +401,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task12ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 12 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task12ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask12ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 12 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask12ButtonSelector);
@@ -408,6 +419,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task13ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 13 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task13ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask13ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 13 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask13ButtonSelector);
@@ -425,6 +437,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task14ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 14 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task14ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask14ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 14 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask14ButtonSelector);
@@ -442,6 +455,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task15ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 15 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task15ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask15ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 15 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask15ButtonSelector);
@@ -459,6 +473,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task16ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 16 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task16ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask16ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 16 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask16ButtonSelector);
@@ -476,6 +491,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task17ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 17 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task17ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask17ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 17 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask17ButtonSelector);
@@ -493,6 +509,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task18ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 18 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task18ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask18ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 18 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask18ButtonSelector);
@@ -510,6 +527,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task19ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 19 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task19ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask19ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 19 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask19ButtonSelector);
@@ -527,6 +545,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task20ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 20 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task20ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask20ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 20 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask20ButtonSelector);
@@ -545,6 +564,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task21ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 21 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task21ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask21ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 21 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask21ButtonSelector);
@@ -562,6 +582,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task22ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 22 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task22ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask22ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 22 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask22ButtonSelector);
@@ -579,6 +600,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task23ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 23 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task23ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask23ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 23 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask23ButtonSelector);
@@ -596,6 +618,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task24ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 24 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task24ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask24ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 24 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask24ButtonSelector);
@@ -613,6 +636,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task25ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 25 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task25ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask25ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 25 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask25ButtonSelector);
@@ -630,6 +654,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task26ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 26 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task26ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask26ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 26 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask26ButtonSelector);
@@ -647,6 +672,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task27ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 27 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task27ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask27ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 27 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask27ButtonSelector);
@@ -664,6 +690,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task28ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 28 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task28ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask28ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 28 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask28ButtonSelector);
@@ -681,6 +708,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task29ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 29 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task29ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask29ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 29 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask29ButtonSelector);
@@ -698,6 +726,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                             await page.waitForSelector(task30ButtonSelector, { timeout: 3000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}làm task 30 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(task30ButtonSelector);
+                            await page.close();
                             await page.waitForSelector(claimtask30ButtonSelector, { timeout: 6000 });
                             console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}claim task 30 cho acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
                             await page.click(claimtask30ButtonSelector);
