@@ -133,16 +133,14 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 
                 const claimmatchainButtonSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka';
                 try {
-                    await page.waitForSelector(claimmatchainButtonSelector, { timeout: 3000 });
-                    await page.click(claimmatchainButtonSelector);
-                    await page.waitForTimeout(2000);
-                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mClaim Acc \x1b[33m${accountNumber} \x1b[35m thành công...`);
+                    await page.waitForSelector(claimmatchainButtonSelector, { timeout: 4500 });
+                    await page.waitForTimeout(1000);
                 } catch (error) {
                     console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi`);
                 }
-                if (claimm) {
-
-
+                if (claimmatchainButtonSelector) {
+                    await page.click(claimmatchainButtonSelector);
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mClaim Acc \x1b[33m${accountNumber} \x1b[35m thành công...`);
                     await page.waitForTimeout(1500);
                     // Confirm startmining process
                     const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
