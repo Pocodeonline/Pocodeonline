@@ -739,7 +739,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             headless: true,
             args: [
                 '--disable-gpu',
-                '--disable-dev-shm-usage',
                 '--disable-cpu',
                 `--proxy-server=${proxy.server}`
             ]
