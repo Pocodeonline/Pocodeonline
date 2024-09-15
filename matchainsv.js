@@ -139,7 +139,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     if (randomNumber === '0.0000') {
                         console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.CYAN}Chờ để số điểm cập nhật ở acc \x1b[38;5;11m${accountNumber}...${COLORS.RESET}`);
                         await page.reload({ waitUntil: 'networkidle0' });
-                        await page.waitForTimeout(3000);
+                        await page.waitForTimeout(5000);
                         updateAttempts++;
                     } else {
                         break; // Exit loop if successful
@@ -147,7 +147,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 }
 
                 if (randomNumber === '0.0000') {
-                    await page.reload({ waitUntil: 'networkidle0' });
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Không cập nhật số điểm cho acc \x1b[38;5;11m${accountNumber} sau ${maxUpdateAttempts} lần thử.${COLORS.RESET}`);
                     return; // Skip this account
                 }
@@ -169,6 +168,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi`);
                 }
                 if (claimmatchainButtonSelector) {
+
 
                     await page.waitForTimeout(1500);
                     // Confirm startmining process
