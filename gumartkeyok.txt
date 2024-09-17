@@ -1,5 +1,5 @@
 JHVSADH212 - IP: 125.235.237.194, Device: Admin-PC, Username: @tphuc_0
 SVBJB732BB - IP: 125.235.237.150, Device: Admin-PC, Username: @tphuc_0
-SJBJBJ992J - IP: 27.68.96.137, Device: Admin-PC, Username: @tranthong12
-SSKKAVB5ZZ - IP: 27.68.96.137, Device: DESKTOP-8SDSM44, Username: @@tranthong12
+SJBJBJ992J
+SSKKAVB5ZZ
 KSDVII7KH7 - IP: 171.252.188.187, Device: DESKTOP-080VBRN, Username: @Narso Leo
