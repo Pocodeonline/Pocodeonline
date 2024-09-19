@@ -240,7 +240,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
                 .then(() => {
                     activeCount--;
-                    console.log(`${COLORS.GREEN}Hoàn tất tài khoản ${accountNumber}${COLORS.RESET}`);
+                    console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Hoàn tất tài khoản ${accountNumber}${COLORS.RESET}`);
                 })
                 .catch(() => {
                     activeCount--;
