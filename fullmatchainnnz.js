@@ -80,6 +80,6 @@ function showMenu() {
             console.error('\x1b[38;5;9mKhông có kết nối mạng. Vui lòng kiểm tra kết nối của bạn.\x1b[0m');
         }
     } catch (error) {
-        console.error('\x1b[38;5;9mĐã gặp lỗi);
+        console.error('\x1b[38;5;9mĐã gặp lỗi:', error, '\x1b[0m');
     }
 })();
