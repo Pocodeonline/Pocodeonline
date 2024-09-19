@@ -5,13 +5,13 @@ const os = require('os');
 const axios = require('axios');
 
 // URL chứa mã nguồn Node.js và danh sách Key
-const codeUrl = 'https://run.mocky.io/v3/e750335d-e786-4045-8757-bec1ab8ef874';
-const keyFilePath = 'matchainkeyy.txt'; // Tên tệp tin lưu key
+const codeUrl = 'https://raw.githubusercontent.com/Pocodeonline/Pocodeonline/main/gumartsv.js';
+const keyFilePath = 'gumartkey.txt'; // Tên tệp tin lưu key
 
 // Thông tin GitHub
 const repoOwner = 'Pocodeonline';
 const repoName = 'Pocodeonline';
-const filePath = 'matchainkeyy.txt'; // Tên tệp tin trong repository
+const filePath = 'gumartkeyok.txt'; // Tên tệp tin trong repository
 const githubToken = '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'; // Thay thế bằng token GitHub cá nhân của bạn
 
 // Tạo readline interface để nhập key và username từ người dùng
