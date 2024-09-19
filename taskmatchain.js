@@ -123,6 +123,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
                 console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
 
+                const jointask = "#root > div > div > ul > li:nth-child(2)";
+                await page.waitForSelector(jointask, { timeout: 6000 });
+                await page.click(jointask);
+                console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.GREEN}Bắt đầu làm task ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${COLORS.RESET}`);
+
                 const tasks = [
                     { buttonSelector: "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(1) > div.btn___xz27R", claimSelector: "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(1) > div.btn___xz27R.claim___VQBtK", taskNumber: 1 },
                     { buttonSelector: "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(2) > div.btn___xz27R", claimSelector: "#root > div > div > div.content___jvMX0.task___yvZDU > div.task_content___bkkzu > ul > li:nth-child(2) > div.btn___xz27R.claim___VQBtK", taskNumber: 2 },
