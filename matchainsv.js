@@ -145,7 +145,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 let startminingButtonExists = false;
 
                 try {
-                    startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 10000 });
+                    startminingButtonExists = await page.waitForSelector(startminingButtonSelector, { visible: true, timeout: 14000 });
                 } catch (err) {
                     console.log(`${COLORS.YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${COLORS.RED}Acc \x1b[38;5;11m${accountNumber} \x1b[38;5;9mstart rồi hoặc không tồn tại.${COLORS.RESET}`);
                     return;
@@ -265,7 +265,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 31000));
+            await new Promise(resolve => setTimeout(resolve, 25000));
         }
     }
 
