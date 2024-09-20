@@ -116,11 +116,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Bắt đầu làm task ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
             const tasks = [
-                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(2) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(2) > button > p", taskNumber: 1 },
-                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(3) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(3) > button > p", taskNumber: 2 },
-                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(4) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(4) > button > p", taskNumber: 3 },
-                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(5) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(5) > button > p", taskNumber: 4 },
-                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(6) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(6) > button > p", taskNumber: 5 }
+                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(2) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(2) > button", taskNumber: 1 },
+                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(3) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(3) > button", taskNumber: 2 },
+                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(4) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(4) > button", taskNumber: 3 },
+                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(5) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(5) > button", taskNumber: 4 },
+                { buttonSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(6) > button", claimSelector: "#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(6) > button", taskNumber: 5 }
             ];
 
             for (const { buttonSelector, claimSelector, taskNumber } of tasks) {
@@ -128,6 +128,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     await page.waitForSelector(buttonSelector, { timeout: 600 });
                     console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}làm task \x1b[38;5;11m${taskNumber} \x1b[38;5;10mcho acc \x1b[38;5;11m${accountNumber}${RESET}`);
                     await page.click(buttonSelector);
+            
+                    // Wait for the loading spinner to disappear
+                    await page.waitForFunction(() => {
+                        const spinner = document.querySelector("#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(3) > button > img");
+                        return !spinner || !spinner.offsetParent; // Check if spinner is not present or not visible
+                    });
+            
                     await page.waitForSelector(claimSelector, { timeout: 6000 });
                     console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}claim task \x1b[38;5;11m${taskNumber} \x1b[38;5;10mcho acc \x1b[38;5;11m${accountNumber}${RESET}`);
                     await page.click(claimSelector);
@@ -155,6 +162,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     await page.waitForSelector(buttonSelector1, { timeout: 600 });
                     console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}làm task \x1b[38;5;11m${taskNumber2} \x1b[38;5;10mcho acc \x1b[38;5;11m${accountNumber}${RESET}`);
                     await page.click(buttonSelector1);
+
+                                        // Wait for the loading spinner to disappear
+                    await page.waitForFunction(() => {
+                        const spinner = document.querySelector("#__nuxt > div > div > div.main-wapper.flex.flex-col.items-center.px-2.animate_show_page.max-w-\\[768px\\].h-\\[100dvh\\].mx-auto.animate_show_page.bg-white-0.relative.z-\\[1\\].transition-all.duration-200.overflow-y-auto > div.w-full.flex-1.z-0.pt-\\[7\\.875rem\\].pb-\\[6rem\\] > div > div > div:nth-child(3) > button > img");
+                        return !spinner || !spinner.offsetParent; // Check if spinner is not present or not visible
+                    });
+                    
                     await page.waitForSelector(claimSelector1, { timeout: 6000 });
                     console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}claim task \x1b[38;5;11m${taskNumber2} \x1b[38;5;10mcho acc \x1b[38;5;11m${accountNumber}${RESET}`);
                     await page.click(claimSelector1);
@@ -325,7 +339,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}5 ${GREEN}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9200 ${GREEN}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -353,7 +367,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha max ${YELLOW}30 ${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
