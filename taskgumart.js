@@ -263,7 +263,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
 
         if (activeCount > 0) {
-            await new Promise(resolve => setTimeout(resolve, 14000));
+            await new Promise(resolve => setTimeout(resolve, 20000));
         }
     }
 
@@ -339,7 +339,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9200 ${GREEN}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}5 ${GREEN}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
@@ -367,7 +367,7 @@ async function countdownTimer(seconds) {
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha max ${YELLOW}30): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
