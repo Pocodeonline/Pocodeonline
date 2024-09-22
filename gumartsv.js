@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
+const os = require('os');
 
 const SILVER = '\x1b[38;5;231m';
 const LIGHT_PINK = '\x1b[38;5;207m';
@@ -93,29 +94,24 @@ async function printCustomLogo(blink = false) {
 
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
-    const maxRetries = 3; // Số lần tối đa để thử lại
-    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (2000ms = 2 giây)
+    const maxRetries = 3;
+    const retryDelay = 3000;
     let success = false;
 
-    // Thực hiện các thử lại
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
             
-            // Điều hướng đến URL và đợi tải trang
             await page.goto(accountUrl, { waitUntil: 'networkidle0' });
             
-            // Chờ và xác nhận phần tử đã tải xong
             const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
             await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc ${YELLOW}${accountNumber}`);
 
-            // Tìm và nhấn nút claim
             const claimButtonSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all';
             await page.waitForSelector(claimButtonSelector, { visible: true, timeout: 4000 });
             await page.click(claimButtonSelector);
 
-            // Kiểm tra xem phần tử img có xuất hiện hay không
             const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > p';
             let imgElementFound = true;
 
@@ -128,7 +124,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 imgElementFound = true;
             }
 
-            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
             if (!imgElementFound) {
                 const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div > p';
                 const timeElement = await page.waitForSelector(timeSelector);
@@ -136,13 +131,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
             }
             
-            // Lấy số điểm hiện tại
             const pointsSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
             const pointsElement = await page.waitForSelector(pointsSelector);
             const points = await pointsElement.evaluate(el => el.innerText);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã claim point thành công\x1b[38;5;11m, ${GREEN}Số dư : ${points}`);
             
-            // Đánh dấu thành công và thoát khỏi vòng lặp
             success = true;
             break;
         } catch (error) {
@@ -150,7 +143,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
                 await page.waitForTimeout(retryDelay);
             } else {
-                // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
                 console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
                 await logFailedAccount(accountNumber, error.message);
             }
@@ -158,7 +150,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     }
 
     try {
-        // Đảm bảo đóng trang sau khi hoàn thành
         await page.close();
     } catch (closeError) {
         console.error(`${RED}Không thể đóng trang: ${closeError.message}`);
@@ -180,7 +171,243 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
                 '--disable-gpu',
-                '--disable-cpu',
+                '--disable-accelerated-2d-canvas',
+                '--disable-accelerated-video-decode',
+                '--disable-software-rasterizer',
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-ipc-flooding-protection',
+                '--disable-client-side-phishing-detection',
+                '--disable-default-apps',
+                '--disable-hang-monitor',
+                '--disable-prompt-on-repost',
+                '--disable-sync',
+                '--disable-translate',
+                '--metrics-recording-only',
+                '--no-first-run',
+                '--safebrowsing-disable-auto-update',
+                '--password-store=basic',
+                '--use-mock-keychain',
+                '--mute-audio',
+                '--no-zygote',
+                '--no-pings',
+                '--disable-setuid-sandbox',
+                '--js-flags=--expose-gc',
+                '--single-process',
+                '--no-sandbox',
+                '--ignore-certificate-errors',
+                '--ignore-ssl-errors',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process',
+                '--disable-site-isolation-trials',
+                '--autoplay-policy=no-user-gesture-required',
+                '--disable-infobars',
+                '--disable-breakpad',
+                '--disable-canvas-aa',
+                '--disable-2d-canvas-clip-aa',
+                '--disable-gl-drawing-for-tests',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--disable-accelerated-jpeg-decoding',
+                '--disable-accelerated-mjpeg-decode',
+                '--disable-app-list-dismiss-on-blur',
+                '--disable-accelerated-video-decode',
+                '--disable-threaded-animation',
+                '--disable-threaded-scrolling',
+                '--disable-composited-antialiasing',
+                '--disable-yuv-image-decoding',
+                '--disable-webgl',
+                '--disable-webgl2',
+                '--disable-gpu-compositing',
+                '--disable-gpu-rasterization',
+                '--disable-gpu-sandbox',
+                '--disable-software-rasterizer',
+                '--disable-logging',
+                '--disable-remote-fonts',
+                '--disable-speech-api',
+                '--disable-cache',
+                '--disable-application-cache',
+                '--disable-offline-load-stale-cache',
+                '--disable-component-update',
+                '--disable-background-downloads',
+                '--disable-add-to-shelf',
+                '--disable-datasaver-prompt',
+                '--disable-domain-reliability',
+                '--disable-print-preview',
+                '--disable-voice-input',
+                '--disable-bundled-ppapi-flash',
+                '--disable-system-font-check',
+                '--disable-gesture-typing',
+                '--disable-namespace-sandbox',
+                '--disable-seccomp-filter-sandbox',
+                '--disable-image-animation-resync',
+                '--disable-tab-for-desktop-share',
+                '--disable-zero-browsers-open-for-tests',
+                '--disable-push-api-background-mode',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-file-system',
+                '--disable-databases',
+                '--disable-local-storage',
+                '--disable-permissions-api',
+                '--disable-presentation-api',
+                '--disable-speech-synthesis',
+                '--disable-image-compression',
+                '--disable-threaded-compositing',
+                '--disable-threaded-scrolling',
+                '--disable-checker-imaging',
+                '--disable-popup-blocking',
+                '--disable-audio-output',
+                '--disable-software-rasterizer',
+                '--disable-font-subpixel-positioning',
+                '--disable-lcd-text',
+                '--disable-remote-playback-api',
+                '--disable-webgl',
+                '--disable-webgl2',
+                '--disable-2d-canvas-image-chromium',
+                '--disable-gl-extensions',
+                '--disable-webgl-image-chromium',
+                '--disable-reading-from-canvas',
+                '--disable-remote-core-animation',
+                '--disable-web-security',
+                '--allow-running-insecure-content',
+                '--disable-site-isolation-trials',
+                '--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process',
+                '--disable-threaded-animation',
+                '--disable-threaded-scrolling',
+                '--disable-composited-antialiasing',
+                '--disable-accelerated-2d-canvas',
+                '--disable-accelerated-jpeg-decoding',
+                '--disable-accelerated-mjpeg-decode',
+                '--disable-app-list-dismiss-on-blur',
+                '--disable-accelerated-video-decode',
+                '--disable-gpu-vsync',
+                '--disable-gpu-shader-disk-cache',
+                '--disable-gpu-early-init',
+                '--disable-gpu-memory-buffer-compositor-resources',
+                '--disable-gpu-process-crash-limit',
+                '--disable-d3d11',
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-ipc-flooding-protection',
+                '--disable-client-side-phishing-detection',
+                '--disable-default-apps',
+                '--disable-hang-monitor',
+                '--disable-prompt-on-repost',
+                '--disable-sync',
+                '--disable-translate',
+                '--metrics-recording-only',
+                '--no-first-run',
+                '--safebrowsing-disable-auto-update',
+                '--password-store=basic',
+                '--use-mock-keychain',
+                '--mute-audio',
+                '--no-zygote',
+                '--no-pings',
+                '--disable-setuid-sandbox',
+                '--js-flags=--expose-gc',
+                '--single-process',
+                '--no-sandbox',
+                '--ignore-certificate-errors',
+                '--ignore-ssl-errors',
+                '--disable-web-security',
+                '--disable-features=IsolateOrigins,site-per-process',
+                '--disable-site-isolation-trials',
+                '--autoplay-policy=no-user-gesture-required',
+                '--disable-infobars',
+                '--disable-breakpad',
+                '--disable-canvas-aa',
+                '--disable-2d-canvas-clip-aa',
+                '--disable-gl-drawing-for-tests',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--disable-accelerated-jpeg-decoding',
+                '--disable-accelerated-mjpeg-decode',
+                '--disable-app-list-dismiss-on-blur',
+                '--disable-accelerated-video-decode',
+                '--disable-threaded-animation',
+                '--disable-threaded-scrolling',
+                '--disable-composited-antialiasing',
+                '--disable-yuv-image-decoding',
+                '--disable-webgl',
+                '--disable-webgl2',
+                '--disable-gpu-compositing',
+                '--disable-gpu-rasterization',
+                '--disable-gpu-sandbox',
+                '--disable-software-rasterizer',
+                '--disable-logging',
+                '--disable-remote-fonts',
+                '--disable-speech-api',
+                '--disable-cache',
+                '--disable-application-cache',
+                '--disable-offline-load-stale-cache',
+                '--disable-component-update',
+                '--disable-background-downloads',
+                '--disable-add-to-shelf',
+                '--disable-datasaver-prompt',
+                '--disable-domain-reliability',
+                '--disable-print-preview',
+                '--disable-voice-input',
+                '--disable-bundled-ppapi-flash',
+                '--disable-system-font-check',
+                '--disable-gesture-typing',
+                '--disable-namespace-sandbox',
+                '--disable-seccomp-filter-sandbox',
+                '--disable-image-animation-resync',
+                '--disable-tab-for-desktop-share',
+                '--disable-zero-browsers-open-for-tests',
+                '--disable-push-api-background-mode',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-file-system',
+                '--disable-databases',
+                '--disable-local-storage',
+                '--disable-permissions-api',
+                '--disable-presentation-api',
+                '--disable-speech-synthesis',
+                '--disable-image-compression',
+                '--disable-threaded-compositing',
+                '--disable-threaded-scrolling',
+                '--disable-checker-imaging',
+                '--disable-popup-blocking',
+                '--disable-audio-output',
+                '--disable-software-rasterizer',
+                '--disable-font-subpixel-positioning',
+                '--disable-lcd-text',
+                '--disable-remote-playback-api',
+                '--disable-webgl',
+                '--disable-webgl2',
+                '--disable-2d-canvas-image-chromium',
+                '--disable-gl-extensions',
+                '--disable-webgl-image-chromium',
+                '--disable-reading-from-canvas',
+                '--disable-remote-core-animation',
+                '--disable-web-security',
+                '--allow-running-insecure-content',
+                '--disable-site-isolation-trials',
+                '--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process',
+                '--disable-threaded-animation',
+                '--disable-threaded-scrolling',
+                '--disable-composited-antialiasing',
+                '--disable-accelerated-2d-canvas',
+                '--disable-accelerated-jpeg-decoding',
+                '--disable-accelerated-mjpeg-decode',
+                '--disable-app-list-dismiss-on-blur',
+                '--disable-accelerated-video-decode',
+                '--disable-gpu-vsync',
+                '--disable-gpu-shader-disk-cache',
+                '--disable-gpu-early-init',
+                '--disable-gpu-memory-buffer-compositor-resources',
+                '--disable-gpu-process-crash-limit',
+                '--disable-d3d11',
                 `--proxy-server=${proxy.server}`
             ]
         });
@@ -327,7 +554,6 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
-            // Thêm đoạn mã yêu cầu số lượng trong hàm runPlaywrightInstances
             const instancesCount = parseInt(await new Promise(resolve => {
                 const rl = readline.createInterface({
                     input: process.stdin,
