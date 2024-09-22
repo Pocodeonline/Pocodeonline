@@ -95,7 +95,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         try {
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[35m🐮 Đang chạy tài khoản \x1b[33m${accountNumber} \x1b[31mIP \x1b[33m: \x1b[35m${proxy.server}`);
 
-            await page.goto(accountUrl);
+            await page.goto(accountUrl, { waitUntil: 'networkidle0' });
     
             const skipButtonSelector = '#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full';
             
@@ -209,11 +209,35 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             headless: true,
             args: [
                 '--no-sandbox',
+                '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
                 '--disable-gpu',
-                '--disable-cpu',
+                '--disable-audio-output',
+                '--disable-background-networking',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-breakpad',
+                '--disable-client-side-phishing-detection',
+                '--disable-component-extensions-with-background-pages',
+                '--disable-default-apps',
+                '--disable-extensions',
+                '--disable-features=TranslateUI,BlinkGenPropertyTrees',
+                '--disable-hang-monitor',
+                '--disable-ipc-flooding-protection',
+                '--disable-popup-blocking',
+                '--disable-prompt-on-repost',
+                '--disable-renderer-backgrounding',
+                '--disable-sync',
+                '--force-color-profile=srgb',
+                '--metrics-recording-only',
+                '--no-default-browser-check',
+                '--password-store=basic',
+                '--use-mock-keychain',
                 `--proxy-server=${proxy.server}`
-            ],
+            ]
         });
 
         const browserContext = await browser.newContext({
@@ -221,7 +245,11 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 storageState: null,
                 username: proxy.username,
                 password: proxy.password
-            }
+            },
+            bypassCSP: true,
+            viewport: null,
+            javascriptEnabled: true,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         });
 
         let accountSuccess = false;
