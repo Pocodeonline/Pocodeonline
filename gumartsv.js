@@ -178,20 +178,44 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             headless: true,
             args: [
                 '--no-sandbox',
+                '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
                 '--disable-gpu',
-                '--disable-cpu',
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-breakpad',
+                '--disable-client-side-phishing-detection',
+                '--disable-component-extensions-with-background-pages',
+                '--disable-default-apps',
+                '--disable-features=TranslateUI,BlinkGenPropertyTrees',
+                '--disable-hang-monitor',
+                '--disable-ipc-flooding-protection',
+                '--disable-popup-blocking',
+                '--disable-prompt-on-repost',
+                '--disable-renderer-backgrounding',
+                '--disable-sync',
+                '--force-color-profile=srgb',
+                '--metrics-recording-only',
+                '--no-default-browser-check',
+                '--password-store=basic',
+                '--use-mock-keychain',
                 `--proxy-server=${proxy.server}`
             ]
         });
-
+    
         const browserContext = await browser.newContext({
             httpCredentials: {
-                storageState: null,
                 username: proxy.username,
                 password: proxy.password
             },
             bypassCSP: true,
+            viewport: { width: 1280, height: 720 },
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         });
 
         let accountSuccess = false;
