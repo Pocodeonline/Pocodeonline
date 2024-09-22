@@ -1,7 +1,6 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
-const { spawn } = require('child_process');
 
 const SILVER = '\x1b[38;5;231m';
 const LIGHT_PINK = '\x1b[38;5;207m';
@@ -177,54 +176,22 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
-            executablePath: process.env.CHROME_BIN || null,
             args: [
                 '--no-sandbox',
-                '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
                 '--disable-gpu',
-                '--disable-extensions',
-                '--disable-background-networking',
-                '--disable-background-timer-throttling',
-                '--disable-backgrounding-occluded-windows',
-                '--disable-breakpad',
-                '--disable-client-side-phishing-detection',
-                '--disable-component-extensions-with-background-pages',
-                '--disable-default-apps',
-                '--disable-features=TranslateUI,BlinkGenPropertyTrees',
-                '--disable-hang-monitor',
-                '--disable-ipc-flooding-protection',
-                '--disable-popup-blocking',
-                '--disable-prompt-on-repost',
-                '--disable-renderer-backgrounding',
-                '--disable-sync',
-                '--force-color-profile=srgb',
-                '--metrics-recording-only',
-                '--no-default-browser-check',
-                '--password-store=basic',
-                '--use-mock-keychain',
-                `--proxy-server=${proxy.server}`,
-                '--disable-software-rasterizer',
-                '--disable-gpu-compositing',
-                '--disable-gpu-memory-buffer-video-frames',
-                '--disable-gpu-rasterization',
-                '--disable-gpu-sandbox',
-                '--enable-low-end-device-mode',
-                '--js-flags=--max-old-space-size=128'
+                '--disable-cpu',
+                `--proxy-server=${proxy.server}`
             ]
         });
-    
+
         const browserContext = await browser.newContext({
             httpCredentials: {
+                storageState: null,
                 username: proxy.username,
                 password: proxy.password
             },
             bypassCSP: true,
-            viewport: { width: 1280, height: 720 },
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         });
 
         let accountSuccess = false;
@@ -284,118 +251,111 @@ async function countdownTimer(seconds) {
 }
 
 (async () => {
+    await printCustomLogo(true);
+    const filePath = 'gumart.txt';
+
     try {
-        // Remove Xvfb setup
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Starting...`);
+        const proxies = await readProxies(PROXIES_FILE_PATH);
+        if (proxies.length === 0) {
+            console.log(`${RED}Không tìm thấy proxy nào.`);
+            return;
+        }
 
-        await printCustomLogo(true);
-        const filePath = 'gumart.txt';
-
-        try {
-            const proxies = await readProxies(PROXIES_FILE_PATH);
-            if (proxies.length === 0) {
-                console.log(`${RED}Không tìm thấy proxy nào.`);
-                return;
+        while (true) {
+            const nonEmptyLines = await countNonEmptyLines(filePath);
+            if (nonEmptyLines === 0) {
+                console.log(`${RED}File không chứa tài khoản nào.`);
+                break;
             }
 
-            while (true) {
-                const nonEmptyLines = await countNonEmptyLines(filePath);
-                if (nonEmptyLines === 0) {
-                    console.log(`${RED}File không chứa tài khoản nào.`);
+            const links = await readAccounts(filePath);
+            console.log(`${SILVER}GUMART ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
+            console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
+            console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản`);
+
+            const userInput = await new Promise(resolve => {
+                const rl = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${GREEN}hoặc ${YELLOW}'all' ${GREEN}để chạy tất cả${YELLOW}, ${RED}0 ${GREEN}để thoát${YELLOW}): `, (answer) => {
+                    rl.close();
+                    resolve(answer.trim());
+                });
+            });
+
+            let numAccounts;
+            if (userInput.toLowerCase() === 'all') {
+                numAccounts = links.length;
+            } else if (!isNaN(userInput)) {
+                numAccounts = parseInt(userInput, 10);
+                if (numAccounts <= 0) {
                     break;
                 }
-
-                const links = await readAccounts(filePath);
-                console.log(`${SILVER}GUMART ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
-                console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
-                console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản`);
-
-                const userInput = await new Promise(resolve => {
-                    const rl = readline.createInterface({
-                        input: process.stdin,
-                        output: process.stdout
-                    });
-                    rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${GREEN}hoặc ${YELLOW}'all' ${GREEN}để chạy tất cả${YELLOW}, ${RED}0 ${GREEN}để thoát${YELLOW}): `, (answer) => {
-                        rl.close();
-                        resolve(answer.trim());
-                    });
-                });
-
-                let numAccounts;
-                if (userInput.toLowerCase() === 'all') {
+                if (numAccounts > links.length) {
                     numAccounts = links.length;
-                } else if (!isNaN(userInput)) {
-                    numAccounts = parseInt(userInput, 10);
-                    if (numAccounts <= 0) {
-                        break;
-                    }
-                    if (numAccounts > links.length) {
-                        numAccounts = links.length;
-                    }
-                } else {
-                    console.log(`${RED}Nhập không hợp lệ!`);
-                    continue;
                 }
-
-                const restTime = parseInt(await new Promise(resolve => {
-                    const rl = readline.createInterface({
-                        input: process.stdin,
-                        output: process.stdout
-                    });
-                    rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9200 ${GREEN}nha${YELLOW}): `, (answer) => {
-                        rl.close();
-                        resolve(answer.trim());
-                    });
-                }), 10);
-
-                const repeatCount = parseInt(await new Promise(resolve => {
-                    const rl = readline.createInterface({
-                        input: process.stdin,
-                        output: process.stdout
-                    });
-                    rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}( ${GREEN}hoặc ${YELLOW}0 ${GREEN}để chạy một lần): `, (answer) => {
-                        rl.close();
-                        resolve(answer.trim());
-                    });
-                }), 10);
-
-                if (isNaN(repeatCount) || repeatCount < 0) {
-                    console.log(`${RED}Nhập không hợp lệ!${RESET}`);
-                    continue;
-                }
-
-                // Thêm đoạn mã yêu cầu số lượng trong hàm runPlaywrightInstances
-                const instancesCount = parseInt(await new Promise(resolve => {
-                    const rl = readline.createInterface({
-                        input: process.stdin,
-                        output: process.stdout
-                    });
-                    rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, (answer) => {
-                        rl.close();
-                        resolve(answer.trim());
-                    });
-                }), 10);
-
-                if (isNaN(instancesCount) || instancesCount <= 0) {
-                    console.log(`${RED}Nhập không hợp lệ!${RESET}`);
-                    continue;
-                }
-
-                for (let i = 0; i <= repeatCount; i++) {
-                    console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}${RESET}`);
-                    await runPlaywrightInstances(links.slice(0, numAccounts), proxies, instancesCount);
-
-                    if (i < repeatCount) {
-                        await countdownTimer(restTime);
-                    }
-                }
-
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.${RESET}`);
+            } else {
+                console.log(`${RED}Nhập không hợp lệ!`);
+                continue;
             }
-        } catch (e) {
-            console.log(`${RED}Lỗi: ${e.message}${RESET}`);
+
+            const restTime = parseInt(await new Promise(resolve => {
+                const rl = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9200 ${GREEN}nha${YELLOW}): `, (answer) => {
+                    rl.close();
+                    resolve(answer.trim());
+                });
+            }), 10);
+
+            const repeatCount = parseInt(await new Promise(resolve => {
+                const rl = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}( ${GREEN}hoặc ${YELLOW}0 ${GREEN}để chạy một lần): `, (answer) => {
+                    rl.close();
+                    resolve(answer.trim());
+                });
+            }), 10);
+
+            if (isNaN(repeatCount) || repeatCount < 0) {
+                console.log(`${RED}Nhập không hợp lệ!${RESET}`);
+                continue;
+            }
+
+            // Thêm đoạn mã yêu cầu số lượng trong hàm runPlaywrightInstances
+            const instancesCount = parseInt(await new Promise(resolve => {
+                const rl = readline.createInterface({
+                    input: process.stdin,
+                    output: process.stdout
+                });
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, (answer) => {
+                    rl.close();
+                    resolve(answer.trim());
+                });
+            }), 10);
+
+            if (isNaN(instancesCount) || instancesCount <= 0) {
+                console.log(`${RED}Nhập không hợp lệ!${RESET}`);
+                continue;
+            }
+
+            for (let i = 0; i <= repeatCount; i++) {
+                console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}${RESET}`);
+                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, instancesCount);
+
+                if (i < repeatCount) {
+                    await countdownTimer(restTime);
+                }
+            }
+
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.${RESET}`);
         }
-    } finally {
-        // Remove Xvfb cleanup
+    } catch (e) {
+        console.log(`${RED}Lỗi${RESET}`);
     }
 })();
