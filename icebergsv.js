@@ -88,7 +88,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     const page = await browserContext.newPage();
     try {
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
-        await page.goto(accountUrl);
+        await page.goto(accountUrl, { waitUntil: 'domcontentloaded' });
 
         const pageLoadedSelector = '#root > div > div.css-g6euby > div > a.navlink.active > button';
         await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
@@ -114,7 +114,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         }
 
         await page.waitForTimeout(2000);
-        // Kiểm tra xem phần tử img có xuất hiện hay không
         const imgSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';
         let imgElementFound = true;
 
@@ -127,7 +126,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             imgElementFound = true;
         }
 
-            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
         if (!imgElementFound) {
             const timeSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
             const timeElement = await page.waitForSelector(timeSelector);
@@ -162,9 +160,22 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             headless: true,
             args: [
                 '--no-sandbox',
+                '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
                 '--disable-gpu',
-                '--disable-cpu',
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-default-apps',
+                '--disable-sync',
+                '--disable-translate',
+                '--hide-scrollbars',
+                '--metrics-recording-only',
+                '--mute-audio',
+                '--no-first-run',
+                '--safebrowsing-disable-auto-update',
                 `--proxy-server=${proxy.server}`
             ]
         });
@@ -174,7 +185,11 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 storageState: null,
                 username: proxy.username,
                 password: proxy.password
-            }
+            },
+            viewport: null,
+            javaScriptEnabled: true,
+            bypassCSP: true,
+            ignoreHTTPSErrors: true
         });
 
         let accountSuccess = false;
@@ -309,7 +324,6 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
-            // Thêm đoạn mã yêu cầu số lượng trong hàm runPlaywrightInstances
             const instancesCount = parseInt(await new Promise(resolve => {
                 const rl = readline.createInterface({
                     input: process.stdin,
