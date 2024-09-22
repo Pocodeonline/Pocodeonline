@@ -166,16 +166,27 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 '--no-first-run',
                 '--no-zygote',
                 '--disable-gpu',
-                '--disable-extensions',
+                '--disable-audio-output',
                 '--disable-background-networking',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-breakpad',
+                '--disable-client-side-phishing-detection',
+                '--disable-component-extensions-with-background-pages',
                 '--disable-default-apps',
+                '--disable-extensions',
+                '--disable-features=TranslateUI,BlinkGenPropertyTrees',
+                '--disable-hang-monitor',
+                '--disable-ipc-flooding-protection',
+                '--disable-popup-blocking',
+                '--disable-prompt-on-repost',
+                '--disable-renderer-backgrounding',
                 '--disable-sync',
-                '--disable-translate',
-                '--hide-scrollbars',
+                '--force-color-profile=srgb',
                 '--metrics-recording-only',
-                '--mute-audio',
-                '--no-first-run',
-                '--safebrowsing-disable-auto-update',
+                '--no-default-browser-check',
+                '--password-store=basic',
+                '--use-mock-keychain',
                 `--proxy-server=${proxy.server}`
             ]
         });
@@ -186,10 +197,10 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 username: proxy.username,
                 password: proxy.password
             },
-            viewport: null,
-            javaScriptEnabled: true,
             bypassCSP: true,
-            ignoreHTTPSErrors: true
+            viewport: null,
+            javascriptEnabled: true,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         });
 
         let accountSuccess = false;
