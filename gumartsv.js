@@ -1,7 +1,6 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
-const os = require('os');
 
 const SILVER = '\x1b[38;5;231m';
 const LIGHT_PINK = '\x1b[38;5;207m';
@@ -92,7 +91,8 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(page, accountUrl, accountNumber, proxy) {
+async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
+    const page = await browserContext.newPage();
     const maxRetries = 3;
     const retryDelay = 3000;
     let success = false;
@@ -101,7 +101,7 @@ async function processAccount(page, accountUrl, accountNumber, proxy) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
             
-            await page.goto(accountUrl, { waitUntil: 'domcontentloaded' });
+            await page.goto(accountUrl, { waitUntil: 'networkidle0' });
             
             const pageLoadedSelector = '#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.shadow_filter.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\] > img';
             await page.waitForSelector(pageLoadedSelector, { timeout: 20000 });
@@ -148,6 +148,12 @@ async function processAccount(page, accountUrl, accountNumber, proxy) {
         }
     }
 
+    try {
+        await page.close();
+    } catch (closeError) {
+        console.error(`${RED}Không thể đóng trang: ${closeError.message}`);
+    }
+
     return success;
 }
 
@@ -155,88 +161,94 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     let totalSuccessCount = 0;
     let totalFailureCount = 0;
     let proxyIndex = 0;
+    let activeCount = 0;
 
-    const browser = await chromium.launch({
-        headless: true,
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-accelerated-2d-canvas',
-            '--no-first-run',
-            '--no-zygote',
-            '--disable-gpu',
-            '--disable-extensions',
-            '--disable-background-networking',
-            '--disable-default-apps',
-            '--disable-sync',
-            '--disable-translate',
-            '--hide-scrollbars',
-            '--metrics-recording-only',
-            '--mute-audio',
-            '--no-first-run',
-            '--safebrowsing-disable-auto-update'
-        ]
-    });
+    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
+        const browser = await chromium.launch({
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--disable-gpu',
+                '--disable-audio-output',
+                '--disable-background-networking',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-breakpad',
+                '--disable-client-side-phishing-detection',
+                '--disable-component-extensions-with-background-pages',
+                '--disable-default-apps',
+                '--disable-extensions',
+                '--disable-features=TranslateUI,BlinkGenPropertyTrees',
+                '--disable-hang-monitor',
+                '--disable-ipc-flooding-protection',
+                '--disable-popup-blocking',
+                '--disable-prompt-on-repost',
+                '--disable-renderer-backgrounding',
+                '--disable-sync',
+                '--force-color-profile=srgb',
+                '--metrics-recording-only',
+                '--no-default-browser-check',
+                '--password-store=basic',
+                '--use-mock-keychain',
+                `--proxy-server=${proxy.server}`
+            ]
+        });
 
-    const semaphore = new Array(maxBrowsers).fill(null).map(() => ({ inUse: false }));
-
-    async function processAccountWithContext(accountUrl, accountNumber, proxy) {
-        const context = await browser.newContext({
-            proxy: {
-                server: proxy.server,
+        const browserContext = await browser.newContext({
+            httpCredentials: {
+                storageState: null,
                 username: proxy.username,
                 password: proxy.password
             },
             bypassCSP: true,
+            viewport: null,
+            javascriptEnabled: true,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         });
 
-        const page = await context.newPage();
         let accountSuccess = false;
-
         try {
-            accountSuccess = await processAccount(page, accountUrl, accountNumber, proxy);
+            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
             if (accountSuccess) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
             console.error('Error processing account:', error);
             totalFailureCount++;
         } finally {
-            await context.close();
+            await browserContext.close();
+            await browser.close();
+        }
+    }
+
+    const accountQueue = [...links];
+    while (accountQueue.length > 0 || activeCount > 0) {
+        while (activeCount < maxBrowsers && accountQueue.length > 0) {
+            const accountUrl = accountQueue.shift();
+            const accountNumber = links.indexOf(accountUrl) + 1;
+            const proxy = proxies[proxyIndex % proxies.length];
+            proxyIndex++;
+
+            activeCount++;
+            processAccountWithBrowser(accountUrl, accountNumber, proxy)
+                .then(() => {
+                    activeCount--;
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                })
+                .catch(() => {
+                    activeCount--;
+                    console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
+                });
         }
 
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+        if (activeCount > 0) {
+            await new Promise(resolve => setTimeout(resolve, 14000));
+        }
     }
-
-    async function processBatch(batch) {
-        const promises = batch.map(async ({ accountUrl, accountNumber, proxy }, index) => {
-            await semaphore[index].promise;
-            semaphore[index].inUse = true;
-            await processAccountWithContext(accountUrl, accountNumber, proxy);
-            semaphore[index].inUse = false;
-            semaphore[index].promise = new Promise(resolve => {
-                setImmediate(resolve);
-            });
-        });
-
-        await Promise.all(promises);
-    }
-
-    const batches = [];
-    for (let i = 0; i < links.length; i += maxBrowsers) {
-        const batch = links.slice(i, i + maxBrowsers).map((accountUrl, index) => ({
-            accountUrl,
-            accountNumber: i + index + 1,
-            proxy: proxies[(i + index) % proxies.length]
-        }));
-        batches.push(batch);
-    }
-
-    for (const batch of batches) {
-        await processBatch(batch);
-    }
-
-    await browser.close();
 
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231mTool \x1b[38;5;11m[ \x1b[38;5;231mGUMART \x1b[38;5;11m].`);
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
@@ -332,18 +344,12 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
-            const cpuCount = os.cpus().length;
-            const recommendedInstances = Math.max(1, Math.floor(cpuCount / 2));
-            
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số lõi CPU của bạn: ${YELLOW}${cpuCount}`);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số luồng khuyến nghị: ${YELLOW}${recommendedInstances}`);
-
             const instancesCount = parseInt(await new Promise(resolve => {
                 const rl = readline.createInterface({
                     input: process.stdin,
                     output: process.stdout
                 });
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}(${GREEN}Khuyến nghị: ${YELLOW}${recommendedInstances}${GREEN}): `, (answer) => {
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, (answer) => {
                     rl.close();
                     resolve(answer.trim());
                 });
