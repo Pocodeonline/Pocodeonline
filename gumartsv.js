@@ -92,16 +92,6 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-let xvfb;
-async function setupXvfb() {
-    return new Promise((resolve, reject) => {
-        xvfb = spawn('Xvfb', [':99', '-ac', '-screen', '0', '1280x1024x24']);
-        xvfb.stdout.on('data', () => resolve());
-        xvfb.stderr.on('data', (data) => console.error(`Xvfb Error: ${data}`));
-        xvfb.on('error', reject);
-    });
-}
-
 async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
     const page = await browserContext.newPage();
     const maxRetries = 3; // Số lần tối đa để thử lại
@@ -295,10 +285,8 @@ async function countdownTimer(seconds) {
 
 (async () => {
     try {
-        // Set up Xvfb
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Setting up virtual display...`);
-        await setupXvfb();
-        process.env.DISPLAY = ':99';
+        // Remove Xvfb setup
+        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Starting...`);
 
         await printCustomLogo(true);
         const filePath = 'gumart.txt';
@@ -408,9 +396,6 @@ async function countdownTimer(seconds) {
             console.log(`${RED}Lỗi: ${e.message}${RESET}`);
         }
     } finally {
-        // Clean up Xvfb
-        if (xvfb) {
-            xvfb.kill();
-        }
+        // Remove Xvfb cleanup
     }
 })();
