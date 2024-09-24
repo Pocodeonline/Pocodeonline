@@ -39,6 +39,10 @@ class FreeDogsAPIClient {
 
     loadProxies() {
         const proxyFile = path.join(__dirname, 'proxies.txt');
+        if (!fs.existsSync(proxyFile)) {
+            console.log(`${RED}Vui lòng thêm file proxies.txt${RESET}`);
+            process.exit(1);
+        }
         const proxyLines = fs.readFileSync(proxyFile, 'utf8').split('\n').filter(Boolean);
         return proxyLines.map(line => {
             const [ip, port, username, password] = line.split(':');
@@ -263,6 +267,11 @@ class FreeDogsAPIClient {
 
         if (fs.existsSync(tokenFile)) {
             tokens = JSON.parse(fs.readFileSync(tokenFile, 'utf8'));
+        }
+
+        if (!fs.existsSync(dataFile)) {
+            console.log(`${RED}Vui lòng thêm file freedogs.txt${RESET}`);
+            process.exit(1);
         }
 
         const data = fs.readFileSync(dataFile, 'utf8')
