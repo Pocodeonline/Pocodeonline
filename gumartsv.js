@@ -112,6 +112,9 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
     const browser = await chromium.launch({
         headless: true,
+        proxy: {
+            server: 'http://per-context'
+        },
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -228,7 +231,7 @@ async function countdownTimer(seconds) {
             }
 
             const restTime = parseInt(await new Promise(resolve => {
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}28800 ${GREEN}nha${YELLOW}): `, resolve);
+                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9000 ${GREEN}nha${YELLOW}): `, resolve);
             }), 10);
 
             const repeatCount = parseInt(await new Promise(resolve => {
