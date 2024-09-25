@@ -94,7 +94,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
-            await page.goto(accountUrl, { waitUntil: 'networkidle' });
+            await page.goto(accountUrl, { waitUntil: 'networkidle0' });
 
             // Handle optional skip button
             const skipButtonSelector = "#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button";
