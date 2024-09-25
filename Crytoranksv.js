@@ -198,44 +198,14 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     return success;
 }
 
-async function runPlaywrightInstances(links, proxies, maxBrowsers) {
-    let totalSuccessCount = 0;
-    let totalFailureCount = 0;
-    let proxyIndex = 0;
-    let activeCount = 0;
-
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
             args: [
                 '--no-sandbox',
-                '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
                 '--disable-gpu',
-                '--disable-audio-output',
-                '--disable-background-networking',
-                '--disable-background-timer-throttling',
-                '--disable-backgrounding-occluded-windows',
-                '--disable-breakpad',
-                '--disable-client-side-phishing-detection',
-                '--disable-component-extensions-with-background-pages',
-                '--disable-default-apps',
-                '--disable-extensions',
-                '--disable-features=TranslateUI,BlinkGenPropertyTrees',
-                '--disable-hang-monitor',
-                '--disable-ipc-flooding-protection',
-                '--disable-popup-blocking',
-                '--disable-prompt-on-repost',
-                '--disable-renderer-backgrounding',
-                '--disable-sync',
-                '--force-color-profile=srgb',
-                '--metrics-recording-only',
-                '--no-default-browser-check',
-                '--password-store=basic',
-                '--use-mock-keychain',
+                '--disable-cpu',
                 `--proxy-server=${proxy.server}`
             ]
         });
