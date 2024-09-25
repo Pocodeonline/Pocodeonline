@@ -97,6 +97,10 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
             await page.goto(accountUrl, { waitUntil: 'networkidle0' });
 
+            const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter > img";
+            await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
+            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
+
             // Handle optional skip button
             const skipButtonSelector = "#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button";
             const pointTextSelector = "#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.flex.gap-2.items-center > div > div.w-full.flex.justify-between > div:nth-child(2) > p";
