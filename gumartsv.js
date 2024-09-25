@@ -136,10 +136,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         ]
     });
 
-    const semaphore = new Array(maxBrowsers).fill(null).map(() => ({ acquire: async () => {}, release: () => {} }));
-
-    const processAccountWithContext = async (accountUrl, accountNumber, proxy, sem) => {
-        await sem.acquire();
+    const processAccountWithContext = async (accountUrl, accountNumber, proxy) => {
         const context = await browser.newContext({
             proxy: {
                 server: proxy.server,
@@ -158,22 +155,27 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             totalFailureCount++;
         } finally {
             await context.close();
-            sem.release();
         }
     };
 
-    for (let i = 0; i < links.length; i += maxBrowsers) {
-        const batch = links.slice(i, i + maxBrowsers);
-        const promises = batch.map((accountUrl, index) => {
-            const accountNumber = i + index + 1;
-            const proxy = proxies[proxyIndex % proxies.length];
-            proxyIndex++;
-            return processAccountWithContext(accountUrl, accountNumber, proxy, semaphore[index]);
-        });
+    const runningTasks = new Set();
 
-        await Promise.all(promises);
+    for (let i = 0; i < links.length; i++) {
+        const accountUrl = links[i];
+        const accountNumber = i + 1;
+        const proxy = proxies[proxyIndex % proxies.length];
+        proxyIndex++;
+
+        const task = processAccountWithContext(accountUrl, accountNumber, proxy);
+        runningTasks.add(task);
+        task.then(() => runningTasks.delete(task));
+
+        if (runningTasks.size >= maxBrowsers) {
+            await Promise.race(runningTasks);
+        }
     }
 
+    await Promise.all(runningTasks);
     await browser.close();
 
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231mTool \x1b[38;5;11m[ \x1b[38;5;231mGUMART CLAIM X2 \x1b[38;5;11m].`);
