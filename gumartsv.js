@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 const readline = require('readline');
+const os = require('os');
 
 const SILVER = '\x1b[38;5;231m';
 const LIGHT_PINK = '\x1b[38;5;207m';
@@ -151,7 +152,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             if (attempt < maxRetries) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
-                await page.waitForTimeout(retryDelay);
+                await page.reload({ waitUntil: 'networkidle0' });
             } else {
                 // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
                 console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
@@ -248,6 +249,13 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
         if (activeCount > 0) {
             await new Promise(resolve => setTimeout(resolve, 14000));
+        }
+
+        // Thêm đoạn code để giảm tải CPU
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Nghỉ 1 giây sau mỗi vòng lặp
+        if (os.loadavg()[0] > 0.7) { // Nếu tải CPU trung bình trong 1 phút vượt quá 70%
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}CPU đang cao, tạm dừng 5 giây...`);
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Nghỉ thêm 5 giây
         }
     }
 
