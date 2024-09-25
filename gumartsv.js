@@ -162,19 +162,25 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         }
     };
 
-    const promises = links.map((accountUrl, index) => {
-        const accountNumber = index + 1;
-        const proxy = proxies[proxyIndex % proxies.length];
-        proxyIndex++;
-        return processAccountWithContext(accountUrl, accountNumber, proxy, semaphore[index % maxBrowsers]);
-    });
+    for (let i = 0; i < links.length; i += maxBrowsers) {
+        const batch = links.slice(i, i + maxBrowsers);
+        const promises = batch.map((accountUrl, index) => {
+            const accountNumber = i + index + 1;
+            const proxy = proxies[proxyIndex % proxies.length];
+            proxyIndex++;
+            return processAccountWithContext(accountUrl, accountNumber, proxy, semaphore[index]);
+        });
 
-    await Promise.all(promises);
+        await Promise.all(promises);
+    }
+
     await browser.close();
 
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231mTool \x1b[38;5;11m[ \x1b[38;5;231mGUMART CLAIM X2 \x1b[38;5;11m].`);
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
+
+    return { totalSuccessCount, totalFailureCount };
 }
 
 async function logFailedAccount(accountNumber, errorMessage) {
@@ -249,9 +255,14 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
+            let totalSuccessCount = 0;
+            let totalFailureCount = 0;
+
             for (let i = 0; i <= repeatCount; i++) {
                 console.log(`${SILVER}Chạy lần ${GREEN}${i + 1}${RESET}`);
-                await runPlaywrightInstances(links.slice(0, numAccounts), proxies, instancesCount);
+                const { totalSuccessCount: successCount, totalFailureCount: failureCount } = await runPlaywrightInstances(links.slice(0, numAccounts), proxies, instancesCount);
+                totalSuccessCount += successCount;
+                totalFailureCount += failureCount;
 
                 if (i < repeatCount) {
                     await countdownTimer(restTime);
@@ -259,6 +270,8 @@ async function countdownTimer(seconds) {
             }
 
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.${RESET}`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
         }
     } catch (e) {
         console.log(`${RED}Lỗi: ${e.message}${RESET}`);
