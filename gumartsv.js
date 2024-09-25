@@ -163,6 +163,12 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     let proxyIndex = 0;
     let activeCount = 0;
 
+async function runPlaywrightInstances(links, proxies, maxBrowsers) {
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+    let proxyIndex = 0;
+    let activeCount = 0;
+
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
@@ -181,10 +187,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 username: proxy.username,
                 password: proxy.password
             },
-            bypassCSP: true,
-            viewport: null,
-            javascriptEnabled: true,
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.54'
+            userAgent: 'Mozilla/5.0 (Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.54'
         });
 
         let accountSuccess = false;
