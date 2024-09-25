@@ -157,51 +157,51 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     return success;
 }
 
-async function runPlaywrightInstances(links, proxies, maxBrowsers) {
-    let totalSuccessCount = 0;
-    let totalFailureCount = 0;
-    let proxyIndex = 0;
-    let activeCount = 0;
+async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
+    const browser = await chromium.launch({
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-cpu',
+            `--proxy-server=${proxy.server}`
+        ]
+    });
 
-async function runPlaywrightInstances(links, proxies, maxBrowsers) {
-    let totalSuccessCount = 0;
-    let totalFailureCount = 0;
-    let proxyIndex = 0;
-    let activeCount = 0;
+    const browserContext = await browser.newContext({
+        httpCredentials: {
+            storageState: null,
+            username: proxy.username,
+            password: proxy.password
+        },
+        bypassCSP: true,
+        viewport: null,
+        javascriptEnabled: true,
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    });
 
-    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
-        const browser = await chromium.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-                '--disable-cpu',
-                `--proxy-server=${proxy.server}`
-            ]
-        });
-
-        const browserContext = await browser.newContext({
-            httpCredentials: {
-                storageState: null,
-                username: proxy.username,
-                password: proxy.password
-            },
-            userAgent: 'Mozilla/5.0 (Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.54'
-        });
-
-        let accountSuccess = false;
-        try {
-            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
-            if (accountSuccess) totalSuccessCount++;
-            else totalFailureCount++;
-        } catch (error) {
-            totalFailureCount++;
-        } finally {
-            await browserContext.close();
-            await browser.close();
-        }
+    let accountSuccess = false;
+    try {
+        accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
+        if (accountSuccess) totalSuccessCount++;
+        else totalFailureCount++;
+    } catch (error) {
+        console.error('Error processing account:', error);
+        totalFailureCount++;
+    } finally {
+        await browserContext.close();
+        await browser.close();
     }
+
+    return accountSuccess;
+}
+
+async function runPlaywrightInstances(links, proxies, maxBrowsers) {
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+    let proxyIndex = 0;
+    let activeCount = 0;
 
     const accountQueue = [...links];
     while (accountQueue.length > 0 || activeCount > 0) {
@@ -213,12 +213,19 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
             activeCount++;
             processAccountWithBrowser(accountUrl, accountNumber, proxy)
-                .then(() => {
+                .then((success) => {
                     activeCount--;
-                    console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    if (success) {
+                        totalSuccessCount++;
+                        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất tài khoản ${accountNumber}`);
+                    } else {
+                        totalFailureCount++;
+                        console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
+                    }
                 })
                 .catch(() => {
                     activeCount--;
+                    totalFailureCount++;
                     console.log(`${RED}Tài khoản ${accountNumber} gặp lỗi`);
                 });
         }
