@@ -233,7 +233,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             if (accountSuccess) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
-            console.error('Error processing account:', error);
             totalFailureCount++;
         } finally {
             await browserContext.close();
