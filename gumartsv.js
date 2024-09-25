@@ -197,6 +197,12 @@ async function countdownTimer(seconds) {
     console.log();
 }
 
+async function askQuestion(rl, question) {
+    return new Promise((resolve) => {
+        rl.question(question, resolve);
+    });
+}
+
 (async () => {
     await printCustomLogo(true);
     const filePath = 'gumart.txt';
@@ -208,7 +214,8 @@ async function countdownTimer(seconds) {
             return;
         }
 
-        while (true) {
+        let runAgain = true;
+        while (runAgain) {
             const nonEmptyLines = await countNonEmptyLines(filePath);
             if (nonEmptyLines === 0) {
                 console.log(`${RED}File không chứa tài khoản nào.`);
@@ -225,9 +232,7 @@ async function countdownTimer(seconds) {
                 output: process.stdout
             });
 
-            const userInput = await new Promise(resolve => {
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${GREEN}hoặc ${YELLOW}'all' ${GREEN}để chạy tất cả${YELLOW}, ${RED}0 ${GREEN}để thoát${YELLOW}): `, resolve);
-            });
+            const userInput = await askQuestion(rl, `${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng tài khoản muốn 🐮 chạy ${YELLOW}(${GREEN}hoặc ${YELLOW}'all' ${GREEN}để chạy tất cả${YELLOW}, ${RED}0 ${GREEN}để thoát${YELLOW}): `);
 
             let numAccounts;
             if (userInput.toLowerCase() === 'all') {
@@ -238,17 +243,11 @@ async function countdownTimer(seconds) {
                 if (numAccounts > links.length) numAccounts = links.length;
             }
 
-            const restTime = parseInt(await new Promise(resolve => {
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9000 ${GREEN}nha${YELLOW}): `, resolve);
-            }), 10);
+            const restTime = parseInt(await askQuestion(rl, `${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập thời gian nghỉ ngơi sau khi 🐮 chạy xong tất cả các tài khoản ${YELLOW}( ${GREEN}Khuyên ${YELLOW}9000 ${GREEN}nha${YELLOW}): `), 10);
 
-            const repeatCount = parseInt(await new Promise(resolve => {
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}( ${GREEN}hoặc ${YELLOW}0 ${GREEN}để chạy một lần): `, resolve);
-            }), 10);
+            const repeatCount = parseInt(await askQuestion(rl, `${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lần lặp lại sau thời gian nghỉ ngơi ${YELLOW}( ${GREEN}hoặc ${YELLOW}0 ${GREEN}để chạy một lần): `), 10);
 
-            const instancesCount = parseInt(await new Promise(resolve => {
-                rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `, resolve);
-            }), 10);
+            const instancesCount = parseInt(await askQuestion(rl, `${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Nhập số lượng luồng máy bạn có thể xử lý tài khoản để chạy ${YELLOW}( ${GREEN}Ai máy yếu khuyên  ${YELLOW}6 ${GREEN}nha${YELLOW}): `), 10);
 
             rl.close();
 
@@ -274,6 +273,16 @@ async function countdownTimer(seconds) {
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã hoàn tất tất cả các số lần muốn chạy lại.${RESET}`);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản lỗi: ${YELLOW}${totalFailureCount}`);
+
+            const rlAgain = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout
+            });
+
+            const runAgainInput = await askQuestion(rlAgain, `${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Bạn có muốn chạy lại với cài đặt cũ không? (y/n): `);
+            rlAgain.close();
+
+            runAgain = runAgainInput.toLowerCase() === 'y';
         }
     } catch (e) {
         console.log(`${RED}Lỗi: ${e.message}${RESET}`);
