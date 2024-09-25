@@ -198,6 +198,12 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     return success;
 }
 
+async function runPlaywrightInstances(links, proxies, maxBrowsers) {
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+    let proxyIndex = 0;
+    let activeCount = 0;
+
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
