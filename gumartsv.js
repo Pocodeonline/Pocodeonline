@@ -157,7 +157,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     return success;
 }
 
-    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
+async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
             headless: true,
             args: [
