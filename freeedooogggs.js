@@ -319,7 +319,7 @@ class FreeDogsAPIClient {
                         currentIndex = endIndex;
                         if (currentIndex >= numAccountsToRun) {
                             currentIndex = 0; // Reset to start again
-                            await this.countdown(300);
+                            await this.countdown(500);
                         }
                     }
                 };
