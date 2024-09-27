@@ -302,7 +302,7 @@ async function countdownTimer(seconds) {
             }
 
             const links = await readAccounts(filePath);
-            console.log(`${SILVER}TEMCO ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
+            console.log(`${SILVER}TEMCO Luồng ${LIGHT_PINK}code by ${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] ${RESET}`);
             console.log(`${LIGHT_PINK}tele${YELLOW}: ${PINK}tphuc_0 ${RESET}`);
             console.log(`${GREEN}Hiện tại bạn có ${YELLOW}${nonEmptyLines}${GREEN} tài khoản`);
 
