@@ -815,7 +815,7 @@ if (isMainThread) {
                 let activeWorkers = 0;
 
                 async function processCycle() {
-                    console.log('Đã dùng thì đừng sợ, đã sợ thì đừng dùng...'.magenta);
+                    console.log(`${LIGHT_BLUE}Đã vào tool Yescoin...`);
                     let accountQueue = [...accounts];
 
                     function startWorker() {
