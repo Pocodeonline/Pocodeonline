@@ -131,13 +131,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 await page.click(successButtonSelector);
                 await page.waitForSelector(clicksuccessButtonSelector, { timeout: 3000 });
                 await page.click(clicksuccessButtonSelector);
-                await page.waitForTimeout(2000);
                 const balancecheckinElement = await page.waitForSelector(balancecheckin, { timeout: 6000 });
                 const balancecheckintext = await balancecheckinElement.evaluate(el => el.innerText);
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mĐiểm danh Acc \x1b[33m${accountNumber} \x1b[35m hôm nay thành công ${YELLOW }+ ${balancecheckintext}...`);
-            } catch (error) {
+            } catch (err) {
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m hôm nay điểm danh rồi`);
             }
+
             const clickskipcheckinButtonSelector = 'body > div.ease.fixed.bottom-0.left-0.z-\\[1000\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div.flex.items-start.justify-between > button > svg > g > path:nth-child(2)';
             await page.waitForSelector(clickskipcheckinButtonSelector, { timeout: 5000 });
             await page.click(clickskipcheckinButtonSelector);
