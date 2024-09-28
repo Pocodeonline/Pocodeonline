@@ -85,109 +85,112 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(page, accountUrl, accountNumber, proxy) {
-    const maxRetries = 3;
-    const retryDelay = 3000;
+async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
+    const page = await browserContext.newPage();
+    const maxRetries = 3; // Số lần tối đa để thử lại
+    const retryDelay = 3000; // Thời gian chờ giữa các lần thử lại (2000ms = 2 giây)
     let success = false;
 
+    // Thực hiện các thử lại
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
-            await page.goto(accountUrl, { waitUntil: 'networkidle' });
+            await page.goto(accountUrl, { waitUntil: 'networkidle0' });
 
-            // Xử lý các nhiệm vụ
-            await handleTasks(page, accountNumber);
+            const pageLoadedSelector = "#app > div.box-border.w-full > div.airdrop-home-wrap > div.mining-flag-wrap > div:nth-child(2) > div.relative.my-30px.h-160px.w-full.flex.items-center.justify-center > img:nth-child(2)";
+            await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
+            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
-            // Lấy số dư hiện tại
-            const currentBalance = await getCurrentBalance(page);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance} ${GREEN}khi làm xong..${RESET}`);
+            const skippButtonSelector = "#app > div:nth-child(2) > div.van-popup.van-popup--center.van-safe-area-bottom.van-popup-customer.base-dialog.a-t-4 > div > div.i-carbon\\:close-outline.close-btn";
+            try {
+                const skippButton = await page.waitForSelector(skippButtonSelector, { timeout: 4000 });
+                if (skippButton) {
+                    await skippButton.click();
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Skip bỏ qua thông báo acc \x1b[38;5;11m${accountNumber}${RESET}`);
+                }
+            } catch (err) {
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${RESET}`);
+            }
+            // Handle optional skip button
+            const startminingButtonSelector = "#app > div.box-border.w-full > div.airdrop-home-wrap > div.mining-flag-wrap > div:nth-child(2) > div.mt-20px > a > div";
+            try {
+                const startButton = await page.waitForSelector(startminingButtonSelector, { timeout: 4000 });
+                if (startButton) {
+                    await startButton.click();
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đào cho acc \x1b[38;5;11m${accountNumber} thành công...${RESET}`);
+                }
+            } catch (err) {
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không đào lại được acc\x1b[38;5;11m${accountNumber}${RED}...${RESET}`);
+            }
             
-            success = true;
+            const imgSelector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(5) > div.ml-11px.flex-col.items-end.inline-flex > div';
+            let imgElementFound = true;
+    
+            try {
+                await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+                await page.click(imgSelector);
+                await page.waitForTimeout(3000);
+                imgElementFound = false;
+            } catch (error) {
+                imgElementFound = true;
+            }
+    
+            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
+            if (!imgElementFound) {                
+                const timeSelector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(5) > div.ml-11px.flex-col.items-end.inline-flex > div';
+                const timeElement = await page.waitForSelector(timeSelector, { timeout: 3000 });
+                const time = await timeElement.evaluate(el => el.innerText);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh của tài khoản ${YELLOW}${accountNumber} ${GREEN}${time} mai mới điểm danh tiếp`);
+            }
+
+            const img2Selector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(4) > div.ml-11px.flex-col.items-end.inline-flex > div';
+            let img2ElementFound = true;
+    
+            try {
+                await page.waitForSelector(img2Selector, { visible: true, timeout: 2000 });
+                await page.click(img2Selector);
+                await page.waitForTimeout(3000);
+                img2ElementFound = false;
+            } catch (error) {
+                img2ElementFound = true;
+            }
+    
+            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
+            if (!img2ElementFound) {                
+                const time2Selector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(4) > div.ml-11px.flex-col.items-end.inline-flex > div';
+                const time2Element = await page.waitForSelector(time2Selector, { timeout: 3000 });
+                const time2 = await time2Element.evaluate(el => el.innerText);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Đã làm task theo dõi nhóm acc ${YELLOW}${accountNumber} ${GREEN}${time2} + ${YELLOW}50 ${GREEN}TEMCO.. `);
+            }
+
+            const currentBalanceSelector = "#app > div.box-border.w-full > div.airdrop-home-wrap > div.mining-flag-wrap > div.account-wrap.left-to-right > div:nth-child(2) > div.font-bold.text-20px.text-\\$primary.mt-4px";
+            const currentBalance = await page.textContent(currentBalanceSelector);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance} ${GREEN}khi làm xong..${RESET}`);
+            await page.waitForTimeout(1500);
+
+                success = true;
+
             break;
         } catch (error) {
             if (attempt < maxRetries) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
-                await page.reload({ waitUntil: 'networkidle' });
+                await page.reload({ waitUntil: 'networkidle0' });
             } else {
+                // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
                 console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
                 await logFailedAccount(accountNumber, error.message);
             }
         }
     }
 
+    try {
+        // Đảm bảo đóng trang sau khi hoàn thành
+        await page.close();
+    } catch (closeError) {
+        console.error(`${RED}Không thể đóng trang: ${closeError.message}`);
+    }
+
     return success;
-}
-
-async function handleTasks(page, accountNumber) {
-    // Xử lý nút Skip
-    await handleSkipButton(page, accountNumber);
-
-    // Xử lý nút Start Mining
-    await handleStartMiningButton(page, accountNumber);
-
-    // Xử lý nhiệm vụ điểm danh
-    await handleAttendanceTask(page, accountNumber);
-
-    // Xử lý nhiệm vụ theo dõi nhóm
-    await handleFollowGroupTask(page, accountNumber);
-}
-
-async function handleSkipButton(page, accountNumber) {
-    const skippButtonSelector = "//div[contains(@class, 'i-carbon:close-outline') and contains(@class, 'close-btn')]";
-    try {
-        await page.waitForXPath(skippButtonSelector, { timeout: 4000 });
-        await page.click(skippButtonSelector);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Skip bỏ qua thông báo acc \x1b[38;5;11m${accountNumber}${RESET}`);
-    } catch (err) {
-        console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${RESET}`);
-    }
-}
-
-async function handleStartMiningButton(page, accountNumber) {
-    const startminingButtonSelector = "//div[contains(@class, 'mt-20px')]//a//div";
-    try {
-        await page.waitForXPath(startminingButtonSelector, { timeout: 4000 });
-        await page.click(startminingButtonSelector);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đào cho acc \x1b[38;5;11m${accountNumber} thành công...${RESET}`);
-    } catch (err) {
-        console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không đào lại được acc\x1b[38;5;11m${accountNumber}${RED}...${RESET}`);
-    }
-}
-
-async function handleAttendanceTask(page, accountNumber) {
-    const attendanceSelector = "//div[contains(@class, 'container-card')]//div[contains(@class, 'flex-col')]//div[5]";
-    try {
-        await page.waitForXPath(attendanceSelector, { timeout: 2000 });
-        await page.click(attendanceSelector);
-        await page.waitForTimeout(3000);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã điểm danh cho acc ${YELLOW}${accountNumber}`);
-    } catch (error) {
-        const timeSelector = "//div[contains(@class, 'container-card')]//div[contains(@class, 'flex-col')]//div[5]";
-        const timeElement = await page.waitForXPath(timeSelector, { timeout: 3000 });
-        const time = await page.evaluate(el => el.textContent, timeElement);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh của tài khoản ${YELLOW}${accountNumber} ${GREEN}${time} mai mới điểm danh tiếp`);
-    }
-}
-
-async function handleFollowGroupTask(page, accountNumber) {
-    const followGroupSelector = "//div[contains(@class, 'container-card')]//div[contains(@class, 'flex-col')]//div[4]";
-    try {
-        await page.waitForXPath(followGroupSelector, { timeout: 2000 });
-        await page.click(followGroupSelector);
-        await page.waitForTimeout(3000);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã làm task theo dõi nhóm acc ${YELLOW}${accountNumber} ${GREEN}+ ${YELLOW}50 ${GREEN}TEMCO`);
-    } catch (error) {
-        const timeSelector = "//div[contains(@class, 'container-card')]//div[contains(@class, 'flex-col')]//div[4]";
-        const timeElement = await page.waitForXPath(timeSelector, { timeout: 3000 });
-        const time = await page.evaluate(el => el.textContent, timeElement);
-        console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Task theo dõi nhóm của tài khoản ${YELLOW}${accountNumber} ${GREEN}${time} mới làm tiếp được`);
-    }
-}
-
-async function getCurrentBalance(page) {
-    const balanceSelector = "//div[contains(@class, 'account-wrap')]//div[contains(@class, 'font-bold')]";
-    const balanceElement = await page.waitForXPath(balanceSelector, { timeout: 3000 });
-    return await page.evaluate(el => el.textContent, balanceElement);
 }
 
 async function runPlaywrightInstances(links, proxies, maxBrowsers) {
@@ -202,31 +205,30 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             args: [
                 '--no-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu',
+                '--disable-cpu',
                 `--proxy-server=${proxy.server}`
             ]
         });
 
-        const context = await browser.newContext({
+        const browserContext = await browser.newContext({
             httpCredentials: {
+                storageState: null,
                 username: proxy.username,
                 password: proxy.password
             },
             bypassCSP: true,
         });
 
-        const page = await context.newPage();
-
         let accountSuccess = false;
         try {
-            accountSuccess = await processAccount(page, accountUrl, accountNumber, proxy);
+            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
             if (accountSuccess) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
             console.error('Error processing account:', error);
             totalFailureCount++;
         } finally {
-            await context.close();
+            await browserContext.close();
             await browser.close();
         }
     }
@@ -255,10 +257,11 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             await new Promise(resolve => setTimeout(resolve, 14000));
         }
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        if (os.loadavg()[0] > 0.7) {
+        // Thêm đoạn code để giảm tải CPU
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Nghỉ 1 giây sau mỗi vòng lặp
+        if (os.loadavg()[0] > 0.7) { // Nếu tải CPU trung bình trong 1 phút vượt quá 70%
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}CPU đang cao, tạm dừng 5 giây...`);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Nghỉ thêm 5 giây
         }
     }
 
@@ -356,6 +359,7 @@ async function countdownTimer(seconds) {
                 continue;
             }
 
+            // Thêm đoạn mã yêu cầu số lượng trong hàm runPlaywrightInstances
             const instancesCount = parseInt(await new Promise(resolve => {
                 const rl = readline.createInterface({
                     input: process.stdin,
