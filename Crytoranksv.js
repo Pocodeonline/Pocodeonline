@@ -131,6 +131,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 await page.click(successButtonSelector);
                 await page.waitForSelector(clicksuccessButtonSelector, { timeout: 3000 });
                 await page.click(clicksuccessButtonSelector);
+                await page.waitForTimeout(2000);
                 const balancecheckinElement = await page.waitForSelector(balancecheckin, { timeout: 6000 });
                 const balancecheckintext = await balancecheckinElement.evaluate(el => el.innerText);
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mĐiểm danh Acc \x1b[33m${accountNumber} \x1b[35m hôm nay thành công ${YELLOW }+ ${balancecheckintext}...`);
