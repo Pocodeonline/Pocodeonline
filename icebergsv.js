@@ -84,10 +84,11 @@ async function printCustomLogo(blink = false) {
     }
 }
 
-async function processAccount(page, accountUrl, accountNumber, proxy) {
+async function processAccount(browserContext, accountUrl, accountNumber, proxy) {
+    const page = await browserContext.newPage();
     try {
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
-        await page.goto(accountUrl, { waitUntil: 'networkidle' });
+        await page.goto(accountUrl, { waitUntil: 'networkidle0' });
 
         const pageLoadedSelector = '#root > div > div.css-g6euby > div > a.navlink.active > button';
         await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
@@ -95,7 +96,7 @@ async function processAccount(page, accountUrl, accountNumber, proxy) {
 
         const balanceSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 3000 });
-        const balanceText = await balanceElement.innerText();
+        const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mSố dư hiện tại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12m là \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
 
         const claimButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > span > svg';
@@ -128,20 +129,22 @@ async function processAccount(page, accountUrl, accountNumber, proxy) {
         if (!imgElementFound) {
             const timeSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
             const timeElement = await page.waitForSelector(timeSelector);
-            const time = await timeElement.innerText();
+            const time = await timeElement.evaluate(el => el.innerText);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Startmining của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
         }
 
         await page.waitForTimeout(2000);
         const pointsSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const pointsElement = await page.waitForSelector(pointsSelector);
-        const points = await pointsElement.innerText();
+        const points = await pointsElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư khi làm xong acc\x1b[38;5;11m: ${points}`);
 
     } catch (e) {
         console.log(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
         await logFailedAccount(accountNumber, e.message);
         return false;
+    } finally {
+        await page.close();
     }
     return true;
 }
@@ -152,36 +155,37 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
     let proxyIndex = 0;
     let activeCount = 0;
 
-    const browser = await chromium.launch({
-        headless: true,
-        args: [
-            '--no-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-cpu'
-        ]
-    });
+    async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
+        const browser = await chromium.launch({
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-cpu',
+                `--proxy-server=${proxy.server}`
+            ]
+        });
 
-    async function processAccountWithContext(accountUrl, accountNumber, proxy) {
-        const context = await browser.newContext({
-            proxy: {
-                server: proxy.server,
+        const browserContext = await browser.newContext({
+            httpCredentials: {
+                storageState: null,
                 username: proxy.username,
                 password: proxy.password
             },
             bypassCSP: true,
         });
 
-        const page = await context.newPage();
         let accountSuccess = false;
         try {
-            accountSuccess = await processAccount(page, accountUrl, accountNumber, proxy);
+            accountSuccess = await processAccount(browserContext, accountUrl, accountNumber, proxy);
             if (accountSuccess) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
             console.error('Error processing account:', error);
             totalFailureCount++;
         } finally {
-            await context.close();
+            await browserContext.close();
+            await browser.close();
         }
     }
 
@@ -194,7 +198,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             proxyIndex++;
 
             activeCount++;
-            processAccountWithContext(accountUrl, accountNumber, proxy)
+            processAccountWithBrowser(accountUrl, accountNumber, proxy)
                 .then(() => {
                     activeCount--;
                     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất tài khoản ${accountNumber}`);
@@ -209,8 +213,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             await new Promise(resolve => setTimeout(resolve, 21000));
         }
     }
-
-    await browser.close();
 
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Hoàn tất xử lý tất cả tài khoản \x1b[38;5;231mTool \x1b[38;5;11m[ \x1b[38;5;231mICEBERG \x1b[38;5;11m].`);
     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${SILVER}Tổng tài khoản thành công: ${YELLOW}${totalSuccessCount}`);
