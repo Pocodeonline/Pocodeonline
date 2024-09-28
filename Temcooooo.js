@@ -97,7 +97,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
             await page.goto(accountUrl, { waitUntil: 'networkidle0' });
 
-            const pageLoadedSelector = "#app > div.box-border.w-full > div.airdrop-home-wrap > div.mining-flag-wrap > div:nth-child(2) > div.relative.my-30px.h-160px.w-full.flex.items-center.justify-center > img:nth-child(2)";
+            const pageLoadedSelector = "#app > div:nth-child(2) > div.van-popup.van-popup--center.van-safe-area-bottom.van-popup-customer.base-dialog.a-t-4 > div > div.i-carbon\\:close-outline.close-btn";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
