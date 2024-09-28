@@ -183,7 +183,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             headless: true,
             args: [
                 '--no-sandbox',
-                '--disable-gpu',
+                '--disable-dev-shm-usage',
                 '--disable-cpu',
                 `--proxy-server=${proxy.server}`
             ]
@@ -196,8 +196,6 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
                 password: proxy.password
             },
             bypassCSP: true,
-            viewport: null,
-            javascriptEnabled: true,
         });
 
         let accountSuccess = false;
@@ -206,6 +204,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
             if (accountSuccess) totalSuccessCount++;
             else totalFailureCount++;
         } catch (error) {
+            console.error('Error processing account:', error);
             totalFailureCount++;
         } finally {
             await browserContext.close();
