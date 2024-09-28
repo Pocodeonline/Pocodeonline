@@ -120,49 +120,20 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đào cho acc \x1b[38;5;11m${accountNumber} thành công...${RESET}`);
                 }
             } catch (err) {
-                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không đào lại được acc\x1b[38;5;11m${accountNumber}${RED}...${RESET}`);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không đào lại được acc\x1b[38;5;11m${accountNumber} ${RED}vì đào rồi${RED}...${RESET}`);
             }
-            
-            const imgSelector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(5) > div.ml-11px.flex-col.items-end.inline-flex > div';
-            let imgElementFound = true;
-    
+            const checkinButtonSelector = "#app > div.box-border.w-full > div.airdrop-home-wrap > div.mining-flag-wrap > div:nth-child(2) > div.mt-20px > a > div";
             try {
-                await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
-                await page.click(imgSelector);
-                await page.waitForTimeout(3000);
-                imgElementFound = false;
-            } catch (error) {
-                imgElementFound = true;
-            }
-    
-            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
-            if (!imgElementFound) {                
-                const timeSelector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(5) > div.ml-11px.flex-col.items-end.inline-flex > div';
-                const timeElement = await page.waitForSelector(timeSelector, { timeout: 3000 });
-                const time = await timeElement.evaluate(el => el.innerText);
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Điểm danh của tài khoản ${YELLOW}${accountNumber} ${GREEN}${time} mai mới điểm danh tiếp`);
+                const checkinButton = await page.waitForSelector(checkinButtonSelector, { timeout: 4000 });
+                if (checkinButton) {
+                    await checkinButton.click();
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Checkin cho acc \x1b[38;5;11m${accountNumber} ${GREEN}+ ${YELLOW}50 ${GREEN}point thành công...${RESET}`);
+                }
+            } catch (err) {
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không checkin được acc\x1b[38;5;11m${accountNumber} ${RED}vì checkin rồi${RED}...quay lại mai nha${RESET}`);
             }
 
-            const img2Selector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(4) > div.ml-11px.flex-col.items-end.inline-flex > div';
-            let img2ElementFound = true;
-    
-            try {
-                await page.waitForSelector(img2Selector, { visible: true, timeout: 2000 });
-                await page.click(img2Selector);
-                await page.waitForTimeout(3000);
-                img2ElementFound = false;
-            } catch (error) {
-                img2ElementFound = true;
-            }
-    
-            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
-            if (!img2ElementFound) {                
-                const time2Selector = '#app > div.box-border.w-full > div.airdrop-home-wrap > div.container-card.relative.rd-\\$card-radius.p-\\$mg.c-\\$btn-text.bg-\\$bg\\! > div:nth-child(4) > div.ml-11px.flex-col.items-end.inline-flex > div';
-                const time2Element = await page.waitForSelector(time2Selector, { timeout: 3000 });
-                const time2 = await time2Element.evaluate(el => el.innerText);
-                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Đã làm task theo dõi nhóm acc ${YELLOW}${accountNumber} ${GREEN}${time2} + ${YELLOW}50 ${GREEN}TEMCO.. `);
-            }
-
+            await page.waitForTimeout(1500);
             const currentBalanceSelector = "#app > div.box-border.w-full > div.airdrop-home-wrap > div.mining-flag-wrap > div.account-wrap.left-to-right > div:nth-child(2) > div.font-bold.text-20px.text-\\$primary.mt-4px";
             const currentBalance = await page.textContent(currentBalanceSelector);
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance} ${GREEN}khi làm xong..${RESET}`);
