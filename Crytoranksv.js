@@ -109,6 +109,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     console.log(`\x1b[31mKhông thấy skip \x1b[33m${accountNumber}`);
                 }
             } catch (err) {
+                // Có thể thêm log lỗi nếu cần
+            }
     
             await page.waitForTimeout(2000);
             const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
