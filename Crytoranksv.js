@@ -143,7 +143,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m hôm nay điểm danh rồi`);
             }
 
-            const nextSVGSelector = '#root > div > div.fixed.bottom-0.left-0.right-0.z-20.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
+            const nextSVGSelector = '#root > div > div.fixed.bottom-0.left-0.right-0.z-20.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1) > svg';
             await page.waitForSelector(nextSVGSelector, { timeout: 5000 });
             await page.click(nextSVGSelector);
     
