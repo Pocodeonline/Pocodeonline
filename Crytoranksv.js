@@ -109,43 +109,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                     console.log(`\x1b[31mKhông thấy skip \x1b[33m${accountNumber}`);
                 }
             } catch (err) {
-                // Có thể thêm log lỗi nếu cần
-            }
-    
-            const balanceSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div.flex.w-full.justify-between > div.relative.flex.h-10.items-center.gap-2.rounded-\\[10px\\].bg-\\[\\#06080B4D\\].px-3 > span.absolute.right-3.text-sm';
-            const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 6000 });
-            const balanceText = await balanceElement.evaluate(el => el.innerText);
-            console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mSố dư acc \x1b[33m${accountNumber} \x1b[35m là \x1b[33m: \x1b[33m${balanceText}`);
-            await page.waitForTimeout(1000);
-    
-            const claimButtonSelector = '#root > div > div.fixed.bottom-0.left-0.right-0.z-20.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.relative.flex.w-auto.min-w-\\[54px\\].flex-col.items-center.justify-center.gap-2.text-xs.font-semibold.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.after\\:bg-red.text-gray-3';
-            await page.waitForSelector(claimButtonSelector, { timeout: 5000 });
-            await page.click(claimButtonSelector);
-            await page.waitForTimeout(2000);
-    
-            const successButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
-            const clicksuccessButtonSelector = 'body > div.ease.fixed.bottom-0.left-0.z-\\[1000\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div:nth-child(2) > div > div > button'
-            const balancecheckin ='body > div.ease.fixed.bottom-0.left-0.z-\\[1000\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div:nth-child(2) > div > div > button > div'
-            const clickskipcheckinButtonSelector = 'body > div.ease.fixed.bottom-0.left-0.z-\\[1000\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div.flex.items-start.justify-between > button > svg > g > path:nth-child(2)';
-            try {
-                await page.waitForSelector(successButtonSelector, { timeout: 3000 });
-                await page.click(successButtonSelector);
-                await page.waitForSelector(clicksuccessButtonSelector, { timeout: 3000 });
-                await page.click(clicksuccessButtonSelector);
-                await page.waitForTimeout(2000);
-                const balancecheckinElement = await page.waitForSelector(balancecheckin, { timeout: 6000 });
-                const balancecheckintext = await balancecheckinElement.evaluate(el => el.innerText);
-                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[36mĐiểm danh Acc \x1b[33m${accountNumber} \x1b[35m hôm nay thành công ${YELLOW }+ ${balancecheckintext}...`);
-                await page.waitForSelector(clickskipcheckinButtonSelector, { timeout: 3000 });
-                await page.click(clickskipcheckinButtonSelector);
-
-            } catch (err) {
-                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m hôm nay điểm danh rồi`);
-            }
-
-            const nextSVGSelector = '#root > div > div.fixed.bottom-0.left-0.right-0.z-20.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1) > svg';
-            await page.waitForSelector(nextSVGSelector, { timeout: 5000 });
-            await page.click(nextSVGSelector);
     
             await page.waitForTimeout(2000);
             const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
