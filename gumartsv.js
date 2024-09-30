@@ -95,7 +95,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
-            await page.goto(accountUrl, { waitUntil: 'networkidle' });
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
             const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter > img";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
