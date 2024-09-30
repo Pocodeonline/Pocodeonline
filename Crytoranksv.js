@@ -95,7 +95,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         try {
             console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[35m🐮 Đang chạy tài khoản \x1b[33m${accountNumber} \x1b[31mIP \x1b[33m: \x1b[35m${proxy.server}`);
 
-            await page.goto(accountUrl, { waitUntil: 'networkidle' });
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
     
             const skipButtonSelector = '#root > div > div.fixed.left-0.top-0.z-\\[100\\].flex.h-full.w-full.flex-col.items-center.gap-6.bg-black.px-4.pb-10.pt-12 > div.flex.w-full.gap-4 > button.ease.h-11.w-full.rounded-\\[10px\\].px-3.font-semibold.transition-opacity.duration-150.active\\:opacity-\\[0\\.7\\].border.border-main-blue.text-main-blue.w-full';
             
