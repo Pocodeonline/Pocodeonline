@@ -88,7 +88,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     const page = await browserContext.newPage();
     try {
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+        await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
 
         const pageLoadedSelector = '#root > div > div.css-g6euby > div > a.navlink.active > button';
         await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
