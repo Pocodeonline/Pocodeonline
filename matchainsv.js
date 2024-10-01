@@ -94,7 +94,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
-            await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
+            await page.goto(accountUrl, { waitUntil: 'domcontentloaded' });
 
             // Handle optional skip button
             const skipButtonSelector = "body > div:nth-child(6) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.btn_box___Az8hH > div.btn_style___CgrXw.btn_style_cancel___ZHjYK";
@@ -178,7 +178,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             if (attempt < maxRetries) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
-                await page.reload({ waitUntil: 'networkidle' });
+                await page.reload({ waitUntil: 'domcontentloaded' });
             } else {
                 // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
                 console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
