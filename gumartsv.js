@@ -95,7 +95,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
-            await page.goto(url, { waitUntil: 'networkidle0' });
+            await page.goto(accountUrl, { waitUntil: 'networkidle' });
 
             const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter > img";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
@@ -153,7 +153,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (error) {
             if (attempt < maxRetries) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Đang thử lại acc ${YELLOW}${accountNumber} ${RED}lần${YELLOW} ${attempt + 1}`);
-                await page.reload({ waitUntil: 'networkidle0' });
+                await page.reload({ waitUntil: 'networkidle' });
             } else {
                 // Lưu thông tin lỗi nếu tất cả các lần thử đều không thành công
                 console.error(`${RED}Tài khoản số ${accountNumber} gặp lỗi`);
