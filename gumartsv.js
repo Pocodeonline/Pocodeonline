@@ -97,13 +97,14 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 25000 });
 
-            const skiptbButtonSelector = 'document.querySelector(document.querySelector('#el-id-1388-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > label > span.el-checkbox__input > span';
+            const loginButtonSelector = '#__nuxt > div > div > section > div > button';
             try {
-                await page.waitForSelector(skiptbButtonSelector, { visible: true, timeout: 6000 });
-                await page.click(skiptbButtonSelector);
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[38;5;10mĐã bỏ qua Thông Báo Acc \x1b[33m${accountNumber} \x1b[35m...`);
+                await page.waitForSelector(loginButtonSelector, { visible: true, timeout: 4500 });
+                await page.click(loginButtonSelector);
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[36mĐang Đăng Nhập Acc \x1b[33m${accountNumber} \x1b[35m...`);
+                await page.waitForTimeout(1000);
             } catch (error) {
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mKhông thấy bỏ qua skip acc \x1b[33m${accountNumber} \x1b[31m`);
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mĐăng Nhập Thất Bại Acc \x1b[33m${accountNumber} \x1b[31m`);
             }
 
             const doneskiptbButtonSelector = '#el-id-1388-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > button';
@@ -113,16 +114,6 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[38;5;10mĐã đồng ý qua 24h Thông Báo Acc \x1b[33m${accountNumber} \x1b[35m...`);
             } catch (error) {
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mKhông thấy đồng ý qua 24h skip acc \x1b[33m${accountNumber} \x1b[31m`);
-            }
-
-            const loginButtonSelector = '#__nuxt > div > div > section > div > button';
-            try {
-                await page.waitForSelector(loginButtonSelector, { visible: true, timeout: 4500 });
-                await page.click(loginButtonSelector);
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[36mĐang Đăng Nhập Acc \x1b[33m${accountNumber} \x1b[35m...`);
-                await page.waitForTimeout(1000);
-            } catch (error) {
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mĐăng Nhập Thất Bại Acc \x1b[33m${accountNumber} \x1b[31m`);
             }
 
             const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter > img";
