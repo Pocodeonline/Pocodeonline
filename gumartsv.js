@@ -97,7 +97,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 25000 });
 
-            const skiptbButtonSelector = '#el-id-2392-1 > div > div.w-\\[20rem\\].flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > button > img';
+            const skiptbButtonSelector = '#el-id-7327-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > button';
             try {
                 await page.waitForSelector(skiptbButtonSelector, { visible: true, timeout: 6000 });
                 await page.click(skiptbButtonSelector);
