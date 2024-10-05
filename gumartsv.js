@@ -97,13 +97,22 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 25000 });
 
-            const skiptbButtonSelector = '#el-id-7327-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > button';
+            const skiptbButtonSelector = 'document.querySelector(document.querySelector('#el-id-1388-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > label > span.el-checkbox__input > span';
             try {
                 await page.waitForSelector(skiptbButtonSelector, { visible: true, timeout: 6000 });
                 await page.click(skiptbButtonSelector);
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[38;5;10mĐã Skip Thông Báo Acc \x1b[33m${accountNumber} \x1b[35m...`);
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[38;5;10mĐã bỏ qua Thông Báo Acc \x1b[33m${accountNumber} \x1b[35m...`);
             } catch (error) {
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mKhông thấy skip acc \x1b[33m${accountNumber} \x1b[31m`);
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mKhông thấy bỏ qua skip acc \x1b[33m${accountNumber} \x1b[31m`);
+            }
+
+            const doneskiptbButtonSelector = '#el-id-1388-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > button';
+            try {
+                await page.waitForSelector(doneskiptbButtonSelector, { visible: true, timeout: 6000 });
+                await page.click(doneskiptbButtonSelector);
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[38;5;10mĐã đồng ý qua 24h Thông Báo Acc \x1b[33m${accountNumber} \x1b[35m...`);
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mKhông thấy đồng ý qua 24h skip acc \x1b[33m${accountNumber} \x1b[31m`);
             }
 
             const loginButtonSelector = '#__nuxt > div > div > section > div > button';
