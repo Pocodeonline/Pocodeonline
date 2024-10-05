@@ -201,8 +201,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
         const browser = await chromium.launch({
             headless: true,
             args: [
-                '--no-sandbox',
-                '--disable-dev-shm-usage',
+                '--disable-gpu',
                 '--disable-cpu',
                 `--proxy-server=${proxy.server}`
             ]
