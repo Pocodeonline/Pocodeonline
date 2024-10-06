@@ -210,7 +210,7 @@ async function runPlaywrightInstances(links, proxies, maxBrowsers) {
 
     async function processAccountWithBrowser(accountUrl, accountNumber, proxy) {
         const browser = await chromium.launch({
-            headless: false,
+            headless: true,
             args: [
                 '--disable-gpu',
                 '--disable-cpu',
