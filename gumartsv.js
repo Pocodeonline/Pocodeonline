@@ -107,14 +107,25 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mĐăng Nhập Thất Bại Acc \x1b[33m${accountNumber} \x1b[31m`);
             }
 
-            const doneskiptbButtonSelector = '#el-id-9476-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > button';
+            const doneskiptbButtonSelector = '#el-id-9476-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)] > button';
+
             try {
-                await page.waitForSelector(doneskiptbButtonSelector, { timeout: 6000 });
+                await page.waitForSelector(doneskiptbButtonSelector, { timeout: 10000, visible: true });
+
+                await page.evaluate(() => {
+                    const overlay = document.querySelector('.overlay-selector'); // Thay 'overlay-selector' bằng selector của lớp phủ nếu có
+                    if (overlay) {
+                        overlay.remove();
+                    }
+                });
+
                 await page.click(doneskiptbButtonSelector);
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[38;5;10mĐã đồng ý qua 24h Thông Báo Acc \x1b[33m${accountNumber} \x1b[35m...`);
             } catch (error) {
+
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mKhông thấy đồng ý qua 24h skip acc \x1b[33m${accountNumber} \x1b[31m`);
             }
+
 
             const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter > img";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
