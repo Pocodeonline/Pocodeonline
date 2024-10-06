@@ -107,7 +107,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mĐăng Nhập Thất Bại Acc \x1b[33m${accountNumber} \x1b[31m`);
             }
 
-            const doneskiptbButtonSelector = '#el-id-9476-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)] > button';
+            const doneskiptbButtonSelector = '#el-id-6111-1 > div > div.w-full.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\] > button';
 
             try {
                 await page.waitForSelector(doneskiptbButtonSelector, { timeout: 10000, visible: true });
