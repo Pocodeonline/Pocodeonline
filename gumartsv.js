@@ -107,28 +107,67 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mĐăng Nhập Thất Bại Acc \x1b[33m${accountNumber} \x1b[31m`);
             }
 
-            // Đăng nhập xong, chờ nút mua x2 hiện ra và click vào
-            const buyX2ButtonSelector = '//button[contains(@class, \'px-4 py-1 w-fit shadow-\')]';
-            await page.waitForSelector(buyX2ButtonSelector, { timeout: 6000 });
-            await page.click(buyX2ButtonSelector);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Mua x2 thành công acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
-            // Click vào nút Collect
-            const collectButtonSelector = '//p[text()=\'Collect\']';
-            await page.waitForSelector(collectButtonSelector, { timeout: 4500 });
-            await page.click(collectButtonSelector);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Claim thành công acc \x1b[38;5;11m${accountNumber}${RESET}`);
-
-            // In ra số dư hiện có
-            const balanceTextSelector = '#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p';
-            const balanceTextElement = await page.waitForSelector(balanceTextSelector, { timeout: 2500 });
-            let balanceText = "N/A";  // Giả định giá trị mặc định nếu không lấy được
-            if (balanceTextElement) {
-                balanceText = await page.evaluate(el => el.innerText, balanceTextElement);
+            try {
+                await page.waitForXPath('/html/body/div[1]/div/div/div[3]/div/div/div/div/div[2]/button', { timeout: 4500 });
+                await page.click('/html/body/div[1]/div/div/div[3]/div/div/div/div/div[2]/button');
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Skip bỏ qua acc \x1b[38;5;11m${accountNumber}${RESET}`);
+            } catch (err) {
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${RESET}`);
             }
-            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số dư hiện có acc \x1b[38;5;11m${accountNumber}: \x1b[38;5;12m${balanceText} ${GREEN}...${RESET}`);
 
-            success = true;
+            const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter > img";
+            await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
+            console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đăng nhập thành công ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
+
+            // Handle optional skip button
+            const skipButtonSelector = "#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button";
+            const pointTextSelector = "#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.flex.gap-2.items-center > div > div.w-full.flex.justify-between > div:nth-child(2) > p";
+            const balanceTextSelector = "#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p";
+            try {
+                const pointTextElement = await page.waitForSelector(pointTextSelector, { timeout: 2500 });
+                const balanceTextElement = await page.waitForSelector(balanceTextSelector, { timeout: 2500 });
+                let pointText = "N/A";  // Giả định giá trị mặc định nếu không lấy được
+                if (pointTextElement) {
+                    pointText = await page.evaluate(el => el.innerText, pointTextElement);
+                }
+                let balanceText = "N/A";  // Giả định giá trị mặc định nếu không lấy được
+                if (balanceTextElement) {
+                    balanceText = await page.evaluate(el => el.innerText, balanceTextElement);
+                }
+            
+                const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 2000 });
+                if (skipButton) {
+                    // Hiển thị pointText trong console trước khi bấm
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số Dư acc \x1b[38;5;11m${accountNumber}: \x1b[38;5;12m${balanceText} ${GREEN}Claim \x1b[38;5;11m+${pointText} ${GREEN}point thành công...${RESET}`);
+                    // Click vào nút skip
+                    await skipButton.click();
+                }
+            } catch (err) {
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber}${RED} không claim được...${RESET}`);
+            }
+            
+            const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
+            let imgElementFound = true;
+    
+            try {
+                await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
+                await page.click(imgSelector);
+                await page.waitForTimeout(2000);
+                imgElementFound = false;
+            } catch (error) {
+                imgElementFound = true;
+            }
+    
+            // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
+            if (!imgElementFound) {
+                const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div';
+                const timeElement = await page.waitForSelector(timeSelector, { timeout: 3000 });
+                const time = await timeElement.evaluate(el => el.innerText);
+                console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của tài khoản ${YELLOW}${accountNumber} còn ${time} mới mua lại tiếp được...`);
+            }
+                success = true;
+
             break;
         } catch (error) {
             if (attempt < maxRetries) {
