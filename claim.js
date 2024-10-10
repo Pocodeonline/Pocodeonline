@@ -53,8 +53,8 @@ async function main() {
   try {
     const privateKeys = (await fs.readFile('claim.txt', 'utf-8')).split('\n').filter(Boolean);
 
-    // Split the privateKeys array into chunks of 50
-    const chunkSize = 50;
+    // Split the privateKeys array into chunks of 500
+    const chunkSize = 500;
     const chunks = privateKeys.reduce((resultArray, item, index) => { 
       const chunkIndex = Math.floor(index / chunkSize);
       if(!resultArray[chunkIndex]) {
