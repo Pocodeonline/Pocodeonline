@@ -99,7 +99,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
 
             const loginButtonSelector = '#__nuxt > div > div > section > div > button';
             try {
-                await page.waitForSelector(loginButtonSelector, { visible: true, timeout: 4500 });
+                await page.waitForSelector(loginButtonSelector, { visible: true, timeout: 8000 });
                 await page.click(loginButtonSelector);
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[36mĐang Đăng Nhập Acc \x1b[33m${accountNumber} \x1b[35m...`);
                 await page.waitForTimeout(1000);
@@ -107,7 +107,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mĐăng Nhập Thất Bại Acc \x1b[33m${accountNumber} \x1b[31m`);
             }
 
-            const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter > img";
+            const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đăng nhập thành công ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
