@@ -94,7 +94,7 @@ async function main() {
     const danhSachKhoaRiengTu = (await fs.readFile('diachidegomlol.txt', 'utf-8')).split('\n').filter(Boolean);
 
     // Split the danhSachKhoaRiengTu array into chunks of 50
-    const chunkSize = 100;
+    const chunkSize = 500;
     const chunks = danhSachKhoaRiengTu.reduce((resultArray, item, index) => { 
       const chunkIndex = Math.floor(index / chunkSize);
       if(!resultArray[chunkIndex]) {
