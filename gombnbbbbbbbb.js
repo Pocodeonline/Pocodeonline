@@ -34,8 +34,8 @@ fs.readFile(privateKeyFile, 'utf-8').then(data => {
       const fileContent = await fs.readFile('accchinhthubnb.txt', 'utf-8');
       const destinationAddress = fileContent.trim(); // Assuming there's only one address in walletsendrou.txt
 
-      for (let i = 0; i < privateKeys.length; i += 100) {
-        const chunk = privateKeys.slice(i, i + 100);
+      for (let i = 0; i < privateKeys.length; i += 400) {
+        const chunk = privateKeys.slice(i, i + 400);
         await Promise.all(chunk.map(async (privateKey) => {
           try {
             const wallet = new ethers.Wallet(privateKey, provider);
