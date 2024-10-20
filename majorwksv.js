@@ -419,7 +419,7 @@ class GLaDOS {
             if (answer.toLowerCase() === 'all') {
                 numAccounts = data.length;
             } else if (!isNaN(answer)) {
-                numAccounts = parseInt(answer, 10);
+                numAccounts = parseInt(answer, 20);
                 if (numAccounts <= 0) {
                     rl.close();
                     return;
@@ -435,7 +435,7 @@ class GLaDOS {
 
             rl.question(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Bạn muốn chạy 1 lần xử lý bao nhiêu tài khoản? ví dụ ${YELLOW}( ${GREEN}30${YELLOW}) ${YELLOW}: `, async (batchSizeAnswer) => {
                 rl.close();
-                let batchSize = parseInt(batchSizeAnswer, 10);
+                let batchSize = parseInt(batchSizeAnswer, 20);
                 if (isNaN(batchSize) || batchSize <= 0) {
                     console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Số lượng tài khoản xử lý cùng lúc không hợp lệ. Chạy mặc định 30 tài khoản.`);
                     batchSize = 30;
