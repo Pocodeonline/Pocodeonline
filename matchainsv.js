@@ -97,7 +97,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 60000 });
 
             // Handle optional skip button
-            const skipButtonSelector = "body > div:nth-child(8) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.close____CfA4 > svg";
+            const skipButtonSelector = "body > div:nth-child(8) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.close____CfA4 > svg > g";
             try {
                 const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 8000 });
                 if (skipButton) {
