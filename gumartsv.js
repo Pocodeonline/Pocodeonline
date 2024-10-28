@@ -96,6 +96,22 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 25000 });
+  // Define the XPath selector for the image element
+            const xpath = "//img[@src=\"data:image/svg+xml,%3csvg%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M11.9997%2010.5865L16.9495%205.63672L18.3637%207.05093L13.4139%2012.0007L18.3637%2016.9504L16.9495%2018.3646L11.9997%2013.4149L7.04996%2018.3646L5.63574%2016.9504L10.5855%2012.0007L5.63574%207.05093L7.04996%205.63672L11.9997%2010.5865Z'%20fill='white'/%3e%3cpath%20d='M11.9997%2010.5865L16.9495%205.63672L18.3637%207.05093L13.4139%2012.0007L18.3637%2016.9504L16.9495%2018.3646L11.9997%2013.4149L7.04996%2018.3646L5.63574%2016.9504L10.5855%2012.0007L5.63574%207.05093L7.04996%205.63672L11.9997%2010.5865Z'%20fill='white'/%3e%3c/svg%3e\"]";
+
+  // Wait for the element to be present
+            await page.waitForXPath(xpath);
+
+  // Find the element using the XPath selector
+            const elements = await page.$x(xpath);
+
+  // Click the first element found with the given XPath
+            if (elements.length > 0) {
+              await elements[0].click();
+              console.log('Element clicked');
+            } else {
+              console.log('Element not found');
+            }
 
             const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
