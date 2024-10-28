@@ -101,7 +101,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đăng nhập thành công ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
-            const xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div/div[2]/button/img";
+            const xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div/div[2]/button";
 
             await page.waitForXPath(xpath);
 
