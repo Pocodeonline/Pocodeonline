@@ -127,7 +127,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         }
 
         if (!imgElementFound) {
-            const timeSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
+            const timeSelector = '#root > div > div.css-79elbk > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
             const timeElement = await page.waitForSelector(timeSelector);
             const time = await timeElement.evaluate(el => el.innerText);
             console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Startmining của Acc ${YELLOW}${accountNumber} còn ${time} mới start được...`);
