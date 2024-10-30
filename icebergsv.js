@@ -90,16 +90,16 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${PINK}🐮 Đang chạy tài khoản ${YELLOW}${accountNumber} ${PINK}IP ${YELLOW}:${PINK}${proxy.server}`);
         await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 30000 });
 
-        const pageLoadedSelector = '#root > div > div.css-g6euby > div > a.navlink.active > button';
+        const pageLoadedSelector = '#root > div > div.css-79elbk > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-1xg54w';
         await page.waitForSelector(pageLoadedSelector, { timeout: 15000 });
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Đã vào giao diện Iceberg Acc ${YELLOW}${accountNumber}`);
 
-        const balanceSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
+        const balanceSelector = '#root > div > div.css-79elbk > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const balanceElement = await page.waitForSelector(balanceSelector, { timeout: 3000 });
         const balanceText = await balanceElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• \x1b[38;5;12mSố dư hiện tại acc \x1b[38;5;11m${accountNumber} \x1b[38;5;12m là \x1b[38;5;11m: \x1b[38;5;11m${balanceText}`);
 
-        const claimButtonSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > span > svg';
+        const claimButtonSelector = '#root > div > div.css-79elbk > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > span > svg';
 
         try {
             await page.waitForSelector(claimButtonSelector, { timeout: 2000 });
@@ -114,7 +114,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         }
 
         await page.waitForTimeout(2000);
-        const imgSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';
+        const imgSelector = '#root > div > div.css-79elbk > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';
         let imgElementFound = true;
 
         try {
@@ -130,11 +130,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const timeSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button > div > p > span';
             const timeElement = await page.waitForSelector(timeSelector);
             const time = await timeElement.evaluate(el => el.innerText);
-            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Startmining của Acc ${YELLOW}${accountNumber} còn ${time} mới mua được...`);
+            console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Startmining của Acc ${YELLOW}${accountNumber} còn ${time} mới start được...`);
         }
 
         await page.waitForTimeout(2000);
-        const pointsSelector = '#root > div > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
+        const pointsSelector = '#root > div > div.css-79elbk > div.css-5bbctu > div > div.css-17b4s3y > div.css-1cnibcu > p.chakra-text.css-2iljf0';
         const pointsElement = await page.waitForSelector(pointsSelector);
         const points = await pointsElement.evaluate(el => el.innerText);
         console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${LIGHT_BLUE}Số dư khi làm xong acc\x1b[38;5;11m: ${points}`);
