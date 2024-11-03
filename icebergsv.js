@@ -113,7 +113,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
         } catch (err) {
         }
 
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(4000);
         const imgSelector = '#root > div > div.css-79elbk > div.css-5bbctu > div > div.css-17b4s3y > div.chakra-offset-slide > button';
         let imgElementFound = true;
 
