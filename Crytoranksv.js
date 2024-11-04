@@ -111,11 +111,71 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             } catch (err) {
                 // Có thể thêm log lỗi nếu cần
             }
-    
+
+            const checkinnButtonSelector = '#root > div > div.fixed.bottom-0.left-0.right-0.z-20.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a.relative.flex.w-auto.min-w-\\[54px\\].flex-col.items-center.justify-center.gap-2.text-xs.font-semibold.after\\:absolute.after\\:right-\\[16px\\].after\\:top-\\[1px\\].after\\:h-\\[6px\\].after\\:w-\\[6px\\].after\\:rounded-full.after\\:bg-red.text-gray-3';
+            try {
+                await page.waitForSelector(checkinnButtonSelector, { timeout: 6000 });
+                const checkinnButton = await page.$(checkinnButtonSelector);
+                if (checkinnButton) {
+                    await checkinnButton.click();
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m Đang check in... `);
+                }
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m Lỗi check in...`);
+            }
+
+            const checkinn1ButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
+            try {
+                await page.waitForSelector(checkinn1ButtonSelector, { timeout: 6000 });
+                const checkinn1Button = await page.$(checkinn1ButtonSelector);
+                if (checkinn1Button) {
+                    await checkinn1Button.click();
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m Hôm nay chưa check in, Bắt đầu check in... `);
+                }
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m Hôm nay check in rồi vui lòng vào lại ngày mai nhé !`);
+            }
+
+            const checkinn2ButtonSelector = 'body > div.ease.fixed.bottom-0.left-0.z-\\[200\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div:nth-child(2) > div > div > button';
+            try {
+                await page.waitForSelector(checkinn2ButtonSelector, { timeout: 6000 });
+                const checkinn2Button = await page.$(checkinn2ButtonSelector);
+                if (checkinn2Button) {
+                    await checkinn2Button.click();
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32m Điểm danh thành công... `);
+                }
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31mHôm nay check in rồi vui lòng vào lại ngày mai nhé !`);
+            }
+
+            const sanhButtonSelector = 'body > div.ease.fixed.bottom-0.left-0.z-\\[200\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div.flex.items-start.justify-between > button';
+            try {
+                await page.waitForSelector(sanhButtonSelector, { timeout: 6000 });
+                const sanhButton = await page.$(sanhButtonSelector);
+                if (sanhButton) {
+                    await sanhButton.click();
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32mĐang ra sảnh để claim.. `);
+                }
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31mRa sảnh để claim thất bại`);
+            }
+
+            const sanh2ButtonSelector = '#root > div > div.fixed.bottom-0.left-0.right-0.z-20.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
+            try {
+                await page.waitForSelector(sanh2ButtonSelector, { timeout: 6000 });
+                const sanh2Button = await page.$(sanh2ButtonSelector);
+                if (sanh2Button) {
+                    await sanh2Button.click();
+                    console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[32m• \x1b[33mAcc \x1b[33m${accountNumber} \x1b[32mRa Sảnh thành công bắt đầu claim... `);
+                }
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31mRa sảnh để claim thất bại`);
+            }
+
             await page.waitForTimeout(2000);
             const claimpointsButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div.relative.z-10.flex.h-full.flex-col.items-center > div:nth-child(3) > button';
             try {
-                await page.waitForSelector(claimpointsButtonSelector, { timeout: 5000 });
+                await page.waitForSelector(claimpointsButtonSelector, { timeout: 6000 });
                 const claimButton = await page.$(claimpointsButtonSelector);
                 if (claimButton) {
                     await claimButton.click();
