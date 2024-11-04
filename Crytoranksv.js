@@ -123,6 +123,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             } catch (error) {
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m Lỗi check in...`);
             }
+            await page.waitForTimeout(2000);
 
             const checkinn1ButtonSelector = '#root > div > div.grid.h-\\[calc\\(100svh-96px\\)\\].grid-rows-\\[1fr_auto\\].overflow-auto.px-4.pb-6.pt-8 > div > div:nth-child(2) > div > div:nth-child(1) > div.ml-auto.flex.items-center.justify-center > button';
             try {
@@ -136,6 +137,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m Hôm nay check in rồi vui lòng vào lại ngày mai nhé !`);
             }
 
+
             const checkinn2ButtonSelector = 'body > div.ease.fixed.bottom-0.left-0.z-\\[200\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div:nth-child(2) > div > div > button';
             try {
                 await page.waitForSelector(checkinn2ButtonSelector, { timeout: 6000 });
@@ -148,6 +150,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31mHôm nay check in rồi vui lòng vào lại ngày mai nhé !`);
             }
 
+            await page.waitForTimeout(2000);
+
             const sanhButtonSelector = 'body > div.ease.fixed.bottom-0.left-0.z-\\[200\\].max-h-\\[100svh\\].w-full.transform.rounded-\\[10px_10px_0_0\\].bg-dark-second.p-4.pb-8.transition-\\[transform\\].duration-500.translate-y-\\[0\\%\\].animate-move200 > div > div.flex.items-start.justify-between > button';
             try {
                 await page.waitForSelector(sanhButtonSelector, { timeout: 6000 });
@@ -159,6 +163,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             } catch (error) {
                 console.log(`\x1b[33m[ \x1b[37mWIT KOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31mRa sảnh để claim thất bại`);
             }
+
+            await page.waitForTimeout(2000);
 
             const sanh2ButtonSelector = '#root > div > div.fixed.bottom-0.left-0.right-0.z-20.flex.w-full.items-center.justify-center.gap-3\\.5.bg-black.py-4.pb-6.pl-4.pr-4 > a:nth-child(1)';
             try {
