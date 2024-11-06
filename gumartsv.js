@@ -95,27 +95,40 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}🐮 Đang chạy tài khoản \x1b[38;5;11m${accountNumber} \x1b[38;5;207mIP \x1b[38;5;11m:\x1b[38;5;13m${proxy.server}${RESET}`);
+            
+            // Mở trang và chờ tải hoàn tất
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 25000 });
+            await page.waitForTimeout(2000);
 
+            // Selector để tìm nút "skip gumart24h"
+            const skipgumart24hButtonSelector = '#el-id-9256-3 > div > div.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\].w-full > button';
+
+            try {
+                await page.waitForSelector(skipgumart24hButtonSelector, { visible: true, timeout: 4500 });
+                const element = await page.$(skipgumart24hButtonSelector);
+                if (element) {
+                    await element.click();
+                    console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[36mClaim Acc \x1b[33m${accountNumber} \x1b[35mASkip 24h thành công...`);
+                    await page.waitForTimeout(1000);
+                } else {
+                    console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m không tìm thấy skip rồi`);
+                }
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m gặp lỗi khi thực hiện click skip: ${error.message}`);
+            }
+
+            // Kiểm tra nếu trang đã tải xong
             const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đăng nhập thành công ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
-            await page.waitForTimeout(2000);
-            const skipgumart24hButtonSelector = '#el-id-9256-3 > div > div.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\].w-full > button';
-            try {
-                await page.waitForSelector(skipgumart24hButtonSelector, { visible: true, timeout: 4500 });
-                await page.click(skipgumart24hButtonSelector);
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[36mClaim Acc \x1b[33m${accountNumber} \x1b[35mASkip 24h thành công...`);
-                await page.waitForTimeout(1000);
-            } catch (error) {
-                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m khong thay skip rồi`);
-            }
 
             // Handle optional skip button
             const skipButtonSelector = "#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.transition-all > button";
             const pointTextSelector = "#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > div > div > div > div.flex.gap-2.items-center > div > div.w-full.flex.justify-between > div:nth-child(2) > p";
             const balanceTextSelector = "#__nuxt > div > div > section > div.w-full.flex.flex-col.gap-4.px-4.py-2.relative.z-\\[3\\] > div.flex.flex-col.gap-2.items-center > div > p";
+
             try {
+                // Lấy thông tin point và balance
                 const pointTextElement = await page.waitForSelector(pointTextSelector, { timeout: 2500 });
                 const balanceTextElement = await page.waitForSelector(balanceTextSelector, { timeout: 2500 });
                 let pointText = "N/A";  // Giả định giá trị mặc định nếu không lấy được
@@ -126,7 +139,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 if (balanceTextElement) {
                     balanceText = await page.evaluate(el => el.innerText, balanceTextElement);
                 }
-            
+
                 const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 2000 });
                 if (skipButton) {
                     // Hiển thị pointText trong console trước khi bấm
@@ -137,10 +150,11 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             } catch (err) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Acc \x1b[38;5;11m${accountNumber}${RED} không claim được...${RESET}`);
             }
-            
+
+            // Kiểm tra và xử lý hình ảnh (imgSelector)
             const imgSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div';
             let imgElementFound = true;
-    
+
             try {
                 await page.waitForSelector(imgSelector, { visible: true, timeout: 2000 });
                 await page.click(imgSelector);
@@ -149,7 +163,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             } catch (error) {
                 imgElementFound = true;
             }
-    
+
             // Nếu phần tử img không được tìm thấy, in ra thời gian còn lại
             if (!imgElementFound) {
                 const timeSelector = '#__nuxt > div > div > section > div.relative.z-\\[2\\].px-2.flex.flex-col.gap-2 > button > div > div';
@@ -157,8 +171,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 const time = await timeElement.evaluate(el => el.innerText);
                 console.log(`${YELLOW}[ \x1b[38;5;231mWIT KOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}X2 của tài khoản ${YELLOW}${accountNumber} còn ${time} mới mua lại tiếp được...`);
             }
-                success = true;
 
+            success = true;
             break;
         } catch (error) {
             if (attempt < maxRetries) {
