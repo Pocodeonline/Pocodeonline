@@ -100,18 +100,15 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             const pageLoadedSelector = "#__nuxt > div > div > div.fixed.bottom-0.w-full.left-0.z-\\[12\\] > div > div.grid.grid-cols-5.w-full.gap-2 > button:nth-child(3) > div > div.w-\\[4rem\\].h-\\[4rem\\].absolute.-translate-y-\\[50\\%\\].shadow_filter";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đăng nhập thành công ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
-
-            const xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div/div[2]/button";
-
-            await page.waitForXPath(xpath);
-
-            const elements = await page.$x(xpath);
-
-            if (elements.length > 0) {
-              await elements[0].click();
-              console.log('Element clicked');
-            } else {
-              console.log('Element not found');
+            await page.waitForTimeout(2000);
+            const skipgumart24hButtonSelector = '#el-id-9256-3 > div > div.flex.control_popup.justify-between.px-4.py-2.rounded-b-\\[0\\.5rem\\].bg-\\[linear-gradient\\(39deg\\,\\#66E0D9_0\\%\\,\\#0054A1_100\\%\\)\\].w-full > button';
+            try {
+                await page.waitForSelector(skipgumart24hButtonSelector, { visible: true, timeout: 4500 });
+                await page.click(skipgumart24hButtonSelector);
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[36mClaim Acc \x1b[33m${accountNumber} \x1b[35mASkip 24h thành công...`);
+                await page.waitForTimeout(1000);
+            } catch (error) {
+                console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m khong thay skip rồi`);
             }
 
             // Handle optional skip button
