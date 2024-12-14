@@ -97,30 +97,30 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 60000 });
 
             // Handle optional skip button
-            const skipButtonSelector = "body > div:nth-child(8) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.close____CfA4 > svg";
+            const skipButtonSelector = "body > div:nth-child(6) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.close____CfA4 > svg";
             try {
                 const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 8000 });
                 if (skipButton) {
                     await skipButton.click();
-                    console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Skip bỏ qua mainet matchain acc \x1b[38;5;11m${accountNumber}${RESET}`);
+                    console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã Skip bỏ qua mainet matchain acc \x1b[38;5;11m${accountNumber}${RESET}`);
                 }
             } catch (err) {
                 console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${RED}Không thấy skip acc \x1b[38;5;11m${accountNumber}${RESET}`);
             }
 
             // Check for page load
-            const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_balance___ClINX";
+            const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.avator_box___ocQid > div.avatar___QHvtW > div.avatar_level___gGLXD";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
             await page.waitForTimeout(1500);
-            const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_mining___mBJYP > p";
+            const currentBalanceSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.avator_box___ocQid > div.container_balance___ClINX > div > p";
             const currentBalance = await page.textContent(currentBalanceSelector);
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Số dư hiện tại của acc \x1b[38;5;11m${accountNumber} \x1b[38;5;11m: ${currentBalance}${RESET}`);
             await page.waitForTimeout(1500);
             // Check if claim button exists
             
-            const claimmatchainButtonSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka';
+            const claimmatchainButtonSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.farm_box___Fv4IM > div';
             try {
                 await page.waitForSelector(claimmatchainButtonSelector, { visible: true, timeout: 4500 });
                 await page.click(claimmatchainButtonSelector);
@@ -130,7 +130,8 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi`);
             }
                 // Confirm startmining process
-            const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.btn_claim___AC3ka.farming____9oEZ";
+            await page.waitForTimeout(5000);
+            const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.farm_box___Fv4IM > div";
             let startminingButtonExists = false;
 
             try {
@@ -146,9 +147,18 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã đào lại cho acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
                 // Print remaining time
-                const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.container_countdown___G04z1 > ul";
+                const countdownHoursSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.claiming_box___A0GRA > div.title_flex___ISfFk > div.container_countdown___G04z1";
                 const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
                 console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${RESET}`);
+                await page.waitForSelector("#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.booster___JXAcc > div.point_swiper_box___iF7lH > div > div.swiper-wrapper > div > div");
+                console.log("Đang mua x2...");
+                await page.click("#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.booster___JXAcc > div.point_swiper_box___iF7lH > div > div.swiper-wrapper > div > div");
+
+                // Chờ phần tử tiếp theo xuất hiện và click
+                await page.waitForSelector("#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE");
+                await page.click("#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE");
+
+                await page.waitForTimeout(3000);
 
             }
                 success = true;
