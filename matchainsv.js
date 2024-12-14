@@ -151,13 +151,13 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 const countdownHours = await page.textContent(countdownHoursSelector, { timeout: 30000 });
                 console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Thời gian còn lại của acc \x1b[38;5;11m${accountNumber}: ${countdownHours}${RESET}`);
                 await page.waitForSelector("#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.booster___JXAcc > div.point_swiper_box___iF7lH > div > div.swiper-wrapper > div > div");
-                console.log("Đang mua x2...");
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đang mua x2${YELLOW}...`);
                 await page.click("#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.booster___JXAcc > div.point_swiper_box___iF7lH > div > div.swiper-wrapper > div > div");
 
                 // Chờ phần tử tiếp theo xuất hiện và click
                 await page.waitForSelector("#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE");
                 await page.click("#root > div > div.container___tYOO7 > div.content___xItdF > div.btn___FttFE");
-
+                console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Mua x2 thành công${YELLOW}...`)
                 await page.waitForTimeout(3000);
 
             }
