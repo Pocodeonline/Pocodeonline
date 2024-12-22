@@ -97,7 +97,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.goto(accountUrl, { waitUntil: 'networkidle0', timeout: 60000 });
 
             // Handle optional skip button
-            const skipButtonSelector = "body > div:nth-child(8) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.close____CfA4";
+            const skipButtonSelector = "body > div:nth-child(6) > div > div.ant-modal-wrap > div > div:nth-child(2) > div > div > div.close____CfA4";
             try {
                 const skipButton = await page.waitForSelector(skipButtonSelector, { timeout: 8000 });
                 if (skipButton) {
@@ -109,7 +109,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             }
 
             // Check for page load
-            const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.avator_box___ocQid > div.avatar___QHvtW > div.avatar_level___gGLXD";
+            const pageLoadedSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.home_account___V3h8y > div:nth-child(2) > img";
             await page.waitForSelector(pageLoadedSelector, { timeout: 6000 });
             console.log(`${YELLOW}[ \x1b[38;5;231mWKOEI \x1b[38;5;11m] \x1b[38;5;207m• ${GREEN}Đã vào giao diện ${await page.title()} Acc \x1b[38;5;11m${accountNumber}${RESET}`);
 
@@ -120,7 +120,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
             await page.waitForTimeout(1500);
             // Check if claim button exists
             
-            const claimmatchainButtonSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.farm_box___Fv4IM > div';
+            const claimmatchainButtonSelector = '#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining_wapper___CxMAN > div > div.farm_box___Fv4IM > div';
             try {
                 await page.waitForSelector(claimmatchainButtonSelector, { visible: true, timeout: 4500 });
                 await page.click(claimmatchainButtonSelector);
@@ -130,7 +130,7 @@ async function processAccount(browserContext, accountUrl, accountNumber, proxy) 
                 console.log(`\x1b[33m[ \x1b[37mWKOEI \x1b[33m] \x1b[35m• \x1b[31mAcc \x1b[33m${accountNumber} \x1b[31m claim rồi`);
             }
                 // Confirm startmining process
-            await page.waitForTimeout(5000);
+            await page.waitForTimeout(7000);
             const startminingButtonSelector = "#root > div > div > div.content___jvMX0.home___efXf1 > div.home_top___WpzvH > div.container_rewards_mining___u39zf > div.farm_box___Fv4IM > div";
             let startminingButtonExists = false;
 
