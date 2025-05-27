@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -465,6 +465,10 @@ def delete_card(page, num_cards_to_delete=9999):  # để mặc định xóa h�
 
             # Thử lấy nút Edit, nếu không tìm được nghĩa là hết thẻ hoặc giới hạn
             try:
+                card_images = page.query_selector_all('.apx-wallet-selectable-image')
+                if len(card_images) > 0:
+                    card_images[0].click()
+                time.sleep(2)
                 edit_card = page.wait_for_selector('//a[text()="Edit"]', timeout=5000)
             except Exception:
                 print(f"{COLORS['CYAN']} \x1b[31mKhông tìm thấy nút Edit nữa\x1b[93m, \x1b[31mđã xóa hết thẻ hoặc bị giới hạn.{COLORS['RESET']}")
