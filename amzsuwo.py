@@ -24,9 +24,9 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']}[ SU WO ] > {COLORS['MAGENTA']}Tool by SuWo {COLORS['RESET']}")
-number_of_profiles = int(input(f"{COLORS['YELLOW']}[ SU WO ] > Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ : {COLORS['RESET']}"))
-retries = int(input(f"{COLORS['YELLOW']}[ SU WO ] > Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng ( khuyên 2 ): {COLORS['RESET']}"))
+print(f"{COLORS['YELLOW']}[ SU WO ] > {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
+number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
+retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
 with open('proxy.txt', 'r') as proxy_file:
     proxy = proxy_file.readline().strip()
