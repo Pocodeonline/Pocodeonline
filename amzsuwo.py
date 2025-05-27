@@ -384,7 +384,7 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
 
     print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Xử lý xong thêm thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
 
-def delete_card(page, email):
+def delete_card(page, email, num_cards_to_delete=5):
     try:
         retry_count = 0
         max_retries = 2
