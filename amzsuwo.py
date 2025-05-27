@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']}[ SU WO ] > {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -273,7 +273,7 @@ def add_card(page, start_line, end_line, credentials_list, profile_number):
                     submit_btn.click()
                     time.sleep(1)
                     added_cards.append({'number': card_number})
-                    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã thêm thành công thẻ \x1b[93m{card_number} \x1b[32mcho tài khoản \x1b[93m{email} \x1b[33m{len(added_cards)}\x1b[32m{max_cards_per_account}{COLORS['RESET']}")
+                    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã thêm thành công thẻ \x1b[93m{card_number} \x1b[32mcho tài khoản \x1b[93m{email} \x1b[33m{len(added_cards)}\x1b[94m/\x1b[32m{max_cards_per_account}{COLORS['RESET']}")
                     break
                 else:
                     print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tài khoản \x1b[93m{email} \x1b[32mbị giới hạn \x1b[31m2 tiếng \x1b[32mĐang chuyển sang tài khoản khác để thêm thẻ.{COLORS['RESET']}")
@@ -422,12 +422,13 @@ def delete_card(page, email):
                 if retry_count >= max_retries:
                     print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mTài khoản đã bị giới hạn lượt xóa thẻ hoặc dư thẻ để xóa{COLORS['RESET']}")
                     return False
-                    
-                print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mĐã bị quá tải xóa thẻ \x1b[93m- \x1b[31mLần thử \x1b[93m{retry_count}/{max_retries}{COLORS['RESET']}")
-                time.sleep(2)
-
+            try:
                 confirm_button = page.wait_for_selector('//span[@class="a-button a-button-primary pmts-delete-instrument apx-remove-button-desktop pmts-button-input"]', timeout=5000)
                 confirm_button.click()
+            except Exception:
+                print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mĐã bị quá tải xóa thẻ \x1b[93m- \x1b[31mLần thử \x1b[93m{retry_count}/{max_retries}{COLORS['RESET']}")
+                time.sleep(2)
+                
                 continue
             except Exception:
                 try:
@@ -439,12 +440,8 @@ def delete_card(page, email):
                             removeButton.click();
                         }
                     ''')
-                    page.reload()
-                    
                     time.sleep(2)
-
-                    start_button_delete = page.wait_for_selector('//*[@id="pp-i41mW6-25"]', timeout=5000)
-                    start_button_delete.click()
+                    page.reload()                   
                     time.sleep(2)
                     continue
                 except Exception as e:
