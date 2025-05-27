@@ -309,7 +309,9 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     page.wait_for_load_state('networkidle')
     time.sleep(25)
     page.reload()
-
+    page.wait_for_load_state('networkidle')
+    time.sleep(25)
+    page.reload()
 
     content = page.content()
     soup = BeautifulSoup(content, 'html.parser')
