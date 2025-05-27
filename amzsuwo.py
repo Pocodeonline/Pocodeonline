@@ -399,7 +399,7 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
                 last4s.append(match.group(1))
         return set(last4s)
 
-    max_clicks = 4
+    max_clicks = 5
     attempt = 0
 
     live_cards_prev = []
@@ -491,7 +491,7 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
     print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Xử lý xong thêm thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
 
 def delete_card(page, num_cards_to_delete=9999):
-    retry_limit = 2
+    retry_limit = 3
     deleted_cards = 0
 
     try:
