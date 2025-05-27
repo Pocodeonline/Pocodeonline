@@ -296,20 +296,20 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     # Wait for network to be idle to ensure page loads completely
     page.wait_for_load_state('networkidle')
     # Wait additional time to ensure all elements are loaded
-    time.sleep(15)
+    time.sleep(25)
     # Refresh page to ensure fresh content
     page.reload()
     # Wait again for network to be idle after refresh
     page.wait_for_load_state('networkidle')
     # Final wait to ensure everything is loaded
-    time.sleep(10)
+    time.sleep(20)
 
     page.reload()
     
     page.wait_for_load_state('networkidle')
-    time.sleep(10)
+    time.sleep(25)
     page.reload()
-    page.wait_for_load_state('networkidle')
+
 
     content = page.content()
     soup = BeautifulSoup(content, 'html.parser')
