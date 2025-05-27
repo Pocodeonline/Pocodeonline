@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -536,26 +536,15 @@ def run_profile(profile_number):
         try:
             with sync_playwright() as playwright:
                 x, y = get_next_position()
-
-                # Mở trình duyệt trong chế độ headless và giảm tài nguyên
                 browser = playwright.chromium.launch(
-                    headless=True,  # Chạy không hiển thị giao diện
-                    args=[
-                        f'--window-size={window_width},{window_height}', 
-                        f'--window-position={x},{y}',
-                        '--disable-gpu',          # Tắt GPU rendering
-                        '--disable-extensions',   # Tắt extension không cần thiết
-                        '--disable-plugins',      # Tắt plugins
-                    ]
+                    headless=False,
+                    args=[f'--window-size={window_width},{window_height}',
+                          f'--window-position={x},{y}']
                 )
-                
-                # Sử dụng nhiều context thay vì nhiều tab trong một cửa sổ duy nhất
                 context = browser.new_context(
                     viewport={'width': window_width, 'height': window_height},
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 )
-
-                # Mở trang mới trong context mới
                 page = context.new_page()
                 try:
                     page.evaluate(f"window.moveTo({x}, {y}); window.resizeTo({window_width}, {window_height});")
