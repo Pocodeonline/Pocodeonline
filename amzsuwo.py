@@ -1,6 +1,7 @@
 import time
 import threading
 import random
+import re
 from screeninfo import get_monitors
 from colorama import init, Fore, Style
 from amazoncaptcha import AmazonCaptcha
@@ -8,13 +9,46 @@ import pyotp
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
 
+# Định nghĩa màu sắc (ANSI escape codes)
+COLORS = {
+    'RED': '\x1b[31m',
+    'GREEN': '\x1b[32m',
+    'YELLOW': '\x1b[33m',
+    'CYAN': '\x1b[36m',
+    'MAGENTA': '\x1b[35m',
+    'BLUE': '\x1b[94m',
+    'BRIGHT_YELLOW': '\x1b[93m',
+    'BRIGHT_CYAN': '\x1b[96m',
+    'RESET': '\x1b[0m'
+}
+
 init()
-print(Fore.GREEN + 'ADD CARD AMZ V1' + Style.RESET_ALL)
-number_of_profiles = int(input(Fore.MAGENTA + 'Nhập số luồng chạy profile: ' + Style.RESET_ALL))
-retries = int(input(Fore.MAGENTA + 'Nhập số lần thử lại khi gặp lỗi (Nếu chọn số 1 sẽ không thử lại): ' + Style.RESET_ALL))
+
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
+number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
+retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
 with open('proxy.txt', 'r') as proxy_file:
     proxy = proxy_file.readline().strip()
+
+def log_to_file(filename, email, password, code_2fa):
+    with open(filename, 'a') as file:
+        file.write(f"{email}|{password}|{code_2fa}\n")
+
+def remove_lines_from_card_txt(lines_to_remove):
+    """Xóa các dòng trong card.txt tương ứng với lines_to_remove (list các string nguyên dòng)"""
+    with open(card_file_path, 'r') as file:
+        lines = file.readlines()
+    with open(card_file_path, 'w') as file:
+        for line in lines:
+            if line.strip() not in lines_to_remove:
+                file.write(line)
+
+def save_live_cards_to_file(live_card_lines, email):
+    """Ghi nguyên dòng thẻ live vào file cardlive.txt"""
+    with open('cardlive.txt', 'a') as f:
+        for line in live_card_lines:
+            f.write(line if line.endswith('\n') else line + '\n')
 
 def read_credentials(file_path='mailadd.txt'):
     credentials = []
@@ -54,8 +88,6 @@ if window_width * columns > screen_width:
 if window_height * rows > screen_height:
     window_height = screen_height // rows
 
-profile_counter = 1
-profile_counter_lock = threading.Lock()
 active_positions = []
 active_positions_lock = threading.Lock()
 
@@ -87,18 +119,15 @@ def solve_captcha(page):
                     button.click()
                     time.sleep(2)
     except Exception as e:
-        print("Captcha solve error:", e)
+        print(f"{COLORS['RED']}[ SU WO ][ERROR] > Captcha solve error: {e}{COLORS['RESET']}")
 
-def log_to_file(file_path, email, password, code_2fa):
-    with open(file_path, 'a') as file:
-        file.write(f'{email}|{password}|{code_2fa}\n')
-
-def login_amz(page, profile_number, credentials):
+def login_amz(page, profile_number, credentials_list):
     page.goto('https://na.account.amazon.com/ap/signin?_encoding=UTF8&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.pape.max_auth_age=0&ie=UTF8&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&pageId=lwa&openid.assoc_handle=amzn_lwa_na&marketPlaceId=ATVPDKIKX0DER&arb=e2bc4dbc-2218-4697-8323-886562f341f1&language=en_US&openid.return_to=https%3A%2F%2Fna.account.amazon.com%2Fap%2Foa%3FmarketPlaceId%3DATVPDKIKX0DER%26arb%3De2bc4dbc-2218-4697-8323-886562f341f1%26language%3Den_US&enableGlobalAccountCreation=1&metricIdentifier=amzn1.application.eb539eb1b9fb4de2953354ec9ed2e379&signedMetricIdentifier=fLsotU64%2FnKAtrbZ2LjdFmdwR3SEUemHOZ5T2deI500%3D')
-    
-    email = credentials[profile_number - 1]['email']
-    password = credentials[profile_number - 1]['password']
-    code_2fa = credentials[profile_number - 1]['2fa']
+
+    cred = credentials_list[profile_number - 1]
+    email = cred['email']
+    password = cred['password']
+    code_2fa = cred['2fa']
 
     page.fill('input#ap_email', email)
     page.click('input#continue')
@@ -116,11 +145,11 @@ def login_amz(page, profile_number, credentials):
         otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
         otp_code = pyotp.TOTP(code_2fa).now()
         otp_input.fill(otp_code)
-        
+
         remember_device_checkbox = page.query_selector('input#auth-mfa-remember-device')
         if remember_device_checkbox:
             remember_device_checkbox.click()
-            
+
         page.click('input#auth-signin-button')
     except PlaywrightTimeoutError:
         pass
@@ -155,61 +184,67 @@ def login_amz(page, profile_number, credentials):
 
     return True
 
-def add_card(page, start_line, end_line, credentials, profile_number):
+def add_card(page, start_line, end_line, credentials_list, profile_number):
     retry_limit = 3
     added_cards = []
+    max_cards_per_account = 5
 
-    email = credentials[profile_number - 1]['email']
-    password = credentials[profile_number - 1]['password']
-    code_2fa = credentials[profile_number - 1]['2fa']
+    cred = credentials_list[profile_number - 1]
+    email = cred['email']
 
-    try:
-        with open(card_file_path, 'r') as f:
-            cards = f.readlines()
-    except Exception:
-        print("Error reading card file")
-        return False
+    with open(card_file_path, 'r') as f:
+        cards = f.readlines()
 
-    switched_url = False
+    max_end_line = min(end_line, len(cards), start_line + max_cards_per_account)
 
-    for index, card_line in enumerate(cards[start_line:end_line], start=start_line):
-        # Check if we've already added 5 cards
-        if len(added_cards) >= 5:
-            print('Đã thêm đủ 5 thẻ.')
-            return True
+    for index, card_line in enumerate(cards[start_line:max_end_line], start=start_line):
+        if len(added_cards) >= max_cards_per_account:
+            print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã đạt giới hạn \x1b[92m{max_cards_per_account} \x1b[32mthẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
+            break
 
         parts = card_line.strip().split('|')
         if len(parts) < 3:
-            print(f"Card line format error: {card_line.strip()}")
+            print(f"{COLORS['RED']}[ SU WO ][ERROR] > Card line format error: {card_line.strip()}{COLORS['RESET']}")
             continue
         card_number, expiration_month, expiration_year = parts[:3]
 
         retry_count = 0
         while retry_count < retry_limit:
             try:
-                if not switched_url:
-                    page.goto('https://www.amazon.com/hp/shopwithpoints/account/?programId=MERCURYFINANCIAL-POINTS-US&productId=MERCURYFINANCIAL-POINTS-US&')
+                url = 'https://www.amazon.com/cpe/yourpayments/settings/manageoneclick'
+                page.goto(url)
+                time.sleep(3)
+
+                link_add_card = page.wait_for_selector('input.pmts-link-button[type="submit"][name^="ppw-widgetEvent:ChangeAddressPreferredPaymentMethodEvent:"]', timeout=10000)
+                link_add_card.click()
+                time.sleep(2.5)
+
+                page.evaluate('''() => {
+                    const observer = new MutationObserver((mutations) => {
+                        mutations.forEach((mutation) => {
+                            if (mutation.type === 'childList') {
+                                const addCardLink = document.querySelector('a.a-link-normal.apx-secure-registration-content-trigger-js');
+                                if (addCardLink) {
+                                    addCardLink.click();
+                                    observer.disconnect();
+                                }
+                            }
+                        });
+                    });
+                    observer.observe(document.body, { childList: true, subtree: true });
+                }''')
+
+                page.wait_for_timeout(2500)
+
+                add_card_credit = page.query_selector('a.a-link-normal.apx-secure-registration-content-trigger-js')
+                if add_card_credit:
+                    add_card_credit.click()
                 else:
-                    page.goto('https://www.amazon.com/hp/shopwithpoints/account/?programId=FISERV-CASH-US&productId=FISERV-CASH-US&')
-
-                # Check for captcha
-                try:
-                    img_element = page.query_selector('//img[@id="d"]')
-                    if img_element:
-                        page.reload()
-                        retry_count += 1
-                        continue
-                except:
-                    pass
-
-                link_add_card = page.wait_for_selector('//a[@href="/hp/shopwithpoints/addCard/"]', timeout=10000)
-                page.evaluate('(element) => element.click()', link_add_card)
-                time.sleep(2)
-
-                # Get card name first
+                    print(f"{COLORS['RED']}Không tìm thấy link Add a credit or debit card sau khi cập nhật HTML cho tài khoản {email}{COLORS['RESET']}")
+                    
+                time.sleep(2.5)
                 card_name = page.evaluate('''() => {
-                    const spanElement = document.evaluate("//span[@id='nav-link-accountList-nav-line-1']", 
-                        document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                    const spanElement = document.evaluate("//span[@id='nav-link-accountList-nav-line-1']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                     if(spanElement){
                         return spanElement.textContent.replace('Hello, ', '').trim();
                     }
@@ -218,109 +253,64 @@ def add_card(page, start_line, end_line, credentials, profile_number):
                 if not card_name:
                     card_name = "User"
 
-                # Click add card and wait for iframe
-                add_card_credit = page.wait_for_selector('//a[contains(text(), "Add a credit or debit card")]', timeout=10000)
-                if add_card_credit:
-                    page.evaluate('(element) => element.click()', add_card_credit)
-                    time.sleep(2)
-                    
-                    # Wait for iframe and fill name immediately
-                    iframe = page.wait_for_selector("iframe[name*='ApxSecureIframe']", timeout=10000)
-                    frame = iframe.content_frame()
-                    
-                    frame.fill("input[name='ppw-accountHolderName']", card_name)
-                    time.sleep(2)
-                    frame.fill("input[name='addCreditCardNumber']", card_number)
-                    time.sleep(2)
+                iframe = page.wait_for_selector("iframe[name*='ApxSecureIframe']", timeout=10000)
+                frame = iframe.content_frame()
 
-                    # Select month
-                    frame.evaluate('''() => {
-                        const selectElement = document.evaluate("//span[@class='a-button-text a-declarative']//span[text()='01']", 
-                            document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                        if(selectElement) selectElement.click();
-                    }''')
-                    time.sleep(2)
-                    frame.evaluate(f'''(month) => {{
-                        const selectElement = document.evaluate(`//a[contains(text(), '${{month}}')]`, 
-                            document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                        if(selectElement) selectElement.click();
-                    }}''', expiration_month)
-                    time.sleep(2)
+                frame.fill("input[name='ppw-accountHolderName']", card_name)
+                time.sleep(1)
+                frame.fill("input[name='addCreditCardNumber']", card_number)
+                time.sleep(1)
 
-                    # Select year
-                    frame.evaluate('''() => {
-                        const selectElement = document.evaluate("//span[@class='a-button-text a-declarative']//span[text()='2025']", 
-                            document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                        if(selectElement) selectElement.click();
-                    }''')
-                    time.sleep(2)
-                    frame.evaluate(f'''(year) => {{
-                        const selectElement = document.evaluate(`//a[contains(text(), '${{year}}')]`, 
-                            document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                        if(selectElement) selectElement.click();
-                    }}''', expiration_year)
-                    time.sleep(2)
+                frame.click("span.a-button-inner span.a-button-text span.a-dropdown-prompt")
+                frame.click(f"//a[contains(text(), '{expiration_month}')]")
 
-                    # Submit
-                    frame.evaluate('''() => {
-                        const submitButton = document.querySelector('input[name="ppw-widgetEvent:AddCreditCardEvent"]');
-                        if (submitButton) submitButton.click();
-                    }''')
+                frame.click("span.pmts-expiry-year span.a-button-inner span.a-button-text span.a-dropdown-prompt")
+                frame.click(f"//a[contains(text(), '{expiration_year}')]")
+                time.sleep(1)
 
-                    try:
-                        frame.evaluate('''() => {
-                            const useAddressBtn = document.querySelector("#pp-ABfiCO-20 > span > input");
-                            if (useAddressBtn) useAddressBtn.click();
-                        }''')
-                        time.sleep(2)
-                        
-                        
-                    except Exception as e:
-                        print(f"Error clicking use address button: {str(e)}")
-                        pass
-
-                    try:
-                        enroll_button = page.wait_for_selector("input[aria-labelledby='enroll_Button-announce'], input[aria-labelledby='enroll-button-desktop-announce']", timeout=10000)
-                        if enroll_button:
-                            print(f'Card {index + 1} added successfully.')
-                            added_cards.append({'number': card_number, 'month': expiration_month, 'year': expiration_year})
-                            log_complete_info('mailaddcomplete.txt', email, password, code_2fa, added_cards)
-                            page.goto('https://www.amazon.com/hp/shopwithpoints/account/?programId=FISERV-CASH-US&productId=FISERV-CASH-US&')
-                            
-                            # Check if we've reached 5 cards after successful addition
-                            if len(added_cards) >= 5:
-                                print('Đã thêm đủ 5 thẻ.')
-                                return True
-                    except:
-                        print('Enroll Button not found.')
-
+                submit_btn = frame.query_selector("input[name='ppw-widgetEvent:AddCreditCardEvent']")
+                if submit_btn:
+                    submit_btn.click()
+                    time.sleep(1)
+                    added_cards.append({'number': card_number})
+                    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã thêm thành công thẻ \x1b[93m{card_number} \x1b[32mcho tài khoản \x1b[93m{email} \x1b[33m{len(added_cards)}\x1b[94m/\x1b[32m{max_cards_per_account}{COLORS['RESET']}")
+                    break
                 else:
-                    print('Không tìm thấy phần tử Add a credit or debit card!')
-                    retry_count += 1
-                    continue
+                    print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tài khoản \x1b[93m{email} \x1b[32mbị giới hạn \x1b[31m2 tiếng \x1b[32mĐang chuyển sang tài khoản khác để thêm thẻ.{COLORS['RESET']}")
+                    return added_cards
 
             except Exception as e:
-                print('Phần tử không còn tồn tại, dừng click!')
-                print('Có lỗi xảy ra:', str(e))
-                if not switched_url:
-                    print('Navigating to a new page to add card')
-                    switched_url = True
-                    retry_count = 0
+                print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[93m[\x1b[31m ERROR \x1b[93m] thêm thẻ \x1b[93m{card_number} \x1b[32mcho tài khoản \x1b[93m{email} \x1b[32mđang thử lại{COLORS['RESET']}")
+                retry_count += 1
+                if retry_count >= retry_limit:
+                    print(f"{COLORS['RED']} Lỗi thêm thẻ \x1b[93m{card_number} \x1b[31msau \x1b[93m{retry_limit} \x1b[31mthử cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
                 else:
-                    print('Acc limit 2h')
-                    return False
+                    print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Retry \x1b[93m{retry_count} \x1b[32mcho thẻ \x1b[93m{card_number} \x1b[32mcho tài khoản \x1b[93m{email}{COLORS['RESET']}")
 
-            retry_count += 1
-        else:
-            print('Error adding card')
-            return False
-
+    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Hoàn thành thêm thẻ cho tài khoản \x1b[93m{email} \x1b[32mTổng số thẻ đã thêm: \x1b[93m{len(added_cards)}{COLORS['RESET']}")
     return added_cards
-
-def check_and_save_cards(page, email, added_cards):
+    
+def check_and_save_cards(page, email, cred, start_line, end_line):
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-    time.sleep(3)
-
+    print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đang tiếng hành check live cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
+    # Wait for network to be idle to ensure page loads completely
+    time.sleep(20)
+    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
+    check_card.click()
+    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
+    check_card.click()
+    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
+    time.sleep(20)
+    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
+    check_card.click()
+    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
+    check_card.click()
+    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
+    time.sleep(5)
+    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
+    check_card.click()
+    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
+    time.sleep(5)
     content = page.content()
     soup = BeautifulSoup(content, 'html.parser')
 
@@ -349,15 +339,50 @@ def check_and_save_cards(page, email, added_cards):
         filtered_cards.append(card_div)
 
     live_card_count = len(filtered_cards)
-    print(f"{Fore.BLUE}Account {email} - Tổng thẻ: {total_cards}, Bị loại: {skip_count}, Thẻ live thực sự: {live_card_count}{Fore.RESET}")
+    print(f"{COLORS['BLUE']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tài Khoản \x1b[93m{email} \x1b[96mCó Tổng thẻ: \x1b[93m{total_cards} \x1b[31mThẻ Die: \x1b[93m{skip_count} \x1b[32mThẻ live: \x1b[93m{live_card_count}{COLORS['RESET']}")
 
-    # Lưu thẻ live vào file
+    live_cards_last4 = []
+    for card in filtered_cards:
+        text_nodes = card.get_text(strip=True)
+        match = re.search(r'(\d{4})$', text_nodes)
+        if match:
+            last4 = match.group(1)
+            live_cards_last4.append(last4)
+
     if live_card_count > 0:
-        # Bạn có thể lưu thẻ live vào file hoặc database ở đây
-        pass
+        log_to_file('live.txt', email, cred['password'], cred['2fa'])
     else:
-        print(f'{Fore.RED}No valid cards found on account {email}. Marking as DIE.{Fore.RESET}')
-        # Bạn có thể lưu tài khoản die vào file hoặc database
+        print(f"{COLORS['RED']} Không tìm thấy thẻ hợp lệ nào trên tài khoản \x1b[93m{email}. DIE.{COLORS['RESET']}")
+        log_to_file('die.txt', email, cred['password'], cred['2fa'])
+
+    with open(card_file_path, 'r') as f:
+        lines = f.readlines()
+
+    lines_to_check = lines[start_line:end_line]
+
+    live_lines = []
+    die_lines = []
+
+    for line in lines_to_check:
+        line = line.strip()
+        if not line:
+            continue
+        card_num = line.split('|')[0]
+        if len(card_num) < 4:
+            continue
+        last4_line = card_num[-4:]
+        if last4_line in live_cards_last4:
+            live_lines.append(line)
+        else:
+            die_lines.append(line)
+
+    if live_lines:
+        save_live_cards_to_file(live_lines, email)
+
+    if die_lines:
+        remove_lines_from_card_txt(die_lines)
+
+    print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Xử lý xong thêm thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
 
 def delete_card(page, num_cards_to_delete=9999):  # để mặc định xóa hết có thể
     retry_limit = 2
@@ -384,7 +409,7 @@ def delete_card(page, num_cards_to_delete=9999):  # để mặc định xóa h�
             try:
                 edit_card = page.wait_for_selector('//a[text()="Edit"]', timeout=5000)
             except Exception:
-                print(f"{COLORS['CYAN']}[ SU WO ] > Không tìm thấy nút Edit nữa, đã xóa hết thẻ hoặc bị giới hạn.{COLORS['RESET']}")
+                print(f"{COLORS['CYAN']} \x1b[31mKhông tìm thấy nút Edit nữa\x1b[93m, \x1b[31mđã xóa hết thẻ hoặc bị giới hạn.{COLORS['RESET']}")
                 break
 
             # Click nút Edit
@@ -427,23 +452,27 @@ def delete_card(page, num_cards_to_delete=9999):  # để mặc định xóa h�
     except Exception as e:
         print(f"{COLORS['RED']}Error removing card: {e}{COLORS['RESET']}")
         return False
+# ----------- Phần chỉnh sửa chính cho chạy tuần tự tài khoản, đa luồng -------------
 
+profile_counter_lock = threading.Lock()
+# Dùng biến global index quản lý tài khoản hiện tại
+profile_index = 0
+profile_index_lock = threading.Lock()
 
 def run_profile(profile_number):
+    global profile_index
     start_line = (profile_number - 1) * 5
     end_line = start_line + 5
 
     for attempt in range(retries):
-        print(f'START PROFILE addcard{profile_number}------------------')
+        print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đang tiến hành mở profile \x1b[93m{profile_number} \x1b[32mđể chạy tài khoản \x1b[93m{profile_number}{COLORS['RESET']}")
         try:
             with sync_playwright() as playwright:
                 x, y = get_next_position()
                 browser = playwright.chromium.launch(
                     headless=False,
-                    args=[
-                        f'--window-size={window_width},{window_height}',
-                        f'--window-position={x},{y}'
-                    ]
+                    args=[f'--window-size={window_width},{window_height}',
+                          f'--window-position={x},{y}']
                 )
                 context = browser.new_context(
                     viewport={'width': window_width, 'height': window_height},
@@ -461,61 +490,69 @@ def run_profile(profile_number):
                     break
 
                 added_cards = add_card(page, start_line, end_line, credentials, profile_number)
-
-                if added_cards is False:
-                    print(f"Tài khoản {credentials[profile_number - 1]['email']} bị giới hạn thêm thẻ, đổi tài khoản khác ngay.")
-                    context.close()
-                    browser.close()
-                    return  # thoát luồng, sang tài khoản khác
-
                 if not added_cards:
-                    print(f'Không thêm được thẻ nào cho profile {profile_number}')
+                    print(f"{COLORS['RED']}Không thêm được thẻ nào cho profile \x1b[93m{profile_number} \x1b[31mvì đã hết thẻ tronng \x1b[93mcard.txt{COLORS['RESET']}")
                     context.close()
                     browser.close()
                     break
 
-                check_and_save_cards(page, credentials[profile_number - 1]['email'], added_cards)
+                check_and_save_cards(page, credentials[profile_number - 1]['email'], credentials[profile_number - 1], start_line, end_line)
 
                 delete_card(page, num_cards_to_delete=len(added_cards))
 
-                print('Check Acc Complete')
+                print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã hoàn thành quá trình cho tài khoản \x1b[93m{profile_number} {COLORS['RESET']}")
                 time.sleep(5)
                 context.close()
                 browser.close()
                 break
         except Exception as e:
-            print(f'Error in thread addcard{profile_number}:', e)
+            print(f"{COLORS['RED']}[ SU WO ][ERROR] > Lỗi thêm thẻ trong quá trình của tài khoản {profile_number}: {e}{COLORS['RESET']}")
             if attempt < retries - 1:
-                print(f'Retry {attempt + 1} for profile addcard{profile_number}')
+                print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đang thử lại \x1b[93m{attempt + 1} \x1b[32mcho tài khoản \x1b[93m{profile_number} \x1b[32mthêm thẻ{COLORS['RESET']}")
             else:
-                print(f'Failed after {retries} attempts for profile addcard{profile_number}')
+                print(f"{COLORS['RED']} Không thành công sau \x1b[93m{retries} \x1b[32mlần thử cho tải khoản \x1b[93m{profile_number} thêm thẻ{COLORS['RESET']}")
             continue
 
+def worker_thread():
+    global profile_index
+    total_profiles = len(credentials)
+    while True:
+        with profile_index_lock:
+            if profile_index >= total_profiles:
+                # Nếu hết tài khoản rồi thì thoát vòng lặp worker thread
+                break
+            current_profile = profile_index + 1
+            profile_index += 1
+        run_profile(current_profile)
+
 def run_profiles_dynamically():
-    global profile_counter
-    threads = []
-    max_threads = min(number_of_profiles, len(credentials))
-    for i in range(max_threads):
-        with profile_counter_lock:
-            profile_number = profile_counter
-            profile_counter += 1
-        t = threading.Thread(target=run_profile, args=(profile_number,))
-        t.start()
-        threads.append(t)
-    for i in range(max_threads, number_of_profiles):
-        with profile_counter_lock:
-            profile_number = profile_counter
-            profile_counter += 1
-        t = threading.Thread(target=run_profile, args=(profile_number,))
-        t.start()
-        threads.append(t)
-    for t in threads:
-        t.join()
+    global profile_index
+    while True:
+        profile_index = 0  # reset index để chạy lại từ đầu
+        threads = []
+        max_threads = min(number_of_profiles, len(credentials))
+
+        for _ in range(max_threads):
+            t = threading.Thread(target=worker_thread)
+            t.start()
+            threads.append(t)
+
+        for t in threads:
+            t.join()
+
+        print(f"{COLORS['BRIGHT_CYAN']}Đã chạy hết tất cả tài khoản trong \x1b[93mmailadd.txt.\n{COLORS['RESET']}")
+        # Hỏi người dùng muốn thoát hay chạy lại
+        user_input = input(f"{COLORS['GREEN']}Bạn đã chạy xong hết tài khoản\x1b[93m, \x1b[32mvui lòng tắt hoặc nhập \x1b[93m'y\x1b[93m' \x1b[32mđể thoát\x1b[93m: {COLORS['RESET']}").strip().lower()
+        if user_input == 'y':
+            print(f"{COLORS['RED']}Thoát chương trình...{COLORS['RESET']}")
+            break
+        else:
+            print(f"{COLORS['BRIGHT_CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Chạy lại tất cả tài khoản từ đầu\x1b[93m...\n\n{COLORS['RESET']}")
 
 if __name__ == '__main__':
     try:
         run_profiles_dynamically()
     except KeyboardInterrupt:
-        print('Process interrupted by user. Exiting...')
+        print(f"{COLORS['GREEN']}Quá trình đã bị người dùng tắt đang thoát\x1b[93m...{COLORS['RESET']}")
     except Exception as e:
-        print('Unexpected error:', e)
+        print(f"{COLORS['RED']}Lỗi không mong muốn{COLORS['RESET']}")
