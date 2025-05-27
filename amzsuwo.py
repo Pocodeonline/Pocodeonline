@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -334,63 +334,82 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
             live_cards.append(card_div)
         return live_cards
 
-    max_attempts = 5
-    attempt = 0
-    live_cards_prev = []
-    consecutive_live_found = 0  # đếm số lần liên tiếp có live cards
+    def extract_last4(cards):
+        last4s = []
+        for card in cards:
+            text = card.get_text(strip=True)
+            match = re.search(r'(\d{4})$', text)
+            if match:
+                last4s.append(match.group(1))
+        return set(last4s)
 
-    while attempt < max_attempts:
-        print(f"--- Lần tải và click lần thứ {attempt+1} cho tài khoản {email} ---")
+    max_clicks = 4
+    attempt = 0
+
+    live_cards_prev = []
+    live_last4_prev = set()
+
+    # Lần đầu tiên: vào trang, đợi 20s, click lần 1, đợi 10s
+    print(f"--- Lần tải và click lần thứ 1 cho tài khoản {email} ---")
+    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
+    time.sleep(20)
+
+    clicked = click_cards_by_img_src()
+    print(f"Đã click {clicked} thẻ die (ảnh đặc trưng) để cập nhật dữ liệu.")
+    time.sleep(10)
+
+    content = page.content()
+    soup = BeautifulSoup(content, 'html.parser')
+    live_cards_current = count_live_cards(soup)
+    live_last4_current = extract_last4(live_cards_current)
+    live_count_current = len(live_cards_current)
+    print(f"Lần 1: Tìm thấy {live_count_current} thẻ live.")
+
+    live_cards_prev = live_cards_current
+    live_last4_prev = live_last4_current
+    attempt = 1
+
+    while attempt < max_clicks:
+        print(f"--- Lần click lần thứ {attempt + 1} cho tài khoản {email} ---")
         page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-        time.sleep(20)
+        time.sleep(10)  # đợi 10s trước khi click
 
         clicked = click_cards_by_img_src()
-        print(f"Đã click {clicked} thẻ die (ảnh đặc trưng) để cập nhật dữ liệu.")
-        time.sleep(10)
+        print(f"Đã click {clicked} thẻ die lần thứ {attempt + 1}.")
+        time.sleep(10)  # đợi 10s sau click
 
         content = page.content()
         soup = BeautifulSoup(content, 'html.parser')
         live_cards_current = count_live_cards(soup)
+        live_last4_current = extract_last4(live_cards_current)
         live_count_current = len(live_cards_current)
+        print(f"Lần {attempt + 1}: Tìm thấy {live_count_current} thẻ live.")
 
-        print(f"Lần {attempt+1}: Tìm thấy {live_count_current} thẻ live.")
+        new_live_cards = live_last4_current - live_last4_prev
 
-        # So sánh live cards hiện tại với lần trước dựa trên last4 card để biết có thêm thẻ live mới không
-        def extract_last4(cards):
-            last4s = []
-            for card in cards:
-                text = card.get_text(strip=True)
-                match = re.search(r'(\d{4})$', text)
-                if match:
-                    last4s.append(match.group(1))
-            return set(last4s)
-
-        last4_prev = extract_last4(live_cards_prev)
-        last4_current = extract_last4(live_cards_current)
-
-        new_live_cards = last4_current - last4_prev
-
-        if live_count_current > 0:
-            consecutive_live_found += 1
+        if attempt == 1:
+            # Lần 2 click
+            if live_count_current == 0:
+                # Chưa có live thì cứ tiếp tục click lần 3,4 nếu có
+                print("Lần 2 chưa có thẻ live, tiếp tục thử lần 3 và 4 nếu cần.")
+            else:
+                # Lần 2 có live rồi thì làm thêm lần 3,4 để kiểm tra thẻ live mới
+                print("Lần 2 đã có thẻ live, làm thêm lần 3 và 4 để kiểm tra thẻ live mới.")
         else:
-            consecutive_live_found = 0
+            # Lần 3 hoặc 4
+            if not new_live_cards:
+                print("Không còn thẻ live mới thêm, dừng vòng lặp.")
+                break
+            else:
+                print(f"Phát hiện thêm {len(new_live_cards)} thẻ live mới, tiếp tục vòng lặp.")
 
-        if consecutive_live_found >= 3:
-            # Đã liên tục 3 lần có thẻ live → dừng, coi như ổn định rồi
-            print("Đã liên tục 3 lần có thẻ live, dừng vòng lặp.")
-            break
-
-        if not new_live_cards:
-            # Không có thẻ live mới so với lần trước → dừng để tránh vô hạn loop
-            print("Không có thẻ live mới thêm, dừng vòng lặp.")
-            break
-
+        # Cập nhật live cards trước để lần sau so sánh
         live_cards_prev = live_cards_current
+        live_last4_prev = live_last4_current
         attempt += 1
 
-    # Nếu hết vòng lặp vẫn chưa có live card thì cảnh báo
-    if attempt == max_attempts and len(live_cards_prev) == 0:
-        print(f"{COLORS['RED']}Không tìm thấy thẻ live sau {max_attempts} lần thử, tiếp tục xử lý với dữ liệu hiện tại.{COLORS['RESET']}")
+    if attempt == max_clicks and len(live_cards_prev) == 0:
+        print(f"{COLORS['RED']}Không tìm thấy thẻ live sau {max_clicks} lần thử, tiếp tục xử lý với dữ liệu hiện tại.{COLORS['RESET']}")
 
     # Tiếp tục xử lý phần check và ghi file như cũ với live_cards_prev
 
@@ -404,7 +423,7 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
 
     print(f"{COLORS['BLUE']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tài Khoản \x1b[93m{email} \x1b[96mCó Tổng thẻ: \x1b[93m{total_cards} \x1b[31mThẻ Die: \x1b[93m{skip_count} \x1b[32mThẻ live: \x1b[93m{len(live_cards_prev)}{COLORS['RESET']}")
 
-    live_cards_last4 = list(extract_last4(live_cards_prev))
+    live_cards_last4 = list(live_last4_prev)
 
     if len(live_cards_prev) > 0:
         log_to_file('live.txt', email, cred['password'], cred['2fa'])
