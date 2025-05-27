@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -386,15 +386,11 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
 
     print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Xử lý xong thêm thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
 
-def delete_card(page, email, num_cards_to_delete=5):
+def delete_card(page, num_cards_to_delete=5):
     try:
-        retry_count = 0
-        max_retries = 2
-        
         while True:
             page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-            print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đang tiếng hành xóa thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
-
+            time.sleep(1.2)
 
             card_count = page.evaluate('''() => {
                 const sidebar = document.querySelector('.a-scroller.apx-wallet-desktop-payment-method-selectable-tab-css.a-scroller-vertical');
@@ -404,14 +400,14 @@ def delete_card(page, email, num_cards_to_delete=5):
             }''')
 
             if card_count == 0:
-                print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tất cả thẻ thêm đã xóa khỏi tài khoản \x1b[93m{email} {COLORS['RESET']}")
+                print("{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tất cả thẻ thêm đã xóa khỏi tài khoản \x1b[93m{email} {COLORS['RESET']}")
                 return True
 
             try:
                 edit_card = page.wait_for_selector('//a[text()="Edit"]', timeout=5000)
             except Exception:
                 print(f"{COLORS['RED']} lỗi không thấy phần edit đang thử lại...{COLORS['RESET']}")
-                break
+                continue
 
             edit_card.click()
             time.sleep(2)
@@ -420,17 +416,15 @@ def delete_card(page, email, num_cards_to_delete=5):
                 remove_card = page.wait_for_selector('//input[@class="apx-remove-link-button"]', timeout=5000)
                 remove_card.click()
             except PlaywrightTimeoutError:
-                retry_count += 1
-                if retry_count >= max_retries:
-                    print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mTài khoản đã bị giới hạn lượt xóa thẻ hoặc dư thẻ để xóa{COLORS['RESET']}")
-                    return False
+                print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mTài khoản đã bị giới hạn lượt xóa thẻ hoặc dư thẻ để xóa{COLORS['RESET']}")
+
             try:
                 confirm_button = page.wait_for_selector('//span[@class="a-button a-button-primary pmts-delete-instrument apx-remove-button-desktop pmts-button-input"]', timeout=5000)
                 confirm_button.click()
-            except Exception:
+            except PlaywrightTimeoutError:
                 print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mĐã bị quá tải xóa thẻ \x1b[93m- \x1b[31mLần thử \x1b[93m{retry_count}/{max_retries}{COLORS['RESET']}")
-                time.sleep(2)
-                
+
+                time.sleep(3)
                 continue
             except Exception:
                 try:
@@ -443,7 +437,7 @@ def delete_card(page, email, num_cards_to_delete=5):
                         }
                     ''')
                     time.sleep(2)
-                    page.reload()                   
+                    page.reload()
                     time.sleep(2)
                     continue
                 except Exception as e:
@@ -452,7 +446,7 @@ def delete_card(page, email, num_cards_to_delete=5):
 
         return True
     except Exception as e:
-        print(f"{COLORS['RED']}[ SU WO ][ERROR] > {e}{COLORS['RESET']}")
+        print('Error removing card:', e)
         return False
 
 # ----------- Phần chỉnh sửa chính cho chạy tuần tự tài khoản, đa luồng -------------
