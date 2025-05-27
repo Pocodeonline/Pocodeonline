@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -350,12 +350,12 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     live_last4_prev = set()
 
     # Lần đầu tiên: vào trang, đợi 20s, click lần 1, đợi 10s
-    print(f"--- Lần tải và click lần thứ 1 cho tài khoản {email} ---")
+    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tải  load cho tài khoản \x1b[93m{email} {COLORS['RESET']}")
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
     time.sleep(20)
 
     clicked = click_cards_by_img_src()
-    print(f"Đã click {clicked} thẻ die (ảnh đặc trưng) để cập nhật dữ liệu.")
+    print(f"{COLORS['CYAN']}Đang cập nhật dữ liệu check live {clicked} {COLORS['RESET']}")
     time.sleep(10)
 
     content = page.content()
@@ -363,19 +363,19 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     live_cards_current = count_live_cards(soup)
     live_last4_current = extract_last4(live_cards_current)
     live_count_current = len(live_cards_current)
-    print(f"Lần 1: Tìm thấy {live_count_current} thẻ live.")
+    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tìm thấy \x1b[93m{live_count_current} \x1b[32mthẻ live để check thêm{COLORS['RESET']}")
 
     live_cards_prev = live_cards_current
     live_last4_prev = live_last4_current
     attempt = 1
 
     while attempt < max_clicks:
-        print(f"--- Lần click lần thứ {attempt + 1} cho tài khoản {email} ---")
+        print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Load thêm lần \x1b[93m{attempt + 1} \x1b[32mcho tài khoản \x1b[93m{email} {COLORS['RESET']}")
         page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
         time.sleep(10)  # đợi 10s trước khi click
 
         clicked = click_cards_by_img_src()
-        print(f"Đã click {clicked} thẻ die lần thứ {attempt + 1}.")
+        print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Đã load \x1b[32mcác thẻ lần thứ {attempt + 1}.")
         time.sleep(10)  # đợi 10s sau click
 
         content = page.content()
@@ -383,7 +383,7 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
         live_cards_current = count_live_cards(soup)
         live_last4_current = extract_last4(live_cards_current)
         live_count_current = len(live_cards_current)
-        print(f"Lần {attempt + 1}: Tìm thấy {live_count_current} thẻ live.")
+        print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Lần {attempt + 1} Load được {live_count_current} thẻ live.")
 
         new_live_cards = live_last4_current - live_last4_prev
 
@@ -391,17 +391,17 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
             # Lần 2 click
             if live_count_current == 0:
                 # Chưa có live thì cứ tiếp tục click lần 3,4 nếu có
-                print("Lần 2 chưa có thẻ live, tiếp tục thử lần 3 và 4 nếu cần.")
+                print("\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Lần 2 đang load thêm thẻ live nếu có ")
             else:
                 # Lần 2 có live rồi thì làm thêm lần 3,4 để kiểm tra thẻ live mới
-                print("Lần 2 đã có thẻ live, làm thêm lần 3 và 4 để kiểm tra thẻ live mới.")
+                print("\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Lần 2 đã có thẻ live load thêm nào")
         else:
             # Lần 3 hoặc 4
             if not new_live_cards:
-                print("Không còn thẻ live mới thêm, dừng vòng lặp.")
+                print("\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Không còn thẻ live mới thêm dừng check live thui")
                 break
             else:
-                print(f"Phát hiện thêm {len(new_live_cards)} thẻ live mới, tiếp tục vòng lặp.")
+                print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Phát hiện thêm \x1b[93m{len(new_live_cards)} thẻ live mới tiếp tục nào.")
 
         # Cập nhật live cards trước để lần sau so sánh
         live_cards_prev = live_cards_current
