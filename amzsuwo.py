@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -407,7 +407,10 @@ def delete_card(page, num_cards_to_delete=5):
                 edit_card = page.wait_for_selector('//a[text()="Edit"]', timeout=5000)
             except Exception:
                 print(f"{COLORS['RED']} lỗi không thấy phần edit đang thử lại...{COLORS['RESET']}")
-                continue
+                time.sleep(2)
+                fpress_agan = page.wait_for_selector('//*[@id="pp-sqJosw-33"]', timeout=5000)
+                fpress_agan.click()
+                break
 
             edit_card.click()
             time.sleep(2)
