@@ -1,6 +1,6 @@
 import time
 import threading
-import math
+import random
 import re
 from screeninfo import get_monitors
 from colorama import init, Fore, Style
@@ -25,9 +25,8 @@ COLORS = {
 init()
 
 print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
-
-number_of_profiles = int(input(f"{COLORS['GREEN']}Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
-retries = int(input(f"{COLORS['GREEN']}Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2\x1b[32m nhé \x1b[93m): {COLORS['RESET']}"))
+number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
+retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
 with open('proxy.txt', 'r') as proxy_file:
     proxy = proxy_file.readline().strip()
@@ -35,15 +34,6 @@ with open('proxy.txt', 'r') as proxy_file:
 def log_to_file(filename, email, password, code_2fa):
     with open(filename, 'a') as file:
         file.write(f"{email}|{password}|{code_2fa}\n")
-
-def remove_line_from_file(filepath, line_content):
-    """Xóa 1 dòng chính xác trong file"""
-    with open(filepath, 'r') as f:
-        lines = f.readlines()
-    with open(filepath, 'w') as f:
-        for line in lines:
-            if line.strip() != line_content.strip():
-                f.write(line)
 
 def remove_lines_from_card_txt(lines_to_remove):
     """Xóa các dòng trong card.txt tương ứng với lines_to_remove (list các string nguyên dòng)"""
@@ -65,7 +55,7 @@ def read_credentials(file_path='mailadd.txt'):
     with open(file_path, 'r') as file:
         for line in file:
             email, password, code_2fa = line.strip().split('|')
-            credentials.append({'email': email, 'password': password, '2fa': code_2fa, 'raw_line': line.strip()})
+            credentials.append({'email': email, 'password': password, '2fa': code_2fa})
     return credentials
 
 credentials = read_credentials()
@@ -73,27 +63,26 @@ monitor = get_monitors()[0]
 screen_width = monitor.width
 screen_height = monitor.height
 
-# Giới hạn số tab tối đa chia trên một màn hình (gpm login khoảng 30)
-MAX_TABS_PER_SCREEN = 30
-max_tabs = min(number_of_profiles, MAX_TABS_PER_SCREEN)
-
 def calc_grid(n):
-    """Tính số cột và hàng để chia màn hình cho n cửa sổ sao cho đủ rộng"""
-    # Tối ưu grid gần vuông, ưu tiên cột >= hàng
-    rows = int(math.floor(math.sqrt(n)))
-    cols = int(math.ceil(n / rows))
+    import math
+    if n <= 4:
+        rows = 1
+    elif n <= 10:
+        rows = 2
+    elif n <= 15:
+        rows = 3
+    else:
+        rows = math.ceil(n / math.ceil(math.sqrt(n)))
+    cols = math.ceil(n / rows)
     return cols, rows
 
-columns, rows = calc_grid(max_tabs)
+columns, rows = calc_grid(number_of_profiles)
 
-# Giới hạn tối thiểu kích thước cửa sổ như điện thoại dọc (320x480)
 MIN_WIDTH = 320
 MIN_HEIGHT = 480
-
 window_width = max(screen_width // columns, MIN_WIDTH)
 window_height = max(screen_height // rows, MIN_HEIGHT)
 
-# Đảm bảo không vượt kích thước màn hình
 if window_width * columns > screen_width:
     window_width = screen_width // columns
 if window_height * rows > screen_height:
@@ -103,7 +92,6 @@ active_positions = []
 active_positions_lock = threading.Lock()
 
 def get_next_position():
-    """Lấy vị trí tiếp theo để mở cửa sổ mới, theo lưới hàng x cột"""
     with active_positions_lock:
         if len(active_positions) >= columns * rows:
             active_positions.clear()
@@ -113,7 +101,6 @@ def get_next_position():
                 if pos not in active_positions:
                     active_positions.append(pos)
                     return pos
-        # Fallback nếu hết vị trí (dù rất ít khi tới)
         return (0, 0)
 
 def solve_captcha(page):
@@ -135,105 +122,76 @@ def solve_captcha(page):
         print(f"{COLORS['RED']}[ SU WO ][ERROR] > Captcha solve error: {e}{COLORS['RESET']}")
 
 def login_amz(page, profile_number, credentials_list):
-    """Login Amazon, thử tối đa 3 lần, thất bại sẽ đánh dấu acc die và xóa khỏi mailadd.txt"""
+    page.goto('https://na.account.amazon.com/ap/signin?_encoding=UTF8&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.pape.max_auth_age=0&ie=UTF8&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&pageId=lwa&openid.assoc_handle=amzn_lwa_na&marketPlaceId=ATVPDKIKX0DER&arb=e2bc4dbc-2218-4697-8323-886562f341f1&language=en_US&openid.return_to=https%3A%2F%2Fna.account.amazon.com%2Fap%2Foa%3FmarketPlaceId%3DATVPDKIKX0DER%26arb%3De2bc4dbc-2218-4697-8323-886562f341f1%26language%3Den_US&enableGlobalAccountCreation=1&metricIdentifier=amzn1.application.eb539eb1b9fb4de2953354ec9ed2e379&signedMetricIdentifier=fLsotU64%2FnKAtrbZ2LjdFmdwR3SEUemHOZ5T2deI500%3D')
+
     cred = credentials_list[profile_number - 1]
     email = cred['email']
     password = cred['password']
     code_2fa = cred['2fa']
-    raw_line = cred.get('raw_line', f"{email}|{password}|{code_2fa}")
 
-    login_url = 'https://na.account.amazon.com/ap/signin?_encoding=UTF8&openid.mode=checkid_setup&openid.ns=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0&openid.claimed_id=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&openid.pape.max_auth_age=0&ie=UTF8&openid.ns.pape=http%3A%2F%2Fspecs.openid.net%2Fextensions%2Fpape%2F1.0&openid.identity=http%3A%2F%2Fspecs.openid.net%2Fauth%2F2.0%2Fidentifier_select&pageId=lwa&openid.assoc_handle=amzn_lwa_na&marketPlaceId=ATVPDKIKX0DER&arb=e2bc4dbc-2218-4697-8323-886562f341f1&language=en_US&openid.return_to=https%3A%2F%2Fna.account.amazon.com%2Fap%2Foa%3FmarketPlaceId%3DATVPDKIKX0DER%26arb%3De2bc4dbc-2218-4697-8323-886562f341f1%26language%3Den_US&enableGlobalAccountCreation=1&metricIdentifier=amzn1.application.eb539eb1b9fb4de2953354ec9ed2e379&signedMetricIdentifier=fLsotU64%2FnKAtrbZ2LjdFmdwR3SEUemHOZ5T2deI500%3D'
+    page.fill('input#ap_email', email)
+    page.click('input#continue')
 
-    for attempt in range(3):
-        try:
-            page.goto(login_url)
-            page.fill('input#ap_email', email)
-            page.click('input#continue')
-            time.sleep(2)
+    try:
+        if page.query_selector('//div[@class="a-row a-text-center"]//img'):
+            solve_captcha(page)
+    except Exception:
+        pass
 
-            # Captcha solve nếu có
-            try:
-                if page.query_selector('//div[@class="a-row a-text-center"]//img'):
-                    solve_captcha(page)
-            except Exception:
-                pass
+    page.fill('input#ap_password', password)
+    page.click('input#signInSubmit')
 
-            page.fill('input#ap_password', password)
-            page.click('input#signInSubmit')
-            time.sleep(3)
+    try:
+        otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
+        otp_code = pyotp.TOTP(code_2fa).now()
+        otp_input.fill(otp_code)
 
-            # Xử lý OTP 2fa nếu có
-            try:
-                otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
-                otp_code = pyotp.TOTP(code_2fa).now()
-                otp_input.fill(otp_code)
+        remember_device_checkbox = page.query_selector('input#auth-mfa-remember-device')
+        if remember_device_checkbox:
+            remember_device_checkbox.click()
 
-                remember_device_checkbox = page.query_selector('input#auth-mfa-remember-device')
-                if remember_device_checkbox:
-                    remember_device_checkbox.click()
+        page.click('input#auth-signin-button')
+    except PlaywrightTimeoutError:
+        pass
 
-                page.click('input#auth-signin-button')
-                time.sleep(3)
-            except PlaywrightTimeoutError:
-                pass
+    try:
+        if page.query_selector('//h4[text()="Account on hold temporarily"]'):
+            script = '''
+                const elscreen = document.createElement('div');
+                elscreen.style.cssText = 'position: fixed;inset: 0px;background: rgb(206 236 206 / 89%);z-index: 20000;display: flex;justify-content: center;align-items: center;font-size: 80pt;color: #FF4500;';
+                elscreen.innerHTML = 'ACC DIE';
+                document.body.appendChild(elscreen);
+            '''
+            page.evaluate(script)
+            log_to_file('AccDie.txt', email, password, code_2fa)
+            # Xóa tài khoản khỏi mailadd.txt và lưu qua file die.txt
+            with open('mailadd.txt', 'r') as file:
+                lines = file.readlines()
+            with open('mailadd.txt', 'w') as file:
+                for line in lines:
+                    if line.strip() != f"{email}|{password}|{code_2fa}":
+                        file.write(line)
+            log_to_file('die.txt', email, password, code_2fa)
+            print(f"{COLORS['RED']}[ SU WO ] Tài khoản {email} bị khóa. Đã xóa khỏi mailadd.txt và ghi vào die.txt.{COLORS['RESET']}")
+            return False
+    except Exception:
+        pass
 
-            # Kiểm tra Account on hold
-            try:
-                if page.query_selector('//h4[text()="Account on hold temporarily"]'):
-                    script = '''
-                        const elscreen = document.createElement('div');
-                        elscreen.style.cssText = 'position: fixed; inset: 0px; background: rgb(206 236 206 / 89%); z-index: 20000; display: flex; justify-content: center; align-items: center; font-size: 80pt; color: #FF4500;';
-                        elscreen.innerHTML = 'ACC DIE';
-                        document.body.appendChild(elscreen);
-                    '''
-                    page.evaluate(script)
-                    log_to_file('die.txt', email, password, code_2fa)
-                    remove_line_from_file('mailadd.txt', raw_line)
-                    print(f"{COLORS['RED']}[ SU WO ] ACC DIE - Đã đánh dấu và xóa tài khoản {email}{COLORS['RESET']}")
-                    return False
-            except Exception:
-                pass
+    try:
+        skip_link = page.query_selector('a#ap-account-fixup-phone-skip-link')
+        if skip_link:
+            skip_link.click()
+    except Exception:
+        pass
 
-            # Bỏ qua các popup hoặc bước bổ sung
-            try:
-                skip_link = page.query_selector('a#ap-account-fixup-phone-skip-link')
-                if skip_link:
-                    skip_link.click()
-                    time.sleep(1)
-            except Exception:
-                pass
+    try:
+        agree = page.query_selector('span#agree-button-announce')
+        if agree:
+            agree.click()
+    except Exception:
+        pass
 
-            try:
-                agree = page.query_selector('span#agree-button-announce')
-                if agree:
-                    agree.click()
-                    time.sleep(1)
-            except Exception:
-                pass
-
-            # Kiểm tra login thành công (có thể kiểm tra bằng element nào đó trên trang chính)
-            if page.url.startswith('https://www.amazon.com/ap/signin') or "signin" in page.url.lower():
-                # Nếu vẫn ở trang signin, coi như fail
-                print(f"{COLORS['RED']}[ SU WO ][ERROR] > Login attempt {attempt+1} thất bại cho tài khoản {email}{COLORS['RESET']}")
-                time.sleep(2)
-                continue
-
-            # Login thành công
-            return True
-
-        except Exception as e:
-            print(f"{COLORS['RED']}[ SU WO ][ERROR] > Lỗi login attempt {attempt+1} cho tài khoản {email}: {e}{COLORS['RESET']}")
-            time.sleep(2)
-
-    # Nếu tới đây là fail 3 lần liên tiếp
-    log_to_file('die.txt', email, password, code_2fa)
-    remove_line_from_file('mailadd.txt', raw_line)
-    print(f"{COLORS['RED']}[ SU WO ] ACC DIE - Đã đánh dấu và xóa tài khoản {email} sau 3 lần thử login không thành công{COLORS['RESET']}")
-    return False
-
-# (Phần add_card, check_and_save_cards, delete_card giữ nguyên như cũ, không đổi)
-
-# Để gọn, mình sẽ copy nguyên hàm add_card, check_and_save_cards, delete_card từ code bạn gửi
+    return True
 
 def add_card(page, start_line, end_line, credentials_list, profile_number):
     retry_limit = 3
@@ -246,8 +204,10 @@ def add_card(page, start_line, end_line, credentials_list, profile_number):
     with open(card_file_path, 'r') as f:
         cards = f.readlines()
 
+    # Giới hạn end_line đúng độ dài cards và 5 thẻ max
     max_end_line = min(end_line, len(cards), start_line + max_cards_per_account)
 
+    # Chỉ lấy đúng 5 thẻ theo phân bổ dòng
     cards_to_add = cards[start_line:max_end_line]
 
     for index, card_line in enumerate(cards_to_add, start=start_line):
@@ -294,6 +254,7 @@ def add_card(page, start_line, end_line, credentials_list, profile_number):
                     add_card_credit.click()
                 else:
                     print(f"{COLORS['RED']}Không tìm thấy link Add a credit or debit card sau khi cập nhật HTML cho tài khoản {email}{COLORS['RESET']}")
+                    # Dừng thử với thẻ này, chuyển tiếp thẻ khác
                     break
 
                 time.sleep(2.5)
@@ -345,8 +306,7 @@ def add_card(page, start_line, end_line, credentials_list, profile_number):
     return added_cards
 
 def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
-    # Hàm giữ nguyên code từ bạn vì dài quá, để tránh thiếu chức năng, copy từ code cũ của bạn
-
+    """ Chỉ check chính xác các thẻ vừa thêm trong danh sách added_cards (dạng [{'number':..., 'line':...}]) """
     skip_img_srcs = [
         "41MGiaNMk5L._SL85_.png",
         "81NBfFByidL._SL85_.png"
@@ -461,6 +421,7 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
     if attempt == max_clicks and len(live_cards_prev) == 0:
         print(f"{COLORS['RED']}Không tìm thấy thẻ live sau {max_clicks} lần thử, tiếp tục xử lý với dữ liệu hiện tại.{COLORS['RESET']}")
 
+    # Lọc live thẻ chỉ trong danh sách added_cards (5 thẻ đã thêm)
     added_last4 = set()
     line_map = {}
     for card in added_cards:
@@ -469,9 +430,12 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
         added_last4.add(last4)
         line_map[last4] = card['line']
 
+    # Chỉ lấy last4 live trong added_last4
     live_last4_filtered = live_last4_prev.intersection(added_last4)
 
+    # Lấy dòng thẻ live chính xác
     live_lines = [line_map[l4] for l4 in live_last4_filtered if l4 in line_map]
+    # Lấy dòng thẻ die (5 thẻ - thẻ live)
     die_lines = [line_map[l4] for l4 in added_last4 if l4 not in live_last4_filtered]
 
     if live_lines:
@@ -490,12 +454,12 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
 
     print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Xử lý xong thêm thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
 
-def delete_card(page, num_cards_to_delete=9999):
+def delete_card(page, num_cards_to_delete=9999):  # để mặc định xóa hết có thể
     retry_limit = 2
     deleted_cards = 0
 
     try:
-        while True:
+        while True:  # lặp liên tục đến khi break
             page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
             time.sleep(4)
 
@@ -520,7 +484,7 @@ def delete_card(page, num_cards_to_delete=9999):
             except Exception:
                 print(f"{COLORS['CYAN']} \x1b[31mKhông tìm thấy nút Edit nữa\x1b[93m, \x1b[31mđã xóa hết thẻ hoặc bị giới hạn.{COLORS['RESET']}")
                 break
-
+            
             time.sleep(2)
 
             retry_count = 0
@@ -558,8 +522,9 @@ def delete_card(page, num_cards_to_delete=9999):
         print(f"{COLORS['RED']}Error removing card: {e}{COLORS['RESET']}")
         return False
 
-profile_index_lock = threading.Lock()
+profile_counter_lock = threading.Lock()
 profile_index = 0
+profile_index_lock = threading.Lock()
 
 def run_profile(profile_number):
     global profile_index
@@ -571,31 +536,45 @@ def run_profile(profile_number):
         try:
             with sync_playwright() as playwright:
                 x, y = get_next_position()
+
+                # Mở trình duyệt trong chế độ headless và giảm tài nguyên
                 browser = playwright.chromium.launch(
-                    headless=False,
-                    args=[f'--window-size={window_width},{window_height}',
-                          f'--window-position={x},{y}']
+                    headless=True,  # Chạy không hiển thị giao diện
+                    args=[
+                        f'--window-size={window_width},{window_height}', 
+                        f'--window-position={x},{y}',
+                        '--disable-gpu',          # Tắt GPU rendering
+                        '--no-sandbox',           # Tắt sandbox nếu không cần thiết
+                        '--disable-software-rasterizer',  # Giảm bớt việc sử dụng phần mềm cho rendering
+                        '--disable-extensions',   # Tắt extension không cần thiết
+                        '--disable-plugins',      # Tắt plugins
+                        '--disable-images',       # Tắt việc tải hình ảnh
+                        '--disable-telemetry',    # Tắt gửi dữ liệu telemetry
+                        #'--headless',             # Chạy không hiển thị giao diện
+                    ]
                 )
+                
+                # Sử dụng nhiều context thay vì nhiều tab trong một cửa sổ duy nhất
                 context = browser.new_context(
                     viewport={'width': window_width, 'height': window_height},
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 )
+
+                # Mở trang mới trong context mới
                 page = context.new_page()
                 try:
                     page.evaluate(f"window.moveTo({x}, {y}); window.resizeTo({window_width}, {window_height});")
                 except Exception:
                     pass
 
-                # Thêm vòng lặp login 3 lần trong login_amz rồi, nên gọi thẳng
                 if not login_amz(page, profile_number, credentials):
-                    # Login fail đã xử lý đóng browser, log die và xóa dòng rồi
                     context.close()
                     browser.close()
                     break
 
                 added_cards = add_card(page, start_line, end_line, credentials, profile_number)
                 if not added_cards:
-                    print(f"{COLORS['RED']}Không thêm được thẻ nào cho profile \x1b[93m{profile_number} \x1b[31mvì hết tài khoản trong \x1b[93mmailadd.txt \x1b[32mhoặc đã hết thẻ trong \x1b[93mcard.txt{COLORS['RESET']}")
+                    print(f"{COLORS['RED']}Không thêm được thẻ nào cho profile \x1b[93m{profile_number} \x1b[31mvì đã hết thẻ tronng \x1b[93mcard.txt{COLORS['RESET']}")
                     context.close()
                     browser.close()
                     break
@@ -633,7 +612,7 @@ def run_profiles_dynamically():
     while True:
         profile_index = 0
         threads = []
-        max_threads = min(number_of_profiles, len(credentials), MAX_TABS_PER_SCREEN)
+        max_threads = min(number_of_profiles, len(credentials))
 
         for _ in range(max_threads):
             t = threading.Thread(target=worker_thread)
@@ -644,7 +623,7 @@ def run_profiles_dynamically():
             t.join()
 
         print(f"{COLORS['BRIGHT_CYAN']}Đã chạy hết tất cả tài khoản trong \x1b[93mmailadd.txt.\n{COLORS['RESET']}")
-        user_input = input(f"{COLORS['GREEN']}Bạn đã chạy xong hết tài khoản\x1b[93m, \x1b[32mvui lòng tắt hoặc nhập \x1b[93m'y'\x1b[93m \x1b[32mđể thoát\x1b[93m: {COLORS['RESET']}").strip().lower()
+        user_input = input(f"{COLORS['GREEN']}Bạn đã chạy xong hết tài khoản\x1b[93m, \x1b[32mvui lòng tắt hoặc nhập \x1b[93m'y\x1b[93m' \x1b[32mđể thoát\x1b[93m: {COLORS['RESET']}").strip().lower()
         if user_input == 'y':
             print(f"{COLORS['RED']}Thoát chương trình...{COLORS['RESET']}")
             break
