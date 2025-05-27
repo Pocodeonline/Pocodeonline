@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -291,16 +291,52 @@ def add_card(page, start_line, end_line, credentials_list, profile_number):
     return added_cards
     
 def check_and_save_cards(page, email, cred, start_line, end_line):
+    skip_img_srcs = [
+        "41MGiaNMk5L._SL85_.png",
+        "81NBfFByidL._SL85_.png"
+    ]
+
+    def click_cards_by_img_src():
+        # Lấy tất cả các thẻ chứa ảnh có src nằm trong skip_img_srcs và click vào từng thẻ
+        # Dùng JavaScript để lấy các thẻ chứa img có src phù hợp rồi click
+        script = f'''
+        (() => {{
+            const skipImgs = {skip_img_srcs};
+            let clickedCount = 0;
+            const cardDivs = Array.from(document.querySelectorAll('div.a-section.apx-wallet-selectable-payment-method-tab'));
+            for (const cardDiv of cardDivs) {{
+                const img = cardDiv.querySelector('img.apx-wallet-selectable-image');
+                if (!img) continue;
+                for (const skipSrc of skipImgs) {{
+                    if (img.src.includes(skipSrc)) {{
+                        cardDiv.click();
+                        clickedCount++;
+                        break;
+                    }}
+                }}
+            }}
+            return clickedCount;
+        }})();
+        '''
+        clicked = page.evaluate(script)
+        print(f"Đã click {clicked} thẻ có ảnh cần skip.")
+
+    # Bước 1: Vào trang lần đầu, đợi 20 giây
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-    print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đang tiếng hành check live cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
-    # Wait for network to be idle to ensure page loads completely
     time.sleep(20)
+    click_cards_by_img_src()
+
+    # Bước 2: Reload lại trang, đợi 20 giây, click lại
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
     time.sleep(20)
+    click_cards_by_img_src()
+
+    # Bước 3: Reload lại trang, đợi 10 giây, click lại
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
     time.sleep(10)
-    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-    time.sleep(5)
+    click_cards_by_img_src()
+
+    # Tiếp tục xử lý phần parse và kiểm tra thẻ như trước
     content = page.content()
     soup = BeautifulSoup(content, 'html.parser')
 
@@ -310,11 +346,6 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
         'div.a-row.apx-wallet-desktop-payment-method-selectable-tab-inner-css > '
         'div.a-section.apx-wallet-selectable-payment-method-tab'
     )
-
-    skip_img_srcs = [
-        "41MGiaNMk5L._SL85_.png",
-        "81NBfFByidL._SL85_.png"
-    ]
 
     total_cards = len(container_divs)
     filtered_cards = []
