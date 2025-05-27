@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -295,20 +295,10 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đang tiếng hành check live cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
     # Wait for network to be idle to ensure page loads completely
     time.sleep(20)
-    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
-    check_card.click()
-    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
-    check_card.click()
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
     time.sleep(20)
-    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
-    check_card.click()
-    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
-    check_card.click()
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-    time.sleep(5)
-    check_card = page.query_selector('xpath=//*[@id="pp-sqJosw-33"]')
-    check_card.click()
+    time.sleep(10)
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
     time.sleep(5)
     content = page.content()
