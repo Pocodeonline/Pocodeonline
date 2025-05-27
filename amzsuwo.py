@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool By SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool by SuWo {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -544,13 +544,8 @@ def run_profile(profile_number):
                         f'--window-size={window_width},{window_height}', 
                         f'--window-position={x},{y}',
                         '--disable-gpu',          # Tắt GPU rendering
-                        '--no-sandbox',           # Tắt sandbox nếu không cần thiết
-                        '--disable-software-rasterizer',  # Giảm bớt việc sử dụng phần mềm cho rendering
                         '--disable-extensions',   # Tắt extension không cần thiết
                         '--disable-plugins',      # Tắt plugins
-                        '--disable-images',       # Tắt việc tải hình ảnh
-                        '--disable-telemetry',    # Tắt gửi dữ liệu telemetry
-                        #'--headless',             # Chạy không hiển thị giao diện
                     ]
                 )
                 
