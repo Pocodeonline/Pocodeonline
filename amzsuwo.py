@@ -294,25 +294,17 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
     print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đang tiếng hành check live cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
     # Wait for network to be idle to ensure page loads completely
-    page.wait_for_load_state('networkidle')
-    # Wait additional time to ensure all elements are loaded
-    time.sleep(25)
-    # Refresh page to ensure fresh content
+    time.sleep(10)
     page.reload()
-    # Wait again for network to be idle after refresh
-    page.wait_for_load_state('networkidle')
-    # Final wait to ensure everything is loaded
-    time.sleep(20)
-
+    time.sleep(10)
     page.reload()
-    
-    page.wait_for_load_state('networkidle')
-    time.sleep(25)
+    time.sleep(10)
     page.reload()
-    page.wait_for_load_state('networkidle')
-    time.sleep(25)
+    time.sleep(10)
     page.reload()
-
+    time.sleep(10)
+    page.reload()
+    time.sleep(5)
     content = page.content()
     soup = BeautifulSoup(content, 'html.parser')
 
@@ -387,8 +379,11 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Xử lý xong thêm thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
 
 def delete_card(page, num_cards_to_delete=5):
+    retry_limit = 3
+    deleted_cards = 0
+
     try:
-        while True:
+        while deleted_cards < num_cards_to_delete:
             page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
             time.sleep(1.2)
 
@@ -400,58 +395,52 @@ def delete_card(page, num_cards_to_delete=5):
             }''')
 
             if card_count == 0:
-                print("{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tất cả thẻ thêm đã xóa khỏi tài khoản \x1b[93m{email} {COLORS['RESET']}")
+                print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tất cả thẻ đã xóa khỏi tài khoản{COLORS['RESET']}")
                 return True
 
             try:
                 edit_card = page.wait_for_selector('//a[text()="Edit"]', timeout=5000)
-            except Exception:
-                print(f"{COLORS['RED']} lỗi không thấy phần edit đang thử lại...{COLORS['RESET']}")
+                edit_card.click()
                 time.sleep(2)
-                fpress_agan = page.wait_for_selector('//*[@id="pp-sqJosw-33"]', timeout=5000)
-                fpress_agan.click()
+            except Exception:
+                print('\x1b[31mNo more cards to delete ')
                 break
 
-            edit_card.click()
-            time.sleep(2)
-
-            try:
-                remove_card = page.wait_for_selector('//input[@class="apx-remove-link-button"]', timeout=5000)
-                remove_card.click()
-            except PlaywrightTimeoutError:
-                print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mTài khoản đã bị giới hạn lượt xóa thẻ hoặc dư thẻ để xóa{COLORS['RESET']}")
-
-            try:
-                confirm_button = page.wait_for_selector('//span[@class="a-button a-button-primary pmts-delete-instrument apx-remove-button-desktop pmts-button-input"]', timeout=5000)
-                confirm_button.click()
-            except PlaywrightTimeoutError:
-                print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[31mĐã bị quá tải xóa thẻ \x1b[93m- \x1b[31mLần thử \x1b[93m{retry_count}/{max_retries}{COLORS['RESET']}")
-
-                time.sleep(3)
-                continue
-            except Exception:
+            retry_count = 0
+            success = False
+            while retry_count < retry_limit and not success:
                 try:
-                    page.evaluate('''
-                        var removeButton = document.evaluate(
-                            "//span[@class='a-button-inner']/input[@class='a-button-input' and @type='submit']", 
-                            document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                        if (removeButton) {
-                            removeButton.click();
-                        }
-                    ''')
-                    time.sleep(2)
-                    page.reload()
-                    time.sleep(2)
-                    continue
+                    remove_card = page.wait_for_selector('//input[@class="apx-remove-link-button"]', timeout=5000)
+                    remove_card.click()
+
+                    confirm_button = page.wait_for_selector(
+                        '//span[@class="a-button a-button-primary pmts-delete-instrument apx-remove-button-desktop pmts-button-input"]',
+                        timeout=5000)
+                    confirm_button.click()
+
+                    print(f"{COLORS['CYAN']}\x1b[31m Xóa thẻ thành công sau \x1b[93m{retry_count + 1} \x1b[31mlần thử{COLORS['RESET']}")
+                    success = True
+                    deleted_cards += 1
+                    time.sleep(1.5)
                 except Exception as e:
-                    print(f"{COLORS['RED']}Lỗi không mong muốn{COLORS['RESET']}")
-                    break
+                    retry_count += 1
+                    print(f"{COLORS['RED']} Lỗi khi xóa thẻ, thử lại lần \x1b[93m{retry_count}\x1b[31m: {e}{COLORS['RESET']}")
+                    time.sleep(2)
+                    if retry_count >= retry_limit:
+                        print(f"{COLORS['RED']} Bỏ qua thẻ sau \x1b[93m{retry_limit} \x1b[31mlần thử không thành công{COLORS['RESET']}")
+                        break
 
+            if not success:
+                # Nếu không xóa được thẻ này, chuyển sang thẻ tiếp theo
+                continue
+
+        if deleted_cards >= num_cards_to_delete:
+            print(f"{COLORS['CYAN']}[ SU WO ] > Đã xóa đủ số thẻ yêu cầu: {deleted_cards}{COLORS['RESET']}")
         return True
-    except Exception as e:
-        print('Error removing card:', e)
-        return False
 
+    except Exception as e:
+        print(f"{COLORS['RED']}Error removing card: {e}{COLORS['RESET']}")
+        return False
 # ----------- Phần chỉnh sửa chính cho chạy tuần tự tài khoản, đa luồng -------------
 
 profile_counter_lock = threading.Lock()
