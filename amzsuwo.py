@@ -297,8 +297,6 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
     ]
 
     def click_cards_by_img_src():
-        # Lấy tất cả các thẻ chứa ảnh có src nằm trong skip_img_srcs và click vào từng thẻ
-        # Dùng JavaScript để lấy các thẻ chứa img có src phù hợp rồi click
         script = f'''
         (() => {{
             const skipImgs = {skip_img_srcs};
@@ -318,59 +316,97 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
             return clickedCount;
         }})();
         '''
-        clicked = page.evaluate(script)
-        print(f"Đã click {clicked} thẻ có ảnh cần skip.")
+        return page.evaluate(script)
 
-    # Bước 1: Vào trang lần đầu, đợi 20 giây
-    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-    time.sleep(20)
-    click_cards_by_img_src()
+    def count_live_cards(soup):
+        container_divs = soup.select(
+            'div.a-row.apx-wallet-desktop-payment-method-selectable-tab-css > '
+            'div.a-scroller.apx-wallet-desktop-payment-method-selectable-tab-css.a-scroller-vertical > '
+            'div.a-row.apx-wallet-desktop-payment-method-selectable-tab-inner-css > '
+            'div.a-section.apx-wallet-selectable-payment-method-tab'
+        )
+        live_cards = []
+        for card_div in container_divs:
+            img_tag = card_div.find('img', class_='apx-wallet-selectable-image')
+            img_src = img_tag['src'] if img_tag else ''
+            if any(skip_img in img_src for skip_img in skip_img_srcs):
+                continue
+            live_cards.append(card_div)
+        return live_cards
 
-    # Bước 2: Reload lại trang, đợi 20 giây, click lại
-    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-    time.sleep(20)
-    click_cards_by_img_src()
+    max_attempts = 5
+    attempt = 0
+    live_cards_prev = []
+    consecutive_live_found = 0  # đếm số lần liên tiếp có live cards
 
-    # Bước 3: Reload lại trang, đợi 10 giây, click lại
-    page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
-    time.sleep(10)
-    click_cards_by_img_src()
+    while attempt < max_attempts:
+        print(f"--- Lần tải và click lần thứ {attempt+1} cho tài khoản {email} ---")
+        page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
+        time.sleep(20)
 
-    # Tiếp tục xử lý phần parse và kiểm tra thẻ như trước
-    content = page.content()
-    soup = BeautifulSoup(content, 'html.parser')
+        clicked = click_cards_by_img_src()
+        print(f"Đã click {clicked} thẻ die (ảnh đặc trưng) để cập nhật dữ liệu.")
+        time.sleep(10)
 
-    container_divs = soup.select(
+        content = page.content()
+        soup = BeautifulSoup(content, 'html.parser')
+        live_cards_current = count_live_cards(soup)
+        live_count_current = len(live_cards_current)
+
+        print(f"Lần {attempt+1}: Tìm thấy {live_count_current} thẻ live.")
+
+        # So sánh live cards hiện tại với lần trước dựa trên last4 card để biết có thêm thẻ live mới không
+        def extract_last4(cards):
+            last4s = []
+            for card in cards:
+                text = card.get_text(strip=True)
+                match = re.search(r'(\d{4})$', text)
+                if match:
+                    last4s.append(match.group(1))
+            return set(last4s)
+
+        last4_prev = extract_last4(live_cards_prev)
+        last4_current = extract_last4(live_cards_current)
+
+        new_live_cards = last4_current - last4_prev
+
+        if live_count_current > 0:
+            consecutive_live_found += 1
+        else:
+            consecutive_live_found = 0
+
+        if consecutive_live_found >= 3:
+            # Đã liên tục 3 lần có thẻ live → dừng, coi như ổn định rồi
+            print("Đã liên tục 3 lần có thẻ live, dừng vòng lặp.")
+            break
+
+        if not new_live_cards:
+            # Không có thẻ live mới so với lần trước → dừng để tránh vô hạn loop
+            print("Không có thẻ live mới thêm, dừng vòng lặp.")
+            break
+
+        live_cards_prev = live_cards_current
+        attempt += 1
+
+    # Nếu hết vòng lặp vẫn chưa có live card thì cảnh báo
+    if attempt == max_attempts and len(live_cards_prev) == 0:
+        print(f"{COLORS['RED']}Không tìm thấy thẻ live sau {max_attempts} lần thử, tiếp tục xử lý với dữ liệu hiện tại.{COLORS['RESET']}")
+
+    # Tiếp tục xử lý phần check và ghi file như cũ với live_cards_prev
+
+    total_cards = len(soup.select(
         'div.a-row.apx-wallet-desktop-payment-method-selectable-tab-css > '
         'div.a-scroller.apx-wallet-desktop-payment-method-selectable-tab-css.a-scroller-vertical > '
         'div.a-row.apx-wallet-desktop-payment-method-selectable-tab-inner-css > '
         'div.a-section.apx-wallet-selectable-payment-method-tab'
-    )
+    ))
+    skip_count = total_cards - len(live_cards_prev)
 
-    total_cards = len(container_divs)
-    filtered_cards = []
-    skip_count = 0
+    print(f"{COLORS['BLUE']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tài Khoản \x1b[93m{email} \x1b[96mCó Tổng thẻ: \x1b[93m{total_cards} \x1b[31mThẻ Die: \x1b[93m{skip_count} \x1b[32mThẻ live: \x1b[93m{len(live_cards_prev)}{COLORS['RESET']}")
 
-    for card_div in container_divs:
-        img_tag = card_div.find('img', class_='apx-wallet-selectable-image')
-        img_src = img_tag['src'] if img_tag else ''
-        if any(skip_img in img_src for skip_img in skip_img_srcs):
-            skip_count += 1
-            continue
-        filtered_cards.append(card_div)
+    live_cards_last4 = list(extract_last4(live_cards_prev))
 
-    live_card_count = len(filtered_cards)
-    print(f"{COLORS['BLUE']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tài Khoản \x1b[93m{email} \x1b[96mCó Tổng thẻ: \x1b[93m{total_cards} \x1b[31mThẻ Die: \x1b[93m{skip_count} \x1b[32mThẻ live: \x1b[93m{live_card_count}{COLORS['RESET']}")
-
-    live_cards_last4 = []
-    for card in filtered_cards:
-        text_nodes = card.get_text(strip=True)
-        match = re.search(r'(\d{4})$', text_nodes)
-        if match:
-            last4 = match.group(1)
-            live_cards_last4.append(last4)
-
-    if live_card_count > 0:
+    if len(live_cards_prev) > 0:
         log_to_file('live.txt', email, cred['password'], cred['2fa'])
     else:
         print(f"{COLORS['RED']} Không tìm thấy thẻ hợp lệ nào trên tài khoản \x1b[93m{email}. DIE.{COLORS['RESET']}")
@@ -404,6 +440,7 @@ def check_and_save_cards(page, email, cred, start_line, end_line):
         remove_lines_from_card_txt(die_lines)
 
     print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Xử lý xong thêm thẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
+
 
 def delete_card(page, num_cards_to_delete=9999):  # để mặc định xóa hết có thể
     retry_limit = 2
