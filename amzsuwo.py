@@ -193,7 +193,7 @@ def login_amz(page, profile_number, credentials_list):
 
     return True
 
-def add_card(page, start_line, end_line, credentials_list, profile_number):
+def add_card(page, credentials_list, profile_number):
     retry_limit = 3
     added_cards = []
     max_cards_per_account = 5
@@ -203,116 +203,117 @@ def add_card(page, start_line, end_line, credentials_list, profile_number):
     password = cred['password']
     code_2fa = cred['2fa']
 
-    with open(card_file_path, 'r', encoding='utf-8') as f:
-        cards = f.readlines()
+    for attempt in range(retry_limit):
+        # Đọc lại card.txt mỗi lần thử để lấy thẻ mới nhất
+        with open(card_file_path, 'r', encoding='utf-8') as f:
+            cards = f.readlines()
 
-    max_end_line = min(end_line, len(cards), start_line + max_cards_per_account)
-    cards_to_add = cards[start_line:max_end_line]
+        if not cards:
+            print(f"{COLORS['RED']}Không còn thẻ nào trong {card_file_path} để thêm cho profile {profile_number}.{COLORS['RESET']}")
+            return added_cards
 
-    for index, card_line in enumerate(cards_to_add, start=start_line):
-        if len(added_cards) >= max_cards_per_account:
-            print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã đạt giới hạn \x1b[92m{max_cards_per_account} \x1b[32mthẻ cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
-            break
+        cards_to_add = cards[:max_cards_per_account]
 
-        parts = card_line.strip().split('|')
-        if len(parts) < 3:
-            print(f"{COLORS['RED']}[ SU WO ][ERROR] > Card line format error: {card_line.strip()}{COLORS['RESET']}")
-            continue
-        card_number, expiration_month, expiration_year = parts[:3]
+        for card_line in cards_to_add:
+            if len(added_cards) >= max_cards_per_account:
+                print(f"{COLORS['CYAN']}Đã đạt giới hạn {max_cards_per_account} thẻ cho tài khoản {email}{COLORS['RESET']}")
+                break
 
-        retry_count = 0
-        while retry_count < retry_limit:
-            try:
-                url = 'https://www.amazon.com/cpe/yourpayments/settings/manageoneclick'
-                page.goto(url)
-                time.sleep(3)
+            parts = card_line.strip().split('|')
+            if len(parts) < 3:
+                print(f"{COLORS['RED']}[ SU WO ][ERROR] > Card line format error: {card_line.strip()}{COLORS['RESET']}")
+                continue
+            card_number, expiration_month, expiration_year = parts[:3]
 
-                link_add_card = page.wait_for_selector('input.pmts-link-button[type="submit"][name^="ppw-widgetEvent:ChangeAddressPreferredPaymentMethodEvent:"]', timeout=10000)
-                link_add_card.click()
-                time.sleep(2.5)
+            retry_count = 0
+            while retry_count < retry_limit:
+                try:
+                    url = 'https://www.amazon.com/cpe/yourpayments/settings/manageoneclick'
+                    page.goto(url)
+                    time.sleep(3)
 
-                page.evaluate('''() => {
-                    const observer = new MutationObserver((mutations) => {
-                        mutations.forEach((mutation) => {
-                            if (mutation.type === 'childList') {
-                                const addCardLink = document.querySelector('a.a-link-normal.apx-secure-registration-content-trigger-js');
-                                if (addCardLink) {
-                                    addCardLink.click();
-                                    observer.disconnect();
+                    link_add_card = page.wait_for_selector('input.pmts-link-button[type="submit"][name^="ppw-widgetEvent:ChangeAddressPreferredPaymentMethodEvent:"]', timeout=10000)
+                    link_add_card.click()
+                    time.sleep(2.5)
+
+                    page.evaluate('''() => {
+                        const observer = new MutationObserver((mutations) => {
+                            mutations.forEach((mutation) => {
+                                if (mutation.type === 'childList') {
+                                    const addCardLink = document.querySelector('a.a-link-normal.apx-secure-registration-content-trigger-js');
+                                    if (addCardLink) {
+                                        addCardLink.click();
+                                        observer.disconnect();
+                                    }
                                 }
-                            }
+                            });
                         });
-                    });
-                    observer.observe(document.body, { childList: true, subtree: true });
-                }''')
+                        observer.observe(document.body, { childList: true, subtree: true });
+                    }''')
 
-                page.wait_for_timeout(2500)
+                    page.wait_for_timeout(2500)
 
-                add_card_credit = page.query_selector('a.a-link-normal.apx-secure-registration-content-trigger-js')
-                if add_card_credit:
-                    add_card_credit.click()
-                else:
-                    print(f"{COLORS['RED']}Không tìm thấy link Add a credit or debit card sau khi cập nhật HTML cho tài khoản {email}{COLORS['RESET']}")
-                    # Dừng thử với thẻ này, chuyển tiếp thẻ khác
-                    break
-                time.sleep(1)
-                card_name = page.evaluate('''() => {
-                    const spanElement = document.evaluate("//span[@id='nav-link-accountList-nav-line-1']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-                    if(spanElement){
-                        return spanElement.textContent.replace('Hello, ', '').trim();
-                    }
-                    return null;
-                }''')
-                if not card_name:
-                    card_name = "User"
-                time.sleep(2.5)
-                iframe = page.wait_for_selector("iframe[name*='ApxSecureIframe']", timeout=5000)
-                frame = iframe.content_frame()
+                    add_card_credit = page.query_selector('a.a-link-normal.apx-secure-registration-content-trigger-js')
+                    if add_card_credit:
+                        add_card_credit.click()
+                    else:
+                        print(f"{COLORS['RED']}Không tìm thấy link Add a credit or debit card sau khi cập nhật HTML cho tài khoản {email}{COLORS['RESET']}")
+                        break
+                    time.sleep(1)
+                    card_name = page.evaluate('''() => {
+                        const spanElement = document.evaluate("//span[@id='nav-link-accountList-nav-line-1']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+                        if(spanElement){
+                            return spanElement.textContent.replace('Hello, ', '').trim();
+                        }
+                        return null;
+                    }''')
+                    if not card_name:
+                        card_name = "User"
+                    time.sleep(2.5)
+                    iframe = page.wait_for_selector("iframe[name*='ApxSecureIframe']", timeout=5000)
+                    frame = iframe.content_frame()
 
-                frame.fill("input[name='ppw-accountHolderName']", card_name)
-                time.sleep(0.5)
-                frame.fill("input[name='addCreditCardNumber']", card_number)
-                time.sleep(1)
+                    frame.fill("input[name='ppw-accountHolderName']", card_name)
+                    time.sleep(0.5)
+                    frame.fill("input[name='addCreditCardNumber']", card_number)
+                    time.sleep(1)
 
-                frame.click("span.a-button-inner span.a-button-text span.a-dropdown-prompt")
-                frame.click(f"//a[contains(text(), '{expiration_month}')]")
+                    frame.click("span.a-button-inner span.a-button-text span.a-dropdown-prompt")
+                    frame.click(f"//a[contains(text(), '{expiration_month}')]")
 
-                frame.click("span.pmts-expiry-year span.a-button-inner span.a-button-text span.a-dropdown-prompt")
-                frame.click(f"//a[contains(text(), '{expiration_year}')]")
+                    frame.click("span.pmts-expiry-year span.a-button-inner span.a-button-text span.a-dropdown-prompt")
+                    frame.click(f"//a[contains(text(), '{expiration_year}')]")
 
-                submit_btn = frame.query_selector("input[name='ppw-widgetEvent:AddCreditCardEvent']")
-                if submit_btn:
-                    submit_btn.click()
+                    submit_btn = frame.query_selector("input[name='ppw-widgetEvent:AddCreditCardEvent']")
+                    if submit_btn:
+                        submit_btn.click()
+                        time.sleep(2)
+                        added_cards.append({'number': card_number, 'line': card_line.strip()})
+                        print(f"{COLORS['CYAN']}[ SU WO ] > Đã thêm thành công thẻ {card_number} cho tài khoản {email} {len(added_cards)}/{max_cards_per_account}{COLORS['RESET']}")
+                        break
+                    else:
+                        print(f"{COLORS['YELLOW']}[ SU WO ] > Tài khoản {email} bị giới hạn 2 tiếng. Đang chuyển sang tài khoản khác để thêm thẻ.{COLORS['RESET']}")
+                        return added_cards
+
+                except Exception as e:
+                    retry_count += 1
+                    if retry_count >= retry_limit:
+                        print(f"{COLORS['RED']}Lỗi thêm thẻ {card_number} sau {retry_limit} lần thử cho tài khoản {email}. Dừng thêm thẻ tiếp theo.{COLORS['RESET']}")
+                        break
+                    else:
+                        print(f"{COLORS['RED']}[ SU WO ][ERROR] > Thêm thẻ {card_number} cho tài khoản {email} đang thử lại {retry_count}{COLORS['RESET']}")
                     time.sleep(2)
-                    added_cards.append({'number': card_number, 'line': card_line.strip()})
-                    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã thêm thành công thẻ \x1b[93m{card_number} \x1b[32mcho tài khoản \x1b[93m{email} \x1b[33m{len(added_cards)}\x1b[94m/\x1b[32m{max_cards_per_account}{COLORS['RESET']}")
-                    break
-                else:
-                    print(f"{COLORS['YELLOW']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Tài khoản \x1b[93m{email} \x1b[32mbị giới hạn \x1b[31m2 tiếng \x1b[32mĐang chuyển sang tài khoản khác để thêm thẻ.{COLORS['RESET']}")
-                    return added_cards
 
-            except Exception as e:
-                retry_count += 1
-                if retry_count >= retry_limit:
-                    # Lỗi quá 3 lần => Xử lý xóa tài khoản + thẻ lỗi
-                    print(f"{COLORS['RED']} Lỗi thêm thẻ \x1b[93m{card_number} \x1b[31msau \x1b[93m{retry_limit} \x1b[31mthử cho tài khoản \x1b[93m{email}, sẽ xóa tài khoản và thẻ lỗi rồi chuyển sang tài khoản khác.{COLORS['RESET']}")
-                    # Ghi lỗi tài khoản và 5 thẻ lỗi
-                    log_to_file('taikhoanloi.txt', email, password, code_2fa)
-                    # Lấy 5 thẻ lỗi (toàn bộ 5 thẻ của tài khoản hiện tại)
-                    error_cards_lines = cards_to_add
-                    with open('theloi.txt', 'a', encoding='utf-8') as f:
-                        for line in error_cards_lines:
-                            f.write(line if line.endswith('\n') else line + '\n')
-                    # Xóa tài khoản khỏi mailadd.txt
-                    remove_account_from_mailadd(email, password, code_2fa)
-                    # Xóa 5 thẻ lỗi khỏi card.txt
-                    remove_lines_from_file(card_file_path, [line.strip() for line in error_cards_lines])
-                    return added_cards  # Trả về các thẻ đã thêm trước đó (nếu có)
-                else:
-                    print(f"{COLORS['RED']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> \x1b[93m[\x1b[31m ERROR \x1b[93m] thêm thẻ \x1b[93m{card_number} \x1b[32mcho tài khoản \x1b[93m{email} \x1b[32mđang thử lại {retry_count}{COLORS['RESET']}")
-                time.sleep(2)
+        if added_cards:
+            # Xóa chính xác các thẻ đã thêm khỏi file card.txt
+            lines_to_remove = [card['line'] for card in added_cards]
+            remove_lines_from_file(card_file_path, lines_to_remove)
+            return added_cards
+        else:
+            print(f"[ SU WO ] Thử lại thêm thẻ cho profile {profile_number} lần {attempt+1}")
+            time.sleep(2)
 
-    print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Hoàn thành thêm thẻ cho tài khoản \x1b[93m{email} \x1b[32mTổng số thẻ đã thêm: \x1b[93m{len(added_cards)}{COLORS['RESET']}")
+    print(f"{COLORS['RED']}Không thêm được thẻ nào cho profile {profile_number} sau {retry_limit} lần thử.{COLORS['RESET']}")
     return added_cards
 
 # Hàm check_and_save_cards giữ nguyên không thay đổi, copy lại nguyên bản
@@ -635,7 +636,7 @@ def run_profile(profile_number, use_error_files=False):
                     browser.close()
                     break
 
-                added_cards = add_card(page, start_line, end_line, credentials, profile_number)
+                added_cards = add_card(page, credentials, profile_number)
                 if not added_cards:
                     print(f"{COLORS['RED']}Không thêm được thẻ nào cho profile \x1b[93m{profile_number} \x1b[31mvì đã hết thẻ tronng \x1b[93mcard.txt{COLORS['RESET']}")
                     context.close()
