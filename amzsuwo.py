@@ -24,7 +24,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SuWo {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SuWon JVS {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: \x1b[0m{COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( \x1b[32mkhuyên \x1b[93m2 \x1b[32mnhé \x1b[93m): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -359,8 +359,8 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
                 last4s.append(match.group(1))
         return set(last4s)
 
-    max_clicks = 6
-    attempt = 0
+    max_clicks = 7  # tăng lên 7 lần click như yêu cầu
+    min_clicks_before_check = 6  # phải click tối thiểu 6 lần trước khi quyết định dừng
 
     live_cards_prev = []
     live_last4_prev = set()
@@ -385,12 +385,12 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
     attempt = 1
 
     while attempt < max_clicks:
-        print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Load thêm lần \x1b[93m{attempt + 1} \x1b[32mcho tài khoản \x1b[93m{email} {COLORS['RESET']}")
+        print(f"{COLORS['CYAN']}\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Load lần \x1b[93m{attempt + 1} \x1b[32mcho tài khoản \x1b[93m{email} {COLORS['RESET']}")
         page.goto('https://www.amazon.com/cpe/yourpayments/wallet')
         time.sleep(10)
 
         clicked = click_cards_by_img_src()
-        print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Đã load các thẻ lần thứ {attempt + 1}.")
+        print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Đã load các thẻ lần thứ {attempt + 1}.")
         time.sleep(10)
 
         content = page.content()
@@ -398,21 +398,23 @@ def check_and_save_cards(page, email, cred, start_line, end_line, added_cards):
         live_cards_current = count_live_cards(soup)
         live_last4_current = extract_last4(live_cards_current)
         live_count_current = len(live_cards_current)
-        print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Lần {attempt + 1} Load được {live_count_current} thẻ live.")
+        print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Lần {attempt + 1} load được {live_count_current} thẻ live.")
 
         new_live_cards = live_last4_current - live_last4_prev
 
-        if attempt == 1:
-            if live_count_current == 0:
-                print("\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Lần 2 đang load thêm thẻ live nếu có ")
+        # Bắt buộc click ít nhất 6 lần dù có thẻ live mới hay không
+        if attempt < min_clicks_before_check:
+            if new_live_cards:
+                print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Phát hiện thêm \x1b[93m{len(new_live_cards)} thẻ live mới, tiếp tục load.")
             else:
-                print("\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Lần 2 đã có thẻ live load thêm nào")
+                print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Lần {attempt + 1} chưa có thẻ live mới, vẫn tiếp tục load để đảm bảo đủ dữ liệu.")
         else:
+            # Lần thứ 7 (attempt == 6) nếu không còn live card mới thì dừng
             if not new_live_cards:
-                print("\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Không còn thẻ live mới thêm dừng check live thui")
+                print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Lần {attempt + 1} không có thẻ live mới, dừng check live và chuyển sang xử lý.")
                 break
             else:
-                print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m>Phát hiện thêm \x1b[93m{len(new_live_cards)} thẻ live mới tiếp tục nào.")
+                print(f"\x1b[93m[ \x1b[35mSU WO \x1b[93m] \x1b[32m> Lần {attempt + 1} phát hiện thêm \x1b[93m{len(new_live_cards)} thẻ live mới, tiếp tục load.")
 
         live_cards_prev = live_cards_current
         live_last4_prev = live_last4_current
