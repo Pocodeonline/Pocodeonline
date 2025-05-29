@@ -24,7 +24,6 @@ COLORS = {
 init()
 
 print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SoHan JVS {COLORS['RESET']}")
-
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: {COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( khuyên 2 nhé ): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -107,6 +106,11 @@ def get_next_position():
         return (0, 0)
 
 def get_5_cards_block():
+    """
+    Cấp 5 dòng thẻ liên tiếp, trả về (block_start, list_5_dòng).
+    Nếu hết thẻ trả về (None, []).
+    Đồng bộ với lock để tránh trùng.
+    """
     global next_start_index
     with card_file_lock:
         with open(card_file_path, 'r', encoding='utf-8') as f:
@@ -116,10 +120,12 @@ def get_5_cards_block():
         if total_lines == 0:
             return None, []
 
+        # Tìm block 5 dòng chưa được cấp cho luồng khác
         while True:
             if next_start_index >= total_lines:
                 return None, []
             if next_start_index not in processing_blocks:
+                # Kiểm tra còn đủ 5 dòng để cấp không
                 if next_start_index + 5 <= total_lines:
                     block_start = next_start_index
                     cards_block = lines[block_start:block_start+5]
@@ -127,10 +133,11 @@ def get_5_cards_block():
                     next_start_index += 5
                     return block_start, [line.strip() for line in cards_block]
                 else:
+                    # Không còn đủ 5 dòng ở cuối file
                     block_start = next_start_index
                     cards_block = lines[block_start:]
                     processing_blocks.add(block_start)
-                    next_start_index = total_lines
+                    next_start_index = total_lines  # đánh dấu hết
                     return block_start, [line.strip() for line in cards_block]
             else:
                 next_start_index += 5
@@ -138,6 +145,10 @@ def get_5_cards_block():
                     return None, []
 
 def remove_5_cards_block(block_start):
+    """
+    Xóa đúng 5 dòng thẻ block_start đến block_start+4 khỏi file card.txt
+    Đồng thời xóa block_start khỏi set đang xử lý
+    """
     global next_start_index
     with card_file_lock:
         with open(card_file_path, 'r', encoding='utf-8') as f:
@@ -151,6 +162,7 @@ def remove_5_cards_block(block_start):
 
         processing_blocks.discard(block_start)
 
+        # Sau khi xóa, reset index cấp thẻ để cấp lại từ đầu
         next_start_index = 0
 
 def solve_captcha(page):
@@ -298,7 +310,7 @@ def add_card(page, credentials_list, profile_number, cards_to_add):
                 }''')
                 if not card_name:
                     card_name = "User"
-                time.sleep(2)
+                time.sleep(2.5)
                 iframe = page.wait_for_selector("iframe[name*='ApxSecureIframe']", timeout=5000)
                 frame = iframe.content_frame()
 
@@ -444,6 +456,9 @@ def check_and_save_cards(page, email, cred, added_cards):
     if attempt == max_clicks and len(live_cards_prev) == 0:
         print(f"{COLORS['RED']}[ SoHan ] Không tìm thấy thẻ live sau {max_clicks} lần thử, tiếp tục xử lý với dữ liệu hiện tại.{COLORS['RESET']}")
 
+    # **Chỉnh sửa phần dò thẻ live: chỉ check 4 số đuôi trong 5 dòng thẻ vừa được cấp cho tài khoản đó**
+
+    # Lấy tập 4 số cuối của các thẻ vừa cấp (5 dòng)
     added_last4 = set()
     line_map = {}
     for card in added_cards:
@@ -452,7 +467,10 @@ def check_and_save_cards(page, email, cred, added_cards):
         added_last4.add(last4)
         line_map[last4] = card['line']
 
+    # Lọc thẻ live chỉ trong số thẻ vừa cấp (added_last4)
     live_last4_filtered = live_last4_prev.intersection(added_last4)
+
+    # Lấy đúng dòng thẻ live tương ứng trong 5 dòng thẻ vừa cấp
     live_lines = [line_map[l4] for l4 in live_last4_filtered if l4 in line_map]
 
     if live_lines:
@@ -532,62 +550,70 @@ def delete_card(page, num_cards_to_delete=9999):
 profile_index_lock = threading.Lock()
 profile_index = 0
 
-def run_profile(profile_number, browser):
+def run_profile(profile_number, use_error_files=False):
     global profile_index
+    if use_error_files:
+        # Nếu xử lý chạy lại tài khoản lỗi, bổ sung logic ở đây
+        return
 
     for attempt in range(retries):
-        print(f"{COLORS['CYAN']}[ SoHan ] > Đang tiến hành mở context cho profile {profile_number} để chạy tài khoản {profile_number}{COLORS['RESET']}")
+        print(f"{COLORS['CYAN']}[ SoHan ] > Đang tiến hành mở profile {profile_number} để chạy tài khoản {profile_number}{COLORS['RESET']}")
         try:
-            x, y = get_next_position()
+            with sync_playwright() as playwright:
+                x, y = get_next_position()
+                browser = playwright.chromium.launch(
+                    headless=True,
+                    args=[f'--window-size={window_width},{window_height}',
+                          f'--window-position={x},{y}']
+                )
+                context = browser.new_context(
+                    viewport={'width': window_width, 'height': window_height},
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                )
+                page = context.new_page()
+                try:
+                    page.evaluate(f"window.moveTo({x}, {y}); window.resizeTo({window_width}, {window_height});")
+                except Exception:
+                    pass
 
-            context = browser.new_context(
-                viewport={'width': window_width, 'height': window_height},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                locale='en-US',
-                permissions=[],
-                record_har_path=None
-            )
-            page = context.new_page()
+                if not login_amz(page, profile_number, credentials):
+                    cred = credentials[profile_number - 1]
+                    log_to_file('die.txt', cred['email'], cred['password'], cred['2fa'])
+                    remove_account_from_mailadd(cred['email'], cred['password'], cred['2fa'])
+                    context.close()
+                    browser.close()
+                    break
 
-            try:
-                page.evaluate(f"window.moveTo({x}, {y}); window.resizeTo({window_width}, {window_height});")
-            except Exception:
-                pass
+                block_start, cards_to_add = get_5_cards_block()
+                if not cards_to_add:
+                    print(f"{COLORS['RED']}[ SoHan ] Không còn thẻ nào trong {card_file_path} để thêm cho tài khoản {credentials[profile_number-1]['email']}{COLORS['RESET']}")
+                    context.close()
+                    browser.close()
+                    break
 
-            if not login_amz(page, profile_number, credentials):
+                added_cards = add_card(page, credentials, profile_number, cards_to_add)
+                if not added_cards:
+                    print(f"{COLORS['RED']}[ SoHan ] Không thêm được thẻ nào cho profile {profile_number}{COLORS['RESET']}")
+                    context.close()
+                    browser.close()
+                    break
+
+                check_and_save_cards(page, credentials[profile_number - 1]['email'], credentials[profile_number - 1], added_cards)
+
+                # Sau khi check live xong mới xóa 5 dòng thẻ đã cấp cho luồng này khỏi file card.txt
+                remove_5_cards_block(block_start)
+
+                delete_card(page, num_cards_to_delete=len(added_cards))
+
                 cred = credentials[profile_number - 1]
-                log_to_file('die.txt', cred['email'], cred['password'], cred['2fa'])
                 remove_account_from_mailadd(cred['email'], cred['password'], cred['2fa'])
+                log_to_file('maildone.txt', cred['email'], cred['password'], cred['2fa'])
+
+                print(f"{COLORS['CYAN']}[ SoHan ] > Đã hoàn thành quá trình cho tài khoản {profile_number}{COLORS['RESET']}")
+                time.sleep(5)
                 context.close()
+                browser.close()
                 break
-
-            block_start, cards_to_add = get_5_cards_block()
-            if not cards_to_add:
-                print(f"{COLORS['RED']}[ SoHan ] Không còn thẻ nào trong {card_file_path} để thêm cho tài khoản {credentials[profile_number-1]['email']}{COLORS['RESET']}")
-                context.close()
-                break
-
-            added_cards = add_card(page, credentials, profile_number, cards_to_add)
-            if not added_cards:
-                print(f"{COLORS['RED']}[ SoHan ] Không thêm được thẻ nào cho profile {profile_number}{COLORS['RESET']}")
-                context.close()
-                break
-
-            check_and_save_cards(page, credentials[profile_number - 1]['email'], credentials[profile_number - 1], added_cards)
-
-            # Sau khi check live xong mới xóa 5 dòng thẻ đã cấp cho luồng này khỏi file card.txt
-            remove_5_cards_block(block_start)
-
-            delete_card(page, num_cards_to_delete=len(added_cards))
-
-            cred = credentials[profile_number - 1]
-            remove_account_from_mailadd(cred['email'], cred['password'], cred['2fa'])
-            log_to_file('maildone.txt', cred['email'], cred['password'], cred['2fa'])
-
-            print(f"{COLORS['CYAN']}[ SoHan ] > Đã hoàn thành quá trình cho tài khoản {profile_number}{COLORS['RESET']}")
-            time.sleep(5)
-            context.close()
-            break
         except Exception as e:
             print(f"{COLORS['RED']}[ SoHan ][ERROR] > Lỗi thêm thẻ trong quá trình của tài khoản {profile_number}: {e}{COLORS['RESET']}")
             if attempt < retries - 1:
@@ -596,9 +622,9 @@ def run_profile(profile_number, browser):
                 print(f"{COLORS['RED']}[ SoHan ] Không thành công sau {retries} lần thử cho tải khoản {profile_number} thêm thẻ{COLORS['RESET']}")
             continue
 
-def worker_thread(browser):
+def worker_thread(use_error_files=False):
     global profile_index
-    total_profiles = len(credentials)
+    total_profiles = len(credentials) if not use_error_files else 0
 
     while True:
         with profile_index_lock:
@@ -606,39 +632,32 @@ def worker_thread(browser):
                 break
             current_profile = profile_index + 1
             profile_index += 1
-        run_profile(current_profile, browser)
+        run_profile(current_profile, use_error_files=use_error_files)
 
 def run_profiles_dynamically():
     global profile_index, credentials
-    with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(
-            headless=True,
-            args=[f'--window-size={screen_width},{screen_height}']
-        )
+    while True:
+        profile_index = 0
+        threads = []
+        max_threads = min(number_of_profiles, len(credentials))
 
-        while True:
-            profile_index = 0
-            threads = []
-            max_threads = min(number_of_profiles, len(credentials))
+        for _ in range(max_threads):
+            t = threading.Thread(target=worker_thread)
+            t.start()
+            threads.append(t)
 
-            for _ in range(max_threads):
-                t = threading.Thread(target=worker_thread, args=(browser,))
-                t.start()
-                threads.append(t)
+        for t in threads:
+            t.join()
 
-            for t in threads:
-                t.join()
+        print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Đã chạy hết tất cả tài khoản trong mailadd.txt.\n{COLORS['RESET']}")
 
-            print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Đã chạy hết tất cả tài khoản trong mailadd.txt.\n{COLORS['RESET']}")
-
-            user_input = input(f"{COLORS['GREEN']}Bạn đã chạy xong hết tài khoản, vui lòng tắt hoặc nhập 'y' để thoát: {COLORS['RESET']}").strip().lower()
-            if user_input == 'y':
-                print(f"{COLORS['RED']}Thoát chương trình...{COLORS['RESET']}")
-                browser.close()
-                break
-            else:
-                credentials = read_credentials()
-                print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Chạy lại tất cả tài khoản từ đầu...\n\n{COLORS['RESET']}")
+        user_input = input(f"{COLORS['GREEN']}Bạn đã chạy xong hết tài khoản, vui lòng tắt hoặc nhập 'y' để thoát: {COLORS['RESET']}").strip().lower()
+        if user_input == 'y':
+            print(f"{COLORS['RED']}Thoát chương trình...{COLORS['RESET']}")
+            break
+        else:
+            credentials = read_credentials()
+            print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Chạy lại tất cả tài khoản từ đầu...\n\n{COLORS['RESET']}")
 
 if __name__ == '__main__':
     try:
