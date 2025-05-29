@@ -645,7 +645,7 @@ def run_profiles_dynamically():
         for t in threads:
             t.join()
 
-        print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Đã chạy hết tất cả tài khoản trong mailadd.txt.\n{COLORS['RESET']}")
+        print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Đã chạy hết tất cả tài khoản bỏ vào tiếp thôi nào\n{COLORS['RESET']}")
 
         user_input = input(f"{COLORS['GREEN']}Bạn đã chạy xong hết tài khoản, vui lòng tắt hoặc nhập 'y' để thoát: {COLORS['RESET']}").strip().lower()
         if user_input == 'y':
