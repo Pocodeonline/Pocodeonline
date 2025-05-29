@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV2 By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SoHan JVS {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: {COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( khuyên 2 nhé ): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -134,7 +134,6 @@ def get_5_cards_block():
                     return block_start, [line.strip() for line in cards_block]
                 else:
                     # Không còn đủ 5 dòng ở cuối file
-                    # Bạn có thể bỏ qua hoặc lấy số dòng còn lại nếu muốn (để đảm bảo không sót)
                     block_start = next_start_index
                     cards_block = lines[block_start:]
                     processing_blocks.add(block_start)
@@ -457,7 +456,9 @@ def check_and_save_cards(page, email, cred, added_cards):
     if attempt == max_clicks and len(live_cards_prev) == 0:
         print(f"{COLORS['RED']}[ SoHan ] Không tìm thấy thẻ live sau {max_clicks} lần thử, tiếp tục xử lý với dữ liệu hiện tại.{COLORS['RESET']}")
 
-    # Lọc live thẻ chỉ trong danh sách added_cards (5 thẻ đã thêm)
+    # **Chỉnh sửa phần dò thẻ live: chỉ check 4 số đuôi trong 5 dòng thẻ vừa được cấp cho tài khoản đó**
+
+    # Lấy tập 4 số cuối của các thẻ vừa cấp (5 dòng)
     added_last4 = set()
     line_map = {}
     for card in added_cards:
@@ -466,7 +467,10 @@ def check_and_save_cards(page, email, cred, added_cards):
         added_last4.add(last4)
         line_map[last4] = card['line']
 
+    # Lọc thẻ live chỉ trong số thẻ vừa cấp (added_last4)
     live_last4_filtered = live_last4_prev.intersection(added_last4)
+
+    # Lấy đúng dòng thẻ live tương ứng trong 5 dòng thẻ vừa cấp
     live_lines = [line_map[l4] for l4 in live_last4_filtered if l4 in line_map]
 
     if live_lines:
@@ -645,7 +649,7 @@ def run_profiles_dynamically():
         for t in threads:
             t.join()
 
-        print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Đã chạy hết tất cả tài khoản bỏ vào tiếp thôi nào\n{COLORS['RESET']}")
+        print(f"{COLORS['BRIGHT_CYAN']}[ SoHan ] Đã chạy hết tất cả tài khoản trong mailadd.txt.\n{COLORS['RESET']}")
 
         user_input = input(f"{COLORS['GREEN']}Bạn đã chạy xong hết tài khoản, vui lòng tắt hoặc nhập 'y' để thoát: {COLORS['RESET']}").strip().lower()
         if user_input == 'y':
