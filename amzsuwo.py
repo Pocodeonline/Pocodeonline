@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV3 By SoHan JVS {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: {COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( khuyên 2 nhé ): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -47,8 +47,10 @@ def remove_account_from_mailadd(email, password, code_2fa):
                     f.write(line)
 
 def save_live_cards_to_file(live_card_lines, email):
+    # Loại bỏ dòng trùng trước khi lưu
+    unique_lines = list(dict.fromkeys(live_card_lines))
     with open('cardlive.txt', 'a', encoding='utf-8') as f:
-        for line in live_card_lines:
+        for line in unique_lines:
             f.write(line if line.endswith('\n') else line + '\n')
 
 def read_credentials(file_path='mailadd.txt'):
@@ -120,12 +122,10 @@ def get_5_cards_block():
         if total_lines == 0:
             return None, []
 
-        # Tìm block 5 dòng chưa được cấp cho luồng khác
         while True:
             if next_start_index >= total_lines:
                 return None, []
             if next_start_index not in processing_blocks:
-                # Kiểm tra còn đủ 5 dòng để cấp không
                 if next_start_index + 5 <= total_lines:
                     block_start = next_start_index
                     cards_block = lines[block_start:block_start+5]
@@ -133,11 +133,11 @@ def get_5_cards_block():
                     next_start_index += 5
                     return block_start, [line.strip() for line in cards_block]
                 else:
-                    # Không còn đủ 5 dòng ở cuối file
+                    # Nếu còn dưới 5 dòng (cuối file), trả về hết phần còn lại
                     block_start = next_start_index
                     cards_block = lines[block_start:]
                     processing_blocks.add(block_start)
-                    next_start_index = total_lines  # đánh dấu hết
+                    next_start_index = total_lines
                     return block_start, [line.strip() for line in cards_block]
             else:
                 next_start_index += 5
@@ -456,9 +456,7 @@ def check_and_save_cards(page, email, cred, added_cards):
     if attempt == max_clicks and len(live_cards_prev) == 0:
         print(f"{COLORS['RED']}[ SoHan ] Không tìm thấy thẻ live sau {max_clicks} lần thử, tiếp tục xử lý với dữ liệu hiện tại.{COLORS['RESET']}")
 
-    # **Chỉnh sửa phần dò thẻ live: chỉ check 4 số đuôi trong 5 dòng thẻ vừa được cấp cho tài khoản đó**
-
-    # Lấy tập 4 số cuối của các thẻ vừa cấp (5 dòng)
+    # XỬ LÝ CHỈ LỌC THẺ LIVE TRONG 5 DÒNG THẺ ĐÃ THÊM CHO TÀI KHOẢN NÀY, loại bỏ trùng lặp
     added_last4 = set()
     line_map = {}
     for card in added_cards:
@@ -467,11 +465,17 @@ def check_and_save_cards(page, email, cred, added_cards):
         added_last4.add(last4)
         line_map[last4] = card['line']
 
-    # Lọc thẻ live chỉ trong số thẻ vừa cấp (added_last4)
+    # Chỉ lấy các thẻ live có 4 số cuối trùng với 5 thẻ đã thêm
     live_last4_filtered = live_last4_prev.intersection(added_last4)
 
-    # Lấy đúng dòng thẻ live tương ứng trong 5 dòng thẻ vừa cấp
-    live_lines = [line_map[l4] for l4 in live_last4_filtered if l4 in line_map]
+    # Lọc dòng thẻ live và bỏ trùng
+    live_lines = []
+    seen_lines = set()
+    for l4 in live_last4_filtered:
+        line = line_map.get(l4)
+        if line and line not in seen_lines:
+            live_lines.append(line)
+            seen_lines.add(line)
 
     if live_lines:
         save_live_cards_to_file(live_lines, email)
@@ -480,7 +484,6 @@ def check_and_save_cards(page, email, cred, added_cards):
     print(f"{COLORS['GREEN']}[ SoHan ] > Xử lý xong check live cho tài khoản {email}{COLORS['RESET']}")
 
 def delete_card(page, num_cards_to_delete=9999):
-    retry_limit = 2
     deleted_cards = 0
 
     try:
@@ -512,9 +515,7 @@ def delete_card(page, num_cards_to_delete=9999):
             
             time.sleep(2)
 
-            retry_count = 0
-            success = False
-            while retry_count < retry_limit and not success:
+            while True:
                 try:
                     remove_card = page.wait_for_selector('//input[@class="apx-remove-link-button"]', timeout=5000)
                     remove_card.click()
@@ -523,19 +524,11 @@ def delete_card(page, num_cards_to_delete=9999):
                         '//span[@class="a-button a-button-primary pmts-delete-instrument apx-remove-button-desktop pmts-button-input"]',
                         timeout=5000)
                     confirm_button.click()
-                    success = True
                     deleted_cards += 1
                     time.sleep(1.5)
-                except Exception as e:
-                    retry_count += 1
-                    print(f"{COLORS['RED']} Lỗi khi card đang thử lại lần {retry_count}{COLORS['RESET']}")
-                    time.sleep(2)
-                    if retry_count >= retry_limit:
-                        print(f"{COLORS['RED']} Bỏ qua thẻ sau {retry_limit} lần thử không thành công{COLORS['RESET']}")
-                        break
-
-            if not success:
-                continue
+                except Exception:
+                    # Nếu lỗi hoặc không tìm thấy nút nữa thì thoát vòng while này, quay ra kiểm tra lại số thẻ
+                    break
 
             if deleted_cards >= num_cards_to_delete:
                 print(f"{COLORS['CYAN']}[ SoHan ] > Đã xóa đủ số thẻ yêu cầu: {deleted_cards}{COLORS['RESET']}")
@@ -562,7 +555,7 @@ def run_profile(profile_number, use_error_files=False):
             with sync_playwright() as playwright:
                 x, y = get_next_position()
                 browser = playwright.chromium.launch(
-                    headless=True,
+                    headless=False,
                     args=[f'--window-size={window_width},{window_height}',
                           f'--window-position={x},{y}']
                 )
