@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher Zalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -220,7 +220,10 @@ def solve_captcha_from_api(img_path, endpoint, api_key):
         return None
 
 def solve_captcha_with_fallback(img_path):
-    API_ENDPOINT = "https://apipro2.ocr.space/parse/image"  # Only use the new API
+    API_ENDPOINTS = [
+        "https://apipro1.ocr.space/parse/image",  # API OCR chính
+        "https://apipro2.ocr.space/parse/image"  # API OCR phụ
+    ]
     api_key = read_api_key_from_file()
     if not api_key:
         return None
@@ -242,8 +245,22 @@ def solve_captcha_with_fallback(img_path):
         else:
             print(f"{COLORS['YELLOW']}API {endpoint} lỗi, thử load lại captcha và đổi API...")
             attempt += 1
-            api_index = 1 - api_index
-            return None  # thoát để caller xử lý load lại captcha
+            api_index = 1 - api_index  # chuyển qua API còn lại
+            # Tiếp tục quay lại bước load lại captcha nếu không có kết quả từ API OCR
+            pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=30)
+            if pos_loadlai:
+                auto.click(*pos_loadlai)
+                print(f"{COLORS['GREEN']}> Đang load lại captcha.")
+            else:
+                print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại captcha.")
+            pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=30)
+            if pos_dongy:
+                auto.click(*pos_dongy)
+                print(f"{COLORS['GREEN']}> Đã xác nhận load lại captcha.")
+            else:
+                print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ xác nhận load lại captcha.")
+            continue  # tiếp tục quay lại với captcha mới
+
     print(f"{COLORS['RED']}Không thể giải captcha qua các API OCR đã cung cấp sau {max_attempts} lần thử.")
     return None
 
