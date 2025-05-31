@@ -6,7 +6,7 @@ import time
 import threading
 import requests
 import base64
-import re
+import pyperclip
 from colorama import init
 
 COLORS = {
@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -131,35 +131,21 @@ def read_api_key_from_file():
         print(f"{COLORS['RED']}[ERROR] Lỗi đọc file key.txt: {e}")
         return None
 
-def get_clipboard_text(device_id):
-    try:
-        output = subprocess.check_output(
-            f'adb -s {device_id} shell cmd clipboard get',
-            shell=True, stderr=subprocess.DEVNULL, timeout=5
-        ).decode(errors='ignore').strip()
-        if output:
-            return output
-        else:
-            print(f"{COLORS['RED']}[ERROR] Clipboard thiết bị trống.")
-            return None
-    except Exception as e:
-        print(f"{COLORS['RED']}[ERROR] Lấy clipboard trên thiết bị thất bại: {e}")
-        return None
+def get_base64_from_pc_clipboard(retry=10, delay=0.5):
+    for _ in range(retry):
+        data = pyperclip.paste()
+        if data and data.startswith('data:image/png;base64,'):
+            return data
+        time.sleep(delay)
+    return None
 
 def solve_captcha_from_base64_string(base64_data, endpoint, api_key):
     try:
-        # Loại bỏ khoảng trắng, xuống dòng
         base64_data = ''.join(base64_data.split())
-
-        # Thêm tiền tố nếu chưa có
         if not base64_data.startswith("data:image/png;base64,"):
             base64_data = "data:image/png;base64," + base64_data
-
         print(f"DEBUG base64 data preview: {base64_data[:50]}...")
-
-        headers = {
-            "apikey": api_key,
-        }
+        headers = {"apikey": api_key}
         data = {
             "base64Image": base64_data,
             "language": "eng",
@@ -209,9 +195,9 @@ def solve_captcha_with_fallback(img_path, endpoint, api_key, auto):
         print(f"{COLORS['RED']}[ERROR] Không thấy ảnh sao chép đường dẫn captcha, thoát.")
         return None
 
-    base64_captcha = get_clipboard_text(auto.device_id)
+    base64_captcha = get_base64_from_pc_clipboard()
     if not base64_captcha:
-        print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn base64 captcha từ clipboard.")
+        print(f"{COLORS['RED']}[ERROR] Không lấy được base64 từ clipboard máy tính.")
         return None
 
     captcha_text = solve_captcha_from_base64_string(base64_captcha, endpoint, api_key)
@@ -249,7 +235,7 @@ def handle_done_click(auto):
                 if not api_key:
                     print(f"{COLORS['RED']}[ERROR] Không có API key, thoát.")
                     return 'repeat_captcha'
-                base64_captcha = get_clipboard_text(auto.device_id)
+                base64_captcha = get_base64_from_pc_clipboard()
                 if base64_captcha:
                     captcha_text = solve_captcha_from_base64_string(base64_captcha, "https://apipro1.ocr.space/parse/image", api_key)
                 else:
