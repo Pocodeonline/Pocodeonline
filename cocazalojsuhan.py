@@ -172,8 +172,10 @@ def get_image_base64_from_file(path):
         print(f"{COLORS['RED']}Lỗi khi đọc file ảnh: {e}")
         return None
 
-def solve_captcha_from_api(img_base64, api_key, endpoint):
-    headers = {"apikey": api_key}
+def call_ocr_api(img_base64, endpoint, api_key):
+    headers = {
+        "apikey": api_key,
+    }
     data = {
         "base64Image": "data:image/png;base64," + img_base64,
         "language": "eng",
@@ -187,13 +189,14 @@ def solve_captcha_from_api(img_base64, api_key, endpoint):
             if result.get("IsErroredOnProcessing"):
                 print(f"{COLORS['RED']}Lỗi API: {result.get('ErrorMessage')}")
                 return None
-            parsed_results = result.get("ParsedResults")
-            if parsed_results and len(parsed_results) > 0:
-                text = parsed_results[0].get("ParsedText").strip()
-                return text
             else:
-                print(f"{COLORS['YELLOW']}Không có kết quả phân tích từ API.")
-                return None
+                parsed_results = result.get("ParsedResults")
+                if parsed_results and len(parsed_results) > 0:
+                    text = parsed_results[0].get("ParsedText").strip()
+                    return text
+                else:
+                    print(f"{COLORS['YELLOW']}Không có kết quả phân tích từ API.")
+                    return None
         else:
             print(f"{COLORS['RED']}Lỗi HTTP: {response.status_code}")
             return None
@@ -201,76 +204,51 @@ def solve_captcha_from_api(img_base64, api_key, endpoint):
         print(f"{COLORS['RED']}Lỗi gọi API: {e}")
         return None
 
-def solve_captcha_from_imagefile(auto, img_path):
-    ok_img_path = os.path.join(os.path.dirname(img_path), "ok.png")
-    if not process_captcha_image(img_path, ok_img_path):
-        return None
-
-    api_key = read_api_key_from_file()
-    if not api_key:
-        return None
-
-    img_base64 = get_image_base64_from_file(ok_img_path)
+def solve_captcha_from_api(img_path, endpoint, api_key):
+    img_base64 = get_image_base64_from_file(img_path)
     if not img_base64:
         print(f"{COLORS['RED']}Không lấy được ảnh base64 từ file captcha.")
         return None
+    print(f"{COLORS['GREEN']}Đang gọi API OCR: {endpoint}")
+    text = call_ocr_api(img_base64, endpoint, api_key)
+    if text:
+        print(f"{COLORS['GREEN']}Kết quả captcha đọc được: {COLORS['YELLOW']}{text}")
+        cleaned_text = ''.join(ch for ch in text if ch.isalnum())
+        return cleaned_text.strip()
+    else:
+        print(f"{COLORS['YELLOW']}API {endpoint} không trả về kết quả.")
+        return None
 
+def solve_captcha_with_fallback(img_path):
     API_ENDPOINTS = [
         "https://apipro1.ocr.space/parse/image",
         "https://apipro2.ocr.space/parse/image"
     ]
-    # Thử luân phiên 2 API, nếu đều không được thì load lại captcha và thử tiếp
-    for attempt in range(4):  # tối đa 4 lần thử (2 lần mỗi API)
-        endpoint = API_ENDPOINTS[attempt % 2]
-        print(f"{COLORS['GREEN']}Đang gọi API OCR ({attempt+1}/4): {endpoint}")
-        text = solve_captcha_from_api(img_base64, api_key, endpoint)
-        if text:
-            cleaned_text = ''.join(ch for ch in text if ch.isalnum())
-            print(f"{COLORS['GREEN']}Kết quả captcha đọc được: {COLORS['YELLOW']}{cleaned_text}")
-            if cleaned_text:
-                return cleaned_text.strip()
-            else:
-                print(f"{COLORS['YELLOW']}Kết quả trả về rỗng sau khi lọc, thử API tiếp theo.")
+    api_key = read_api_key_from_file()
+    if not api_key:
+        return None
+
+    ok_img_path = os.path.join(os.path.dirname(img_path), "ok.png")
+    success = process_captcha_image(img_path, ok_img_path)
+    if not success:
+        return None
+
+    api_index = 0
+    max_attempts = 4
+    attempt = 0
+
+    while attempt < max_attempts:
+        endpoint = API_ENDPOINTS[api_index]
+        captcha_text = solve_captcha_from_api(ok_img_path, endpoint, api_key)
+        if captcha_text:
+            return captcha_text
         else:
-            print(f"{COLORS['YELLOW']}API {endpoint} không trả về kết quả, thử API khác hoặc làm mới captcha.")
-
-        # Nếu đến lần 2 hoặc 4 chưa được, tức là sau 1 chu kỳ 2 API không ổn,
-        # ta làm mới captcha bằng cách load lại:
-        if attempt % 2 == 1:
-            print(f"{COLORS['YELLOW']}Thử làm mới captcha bằng cách load lại mã captcha...")
-            pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=10)
-            if pos_loadlai:
-                auto.click(*pos_loadlai)
-                time.sleep(0.3)
-            else:
-                print(f"{COLORS['RED']}Không tìm thấy ảnh load lại mã captcha.")
-            pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=10)
-            if pos_dongy:
-                auto.click(*pos_dongy)
-                print(f"{COLORS['GREEN']}Đã xác nhận load lại mã captcha thành công.")
-                # Đợi file captcha mới về, xóa file cũ nếu còn
-                captcha_path = os.path.join(os.path.dirname(img_path), "captcha.png")
-                wait_time = 0
-                while wait_time < 20:
-                    if os.path.exists(captcha_path):
-                        try:
-                            os.remove(captcha_path)
-                        except:
-                            pass
-                    time.sleep(1)
-                    wait_time += 1
-                # Thoát ra để vòng ngoài gọi lại hàm xử lý
-                return None
-            else:
-                print(f"{COLORS['RED']}Không tìm thấy chỗ xác nhận load lại mã captcha.")
-                return None
-    print(f"{COLORS['RED']}Không thể giải captcha qua API OCR đã cung cấp.")
+            print(f"{COLORS['YELLOW']}API {endpoint} lỗi, thử load lại captcha và đổi API...")
+            attempt += 1
+            api_index = 1 - api_index
+            return None  # thoát để caller xử lý load lại captcha
+    print(f"{COLORS['RED']}Không thể giải captcha qua các API OCR đã cung cấp sau {max_attempts} lần thử.")
     return None
-
-def input_text_slow(auto, text):
-    for ch in text:
-        auto.input_text_full(ch)
-        time.sleep(0.25)
 
 def handle_done_click(auto):
     start = time.time()
@@ -303,7 +281,7 @@ def handle_done_click(auto):
                 if not os.path.exists(captcha_img_path):
                     print(f"{COLORS['RED']}[ERROR] Không thấy file captcha để giải.")
                     return 'repeat_captcha'
-                captcha_text = solve_captcha_from_imagefile(auto, captcha_img_path)
+                captcha_text = solve_captcha_with_fallback(captcha_img_path)
                 print(f"{COLORS['GREEN']}> Captcha mới được giải từ ảnh: {COLORS['YELLOW']}{captcha_text}")
                 try:
                     os.remove(captcha_img_path)
@@ -317,7 +295,7 @@ def handle_done_click(auto):
                     x2, y2 = pos_nhapcapcha_2
                     auto.click(x2, y2)
                     time.sleep(0.3)
-                input_text_slow(auto, captcha_text)
+                auto.input_text_full(captcha_text)
                 time.sleep(0.3)
                 if wait_for_image(auto, 'done.png', timeout=30):
                     auto.click(447.3, 1188.5)
@@ -563,15 +541,59 @@ def main():
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha để giải, chuyển mã tiếp theo.")
             code_index += 1
             continue
-        captcha_text = solve_captcha_from_imagefile(auto, captcha_img_path)
-        print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
+
+        # ==== Phần xử lý giải captcha với fallback API và load lại khi lỗi ====
+        captcha_text = solve_captcha_with_fallback(captcha_img_path)
+        if not captcha_text:
+            print(f"{COLORS['YELLOW']}> Chưa giải được captcha, thực hiện load lại captcha...")
+            pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=30)
+            if pos_loadlai:
+                auto.click(*pos_loadlai)
+                print(f"{COLORS['GREEN']}> Đã click load lại captcha.")
+            else:
+                print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại mã captcha.")
+                code_index += 1
+                continue
+            pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=30)
+            if pos_dongy:
+                auto.click(*pos_dongy)
+                print(f"{COLORS['GREEN']}> Đã xác nhận load lại captcha.")
+            else:
+                print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh đồng ý load lại captcha.")
+                code_index += 1
+                continue
+            time.sleep(2)  # chờ load captcha mới
+            pos_dienma = wait_for_image(auto, 'dienma.png', timeout=30)
+            if pos_dienma:
+                auto.click(*pos_dienma)
+                auto.input_text_full(code)
+                time.sleep(1)
+            else:
+                print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã sau khi load lại.")
+                code_index += 1
+                continue
+            wait_time = 0
+            while not os.path.exists(captcha_img_path) and wait_time < 30:
+                time.sleep(1)
+                wait_time += 1
+            if not os.path.exists(captcha_img_path):
+                print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha sau khi load lại.")
+                code_index += 1
+                continue
+            captcha_text = solve_captcha_with_fallback(captcha_img_path)
+            if not captcha_text:
+                print(f"{COLORS['RED']}[ERROR] Vẫn không giải được captcha sau khi load lại, chuyển mã tiếp theo.")
+                code_index += 1
+                continue
+            print(f"{COLORS['GREEN']}> Captcha mới được giải là: {COLORS['YELLOW']}{captcha_text}")
+        else:
+            print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
+
         try:
             os.remove(captcha_img_path)
         except:
             pass
-        if not captcha_text:
-            print(f"{COLORS['RED']}[ERROR] Không giải mã được captcha, thử lại mã hiện tại.")
-            continue
+
         pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=60)
         if not pos_nhapcapcha:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập captcha chuyển mã tiếp theo.")
@@ -579,7 +601,7 @@ def main():
             continue
         auto.click(*pos_nhapcapcha)
         time.sleep(0.3)
-        input_text_slow(auto, captcha_text)
+        auto.input_text_full(captcha_text)
         time.sleep(0.3)
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
         if not pos_done:
@@ -610,7 +632,7 @@ def main():
                 if user_input == 'y':
                     total_points += 5
                     error_count = 0
-                    print(f"{COLORS['GREEN']}> Đã cộng +5 điểm do nhập mã bằng tay thành công, reset lỗi về 0!")
+                    print(f"{COLORS['GREEN']}> Đã cộng \x1b[93m+\x1b[35m5\x1b[32m điểm do nhập mã bằng tay thành công, reset lỗi về 0!")
                     pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=30)
                     if pos_loadlai:
                         auto.click(*pos_loadlai)
@@ -645,7 +667,7 @@ def main():
             print(f"{COLORS['RED']}[ERROR] Mã coca bị sai làm lại")
             continue
         elif result == 'success':
-            print(f"{COLORS['GREEN']}> Chúc mừng bạn +5 điểm nhập mã thành công!")
+            print(f"{COLORS['GREEN']}> Chúc mừng bạn \x1b[93m+\x1b[35m5\x1b[32m điểm nhập mã thành công!")
             total_points += 5
             error_count = 0
             code_index += 1
