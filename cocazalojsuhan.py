@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher ZL By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher Zalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -218,36 +218,13 @@ def solve_captcha_from_api(img_path, endpoint, api_key):
         print(f"{COLORS['YELLOW']}API {endpoint} không trả về kết quả.")
         return None
 
-def solve_captcha_with_fallback(img_path):
-    API_ENDPOINTS = [
-        "https://apipro1.ocr.space/parse/image",
-        "https://apipro2.ocr.space/parse/image"
-    ]
-    api_key = read_api_key_from_file()
-    if not api_key:
-        return None
-
+def solve_captcha_with_fallback(img_path, endpoint, api_key):
     ok_img_path = os.path.join(os.path.dirname(img_path), "ok.png")
     success = process_captcha_image(img_path, ok_img_path)
     if not success:
         return None
-
-    api_index = 0
-    max_attempts = 4
-    attempt = 0
-
-    while attempt < max_attempts:
-        endpoint = API_ENDPOINTS[api_index]
-        captcha_text = solve_captcha_from_api(ok_img_path, endpoint, api_key)
-        if captcha_text:
-            return captcha_text
-        else:
-            print(f"{COLORS['YELLOW']}API {endpoint} lỗi, thử load lại captcha và đổi API...")
-            attempt += 1
-            api_index = 1 - api_index
-            return None  # thoát để caller xử lý load lại captcha
-    print(f"{COLORS['RED']}Không thể giải captcha qua các API OCR đã cung cấp sau {max_attempts} lần thử.")
-    return None
+    captcha_text = solve_captcha_from_api(ok_img_path, endpoint, api_key)
+    return captcha_text
 
 def handle_done_click(auto):
     start = time.time()
@@ -280,7 +257,14 @@ def handle_done_click(auto):
                 if not os.path.exists(captcha_img_path):
                     print(f"{COLORS['RED']}[ERROR] Không thấy file captcha để giải.")
                     return 'repeat_captcha'
-                captcha_text = solve_captcha_with_fallback(captcha_img_path)
+                # Lấy API key để giải
+                api_key = read_api_key_from_file()
+                if not api_key:
+                    print(f"{COLORS['RED']}[ERROR] Không có API key, thoát.")
+                    return 'repeat_captcha'
+                # Lấy endpoint xen kẽ mặc định lần đầu
+                # Đây là trường hợp dùng trong handle_done_click nên lấy mặc định endpoint 1
+                captcha_text = solve_captcha_with_fallback(captcha_img_path, "https://apipro1.ocr.space/parse/image", api_key)
                 print(f"{COLORS['GREEN']}> Captcha mới được giải từ ảnh: {COLORS['YELLOW']}{captcha_text}")
                 try:
                     os.remove(captcha_img_path)
@@ -543,20 +527,28 @@ def main():
             code_index += 1
             continue
 
-        # ==== Xử lý giải captcha với vòng lặp retry loadlai và dongyloadlai tối đa 5 lần ====
+        api_key = read_api_key_from_file()
+        if not api_key:
+            print(f"{COLORS['RED']}[ERROR] Không có API key OCR, thoát chương trình.")
+            stop_event.set()
+            watcher_thread.join()
+            return
+
         MAX_RETRY_CAPTCHA = 5
         retry_captcha_count = 0
         captcha_text = None
 
+        # Luân phiên API endpoints theo thứ tự mã (code_index): mã lẻ endpoint 1, mã chẵn endpoint 2
+        api_endpoints = ["https://apipro1.ocr.space/parse/image", "https://apipro2.ocr.space/parse/image"]
         while retry_captcha_count < MAX_RETRY_CAPTCHA:
-            captcha_text = solve_captcha_with_fallback(captcha_img_path)
+            endpoint = api_endpoints[code_index % 2]
+            captcha_text = solve_captcha_with_fallback(captcha_img_path, endpoint, api_key)
             if captcha_text:
                 print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
                 break
             else:
-                print(f"{COLORS['YELLOW']}> Chưa giải được captcha, thực hiện load lại captcha lần {retry_captcha_count+1}...")
+                print(f"{COLORS['YELLOW']}> API {endpoint} không trả về kết quả, thực hiện load lại captcha lần {retry_captcha_count+1}...")
 
-                # 1. Click load lại captcha
                 pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=30)
                 if not pos_loadlai:
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại mã captcha.")
@@ -564,7 +556,6 @@ def main():
                 auto.click(*pos_loadlai)
                 print(f"{COLORS['GREEN']}> Đã click load lại captcha.")
 
-                # 2. Click đồng ý load lại captcha
                 pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=30)
                 if not pos_dongy:
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh đồng ý load lại captcha.")
@@ -572,9 +563,8 @@ def main():
                 auto.click(*pos_dongy)
                 print(f"{COLORS['GREEN']}> Đã xác nhận load lại captcha.")
 
-                time.sleep(2)  # đợi captcha mới load
+                time.sleep(2)
 
-                # 3. Đợi và click vào ô nhập mã (dienma.png)
                 pos_dienma = wait_for_image(auto, 'dienma.png', timeout=30)
                 if not pos_dienma:
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã sau khi load lại captcha.")
@@ -582,11 +572,9 @@ def main():
                 auto.click(*pos_dienma)
                 print(f"{COLORS['GREEN']}> Đã click vào ô nhập mã lại.")
 
-                # 4. Nhập lại mã cũ
-                auto.input_text_full(codes[code_index])
+                auto.input_text_full(code)
                 time.sleep(0.5)
 
-                # 5. Giữ click tải captcha mới
                 print(f"{COLORS['GREEN']}> Đang giữ click tìm chỗ tải captcha mới...")
                 start_hold = time.time()
                 captcha_found = False
@@ -602,7 +590,6 @@ def main():
                 auto.click(*pos_dl)
                 print(f"{COLORS['GREEN']}> Đã click tải captcha mới về giả lập")
 
-                # 6. Đợi file captcha mới về máy
                 wait_time = 0
                 while not os.path.exists(captcha_img_path) and wait_time < 30:
                     time.sleep(1)
