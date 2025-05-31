@@ -6,6 +6,7 @@ import time
 import threading
 import requests
 import base64
+import re
 from colorama import init
 
 COLORS = {
@@ -22,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher Zalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -114,38 +115,6 @@ def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
         time.sleep(0.5)
     return None
 
-def process_captcha_image(input_path, output_path):
-    try:
-        img = cv2.imread(input_path, cv2.IMREAD_UNCHANGED)
-        if img is None:
-            print(f"{COLORS['RED']}[ERROR] Không đọc được file ảnh {input_path}")
-            return False
-
-        if img.shape[2] == 4:
-            b, g, r, a = cv2.split(img)
-            img_bgr = cv2.merge([b, g, r])
-        else:
-            img_bgr = img
-
-        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-        _, mask = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY_INV)
-
-        if img.shape[2] == 4:
-            alpha = a
-        else:
-            alpha = mask
-
-        b, g, r = cv2.split(img_bgr)
-        rgba = cv2.merge([b, g, r, alpha])
-
-        cv2.imwrite(output_path, rgba)
-        print(f"{COLORS['GREEN']}> Ảnh captcha đã được xử lý nền trong suốt, lưu thành {output_path}")
-        return True
-
-    except Exception as e:
-        print(f"{COLORS['RED']}[ERROR] Lỗi xử lý ảnh captcha: {e}")
-        return False
-
 def read_api_key_from_file():
     key_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "key.txt")
     if not os.path.isfile(key_path):
@@ -162,26 +131,40 @@ def read_api_key_from_file():
         print(f"{COLORS['RED']}[ERROR] Lỗi đọc file key.txt: {e}")
         return None
 
-def get_image_base64_from_file(path):
+def get_clipboard_text(device_id):
+    """Lấy text clipboard trên thiết bị adb"""
     try:
-        with open(path, "rb") as f:
-            img_bytes = f.read()
-            return base64.b64encode(img_bytes).decode()
+        # Lệnh lấy clipboard dạng hex trên Android
+        output = subprocess.check_output(
+            f'adb -s {device_id} shell service call clipboard 1',
+            shell=True, stderr=subprocess.DEVNULL, timeout=5
+        ).decode(errors='ignore')
+
+        hex_matches = re.findall(r"0x([0-9a-fA-F]{2})", output)
+        clipboard_chars = [chr(int(h, 16)) for h in hex_matches if 0 < int(h, 16) < 256]
+        clipboard_text = ''.join(clipboard_chars).strip()
+        return clipboard_text
     except Exception as e:
-        print(f"{COLORS['RED']}Lỗi khi đọc file ảnh: {e}")
+        print(f"{COLORS['RED']}[ERROR] Lấy clipboard trên thiết bị thất bại: {e}")
         return None
 
-def call_ocr_api(img_base64, endpoint, api_key):
-    headers = {
-        "apikey": api_key,
-    }
-    data = {
-        "base64Image": "data:image/png;base64," + img_base64,
-        "language": "eng",
-        "isOverlayRequired": False,
-        "OCREngine": 2,
-    }
+def solve_captcha_from_base64_string(base64_data, endpoint, api_key):
     try:
+        prefix = "data:image/png;base64,"
+        if base64_data.startswith(prefix):
+            base64_str = base64_data[len(prefix):]
+        else:
+            base64_str = base64_data
+        headers = {
+            "apikey": api_key,
+        }
+        data = {
+            "base64Image": "data:image/png;base64," + base64_str,
+            "language": "eng",
+            "isOverlayRequired": False,
+            "OCREngine": 2,
+        }
+        print(f"{COLORS['GREEN']}Đang gọi API OCR: {endpoint}")
         response = requests.post(endpoint, data=data, headers=headers, timeout=30)
         if response.status_code == 200:
             result = response.json()
@@ -192,7 +175,9 @@ def call_ocr_api(img_base64, endpoint, api_key):
                 parsed_results = result.get("ParsedResults")
                 if parsed_results and len(parsed_results) > 0:
                     text = parsed_results[0].get("ParsedText").strip()
-                    return text
+                    print(f"{COLORS['GREEN']}Kết quả captcha đọc được: {COLORS['YELLOW']}{text}")
+                    cleaned_text = ''.join(ch for ch in text if ch.isalnum())
+                    return cleaned_text.strip()
                 else:
                     print(f"{COLORS['YELLOW']}Không có kết quả phân tích từ API.")
                     return None
@@ -203,27 +188,40 @@ def call_ocr_api(img_base64, endpoint, api_key):
         print(f"{COLORS['RED']}Lỗi gọi API: {e}")
         return None
 
-def solve_captcha_from_api(img_path, endpoint, api_key):
-    img_base64 = get_image_base64_from_file(img_path)
-    if not img_base64:
-        print(f"{COLORS['RED']}Không lấy được ảnh base64 từ file captcha.")
-        return None
-    print(f"{COLORS['GREEN']}Đang gọi API OCR: {endpoint}")
-    text = call_ocr_api(img_base64, endpoint, api_key)
-    if text:
-        print(f"{COLORS['GREEN']}Kết quả captcha đọc được: {COLORS['YELLOW']}{text}")
-        cleaned_text = ''.join(ch for ch in text if ch.isalnum())
-        return cleaned_text.strip()
-    else:
-        print(f"{COLORS['YELLOW']}API {endpoint} không trả về kết quả.")
+def solve_captcha_with_fallback(img_path, endpoint, api_key, auto):
+    """
+    Giữ click chỗ tải captcha, đợi saochepduongdancaptcha.png xuất hiện,
+    click sao chép đường dẫn, click vị trí paste,
+    lấy base64 trong clipboard, gọi API giải captcha.
+    """
+    print(f"{COLORS['GREEN']}> Bắt đầu giữ click tải captcha...")
+    start_hold = time.time()
+    captcha_copied = False
+    while time.time() - start_hold < 60:
+        pos = auto.find_image('saochepduongdancaptcha.png', 0.95)
+        if pos:
+            auto.click(*pos)
+            time.sleep(0.3)
+            auto.click(257.6, 801.1)
+            time.sleep(0.3)
+            captcha_copied = True
+            break
+        else:
+            auto.click_and_hold(683.0, 1015.1, 600)
+    if not captcha_copied:
+        print(f"{COLORS['RED']}[ERROR] Không thấy ảnh sao chép đường dẫn captcha, thoát.")
         return None
 
-def solve_captcha_with_fallback(img_path, endpoint, api_key):
-    ok_img_path = os.path.join(os.path.dirname(img_path), "ok.png")
-    success = process_captcha_image(img_path, ok_img_path)
-    if not success:
+    base64_captcha = get_clipboard_text(auto.device_id)
+    if not base64_captcha:
+        print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn base64 captcha từ clipboard.")
         return None
-    captcha_text = solve_captcha_from_api(ok_img_path, endpoint, api_key)
+
+    captcha_text = solve_captcha_from_base64_string(base64_captcha, endpoint, api_key)
+    if not captcha_text:
+        print(f"{COLORS['RED']}[ERROR] Không giải được captcha từ base64 string.")
+        return None
+
     return captcha_text
 
 def handle_done_click(auto):
@@ -235,55 +233,44 @@ def handle_done_click(auto):
             auto.click(168.2, 1007.0)
             time.sleep(0.3)
             for _ in range(7):
-                os.system(f'adb -s {auto.device_id} shell input keyevent 67')  # Backspace
+                os.system(f'adb -s {auto.device_id} shell input keyevent 67')
                 time.sleep(0.05)
             print(f"{COLORS['GREEN']}> Đã xóa captcha cũ trong ô nhập captcha.")
             if wait_for_image(auto, 'loadlaicapcha.png', timeout=20):
                 auto.click(829.3, 1015.1)
                 print("Đã làm mới captcha.")
                 auto.click_and_hold(683.0, 1015.1, 600)
-                pos_dl = wait_for_image(auto, 'downloadcaptcha.png', timeout=30)
+                pos_dl = wait_for_image(auto, 'saochepduongdancaptcha.png', timeout=30)
                 if pos_dl:
-                    auto.click(152.0, 879.6)
-                    print(f"{COLORS['GREEN']}> Đang tải mã captcha về để giải.")
+                    auto.click(*pos_dl)
+                    auto.click(257.6, 801.1)
+                    print(f"{COLORS['GREEN']}> Đã sao chép đường dẫn captcha.")
                 else:
-                    print("Không thấy chỗ tải captcha, thoát.")
+                    print("Không thấy chỗ sao chép đường dẫn, thoát.")
                     return 'repeat_captcha'
-                captcha_img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "captcha.png")
-                wait_time = 0
-                while not os.path.exists(captcha_img_path) and wait_time < 30:
-                    time.sleep(1)
-                    wait_time += 1
-                if not os.path.exists(captcha_img_path):
-                    print(f"{COLORS['RED']}[ERROR] Không thấy file captcha để giải.")
-                    return 'repeat_captcha'
-                # Lấy API key để giải
+                captcha_text = None
+                # Lấy API key và endpoint mặc định cho handle_done_click
                 api_key = read_api_key_from_file()
                 if not api_key:
                     print(f"{COLORS['RED']}[ERROR] Không có API key, thoát.")
                     return 'repeat_captcha'
-                # Lấy endpoint xen kẽ mặc định lần đầu
-                # Đây là trường hợp dùng trong handle_done_click nên lấy mặc định endpoint 1
-                captcha_text = solve_captcha_with_fallback(captcha_img_path, "https://apipro1.ocr.space/parse/image", api_key)
+                captcha_text = get_clipboard_text(auto.device_id)
+                if captcha_text:
+                    captcha_text = solve_captcha_from_base64_string(captcha_text, "https://apipro1.ocr.space/parse/image", api_key)
                 print(f"{COLORS['GREEN']}> Captcha mới được giải từ ảnh: {COLORS['YELLOW']}{captcha_text}")
-                try:
-                    os.remove(captcha_img_path)
-                except:
-                    pass
                 if not captcha_text:
                     print(f"{COLORS['RED']}[ERROR] Không giải mã được captcha tải về.")
                     return 'repeat_captcha'
-                pos_nhapcapcha_2 = wait_for_image(auto, 'nhapcapcha.png', timeout=10)
+                pos_nhapcapcha_2 = wait_for_image(auto, 'nhapmacapcha.png', timeout=10)
                 if pos_nhapcapcha_2:
-                    x2, y2 = pos_nhapcapcha_2
-                    auto.click(x2, y2)
+                    auto.click(*pos_nhapcapcha_2)
                     time.sleep(0.3)
+                captcha_text = ''.join(captcha_text.split())
                 auto.input_text_full(captcha_text)
                 time.sleep(0.3)
                 if wait_for_image(auto, 'done.png', timeout=30):
                     auto.click(447.3, 1188.5)
                     print(f"{COLORS['GREEN']}> Đã done được với captcha [{captcha_text}].")
-                    # Xóa dữ liệu trong thư mục giả lập
                     os.system(f'adb -s {auto.device_id} shell rm -rf /storage/emulated/0/Download/zalo/*')
                     return handle_done_click(auto)
             else:
@@ -489,6 +476,7 @@ def main():
     stop_event = threading.Event()
     watcher_thread = threading.Thread(target=watch_and_pull_latest, args=(stop_event,), daemon=True)
     watcher_thread.start()
+    api_endpoints = ["https://apipro1.ocr.space/parse/image", "https://apipro2.ocr.space/parse/image"]
     while code_index < len(codes):
         code = codes[code_index]
         print(f"{COLORS['GREEN']}> Đang xử lý mã thứ {code_index+1}/{len(codes)}: {COLORS['CYAN']}{code}")
@@ -502,31 +490,9 @@ def main():
         time.sleep(0.3)
         auto.input_text_full(code)
         time.sleep(0.5)
-        print(f"{COLORS['GREEN']}> Đang giữ click tìm chỗ tải captcha...")
-        start_hold = time.time()
-        captcha_found = False
-        while time.time() - start_hold < 60:
-            pos_dl = auto.find_image('downloadcaptcha.png', 0.95)
-            if pos_dl:
-                captcha_found = True
-                break
-            auto.click_and_hold(683.0, 1015.1, 600)
-        if not captcha_found:
-            print(f"{COLORS['RED']}[ERROR] Không thấy chỗ tải captcha chuyển sang mã tiếp theo.")
-            code_index += 1
-            continue
-        auto.click(*pos_dl)
-        print(f"{COLORS['GREEN']}> Đã click tải captcha về giả lập")
-        captcha_img_path = os.path.join(LOCAL_SAVE_DIR, "captcha.png")
-        wait_time = 0
-        while not os.path.exists(captcha_img_path) and wait_time < 30:
-            time.sleep(1)
-            wait_time += 1
-        if not os.path.exists(captcha_img_path):
-            print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha để giải, chuyển mã tiếp theo.")
-            code_index += 1
-            continue
 
+        # Giữ click tìm chỗ sao chép đường dẫn captcha, đợi saochepduongdancaptcha.png rồi xử lý
+        captcha_img_path = os.path.join(LOCAL_SAVE_DIR, "captcha.png")  # hiện giờ ko dùng file này nhưng giữ để đồng bộ
         api_key = read_api_key_from_file()
         if not api_key:
             print(f"{COLORS['RED']}[ERROR] Không có API key OCR, thoát chương trình.")
@@ -538,11 +504,9 @@ def main():
         retry_captcha_count = 0
         captcha_text = None
 
-        # Luân phiên API endpoints theo thứ tự mã (code_index): mã lẻ endpoint 1, mã chẵn endpoint 2
-        api_endpoints = ["https://apipro1.ocr.space/parse/image", "https://apipro2.ocr.space/parse/image"]
         while retry_captcha_count < MAX_RETRY_CAPTCHA:
             endpoint = api_endpoints[code_index % 2]
-            captcha_text = solve_captcha_with_fallback(captcha_img_path, endpoint, api_key)
+            captcha_text = solve_captcha_with_fallback(None, endpoint, api_key, auto)
             if captcha_text:
                 print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
                 break
@@ -575,29 +539,6 @@ def main():
                 auto.input_text_full(code)
                 time.sleep(0.5)
 
-                print(f"{COLORS['GREEN']}> Đang giữ click tìm chỗ tải captcha mới...")
-                start_hold = time.time()
-                captcha_found = False
-                while time.time() - start_hold < 60:
-                    pos_dl = auto.find_image('downloadcaptcha.png', 0.95)
-                    if pos_dl:
-                        captcha_found = True
-                        break
-                    auto.click_and_hold(683.0, 1015.1, 600)
-                if not captcha_found:
-                    print(f"{COLORS['RED']}[ERROR] Không thấy chỗ tải captcha mới, thoát vòng retry captcha.")
-                    break
-                auto.click(*pos_dl)
-                print(f"{COLORS['GREEN']}> Đã click tải captcha mới về giả lập")
-
-                wait_time = 0
-                while not os.path.exists(captcha_img_path) and wait_time < 30:
-                    time.sleep(1)
-                    wait_time += 1
-                if not os.path.exists(captcha_img_path):
-                    print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha mới sau khi load lại.")
-                    break
-
                 retry_captcha_count += 1
 
         if not captcha_text:
@@ -605,18 +546,14 @@ def main():
             code_index += 1
             continue
 
-        try:
-            os.remove(captcha_img_path)
-        except:
-            pass
-
-        pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=60)
+        pos_nhapcapcha = wait_for_image(auto, 'nhapmacapcha.png', timeout=60)
         if not pos_nhapcapcha:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập captcha chuyển mã tiếp theo.")
             code_index += 1
             continue
         auto.click(*pos_nhapcapcha)
         time.sleep(0.3)
+        captcha_text = ''.join(captcha_text.split())  # nối liền không khoảng trắng
         auto.input_text_full(captcha_text)
         time.sleep(0.3)
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
