@@ -51,7 +51,7 @@ class Auto:
             )
             img = cv2.imread(local_tmp)
             if img is None:
-                print(f"{COLORS['BRIGHT_YELLOW']}[ SoHan ] {COLORS['GREEN']}> {COLORS['RED']}[ERROR] Không đọc được file ảnh temp_screencap.png")
+                print(f"{COLORS['RED']}[ERROR] Không đọc được file ảnh temp_screencap.png")
             os.remove(local_tmp)
             subprocess.run(
                 ["adb", "-s", self.device_id, "shell", "rm", tmp_path],
@@ -60,21 +60,19 @@ class Auto:
             )
             return img
         except subprocess.CalledProcessError as e:
-            print(f"{COLORS['BRIGHT_YELLOW']}[ SoHan ] {COLORS['GREEN']}> {COLORS['RED']}[ERROR] Lỗi khi chụp màn hình bằng adb shell screencap:", e)
+            print(f"{COLORS['RED']}[ERROR] Lỗi khi chụp màn hình adb screencap: {e}")
             return None
 
     def find_image(self, template_filename, threshold=0.95):
         screen = self.screen_capture()
         if screen is None:
-            print(f"{COLORS['BRIGHT_YELLOW']}[ SoHan ] {COLORS['GREEN']}> {COLORS['RED']}[ERROR]Không có ảnh màn hình để xử lý.")
+            print(f"{COLORS['RED']}[ERROR] Không có ảnh màn hình để xử lý.")
             return None
-
         template_path = image_path(template_filename)
         template = cv2.imread(template_path)
         if template is None:
-            print(f"{COLORS['BRIGHT_YELLOW']}[ SoHan ] {COLORS['GREEN']}> {COLORS['RED']}[ERROR]Không tìm thấy file ảnh mẫu: {template_path}")
+            print(f"{COLORS['RED']}[ERROR] Không tìm thấy file ảnh mẫu: {template_path}")
             return None
-
         res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
         loc = np.where(res >= threshold)
         points = list(zip(*loc[::-1]))
@@ -83,11 +81,8 @@ class Auto:
         return None
 
     def click(self, x, y):
-        x_int = round(x)
-        y_int = round(y)
-        cmd = f"adb -s {self.device_id} shell input tap {x_int} {y_int}"
-        os.system(cmd)
-        time.sleep(0.1)
+        os.system(f'adb -s {self.device_id} shell input tap {round(x)} {round(y)}')
+        time.sleep(0.15)
 
     def escape_adb_input_text(self, text):
         escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
@@ -99,12 +94,11 @@ class Auto:
     def input_text_full(self, text):
         safe_text = self.escape_adb_input_text(text)
         os.system(f'adb -s {self.device_id} shell input text "{safe_text}"')
-        time.sleep(0.2)
+        time.sleep(0.25)
 
     def click_and_hold(self, x, y, duration_ms=600):
-        cmd = f'adb -s {self.device_id} shell input swipe {round(x)} {round(y)} {round(x)} {round(y)} {duration_ms}'
-        os.system(cmd)
-        time.sleep(duration_ms / 1000 + 0.1)
+        os.system(f'adb -s {self.device_id} shell input swipe {round(x)} {round(y)} {round(x)} {round(y)} {duration_ms}')
+        time.sleep(duration_ms/1000 + 0.15)
 
 def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
     start = time.time()
@@ -118,7 +112,7 @@ def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
 def read_api_key_from_file():
     key_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "key.txt")
     if not os.path.isfile(key_path):
-        print(f"{COLORS['RED']}[ERROR] File key.txt chứa API key không tồn tại.")
+        print(f"{COLORS['RED']}[ERROR] File key.txt không tồn tại.")
         return None
     try:
         with open(key_path, "r", encoding="utf-8") as f:
@@ -308,11 +302,6 @@ def handle_done_click(auto):
         time.sleep(0.2)
     return None
 
-DEVICE_SERIAL = None
-WATCH_PATH = "/storage/emulated/0/Download/zalo"
-LOCAL_SAVE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOCAL_FILENAME = "captcha.png"
-
 def get_connected_device():
     devices_raw = subprocess.check_output("adb devices", shell=True).decode()
     devices = []
@@ -323,58 +312,6 @@ def get_connected_device():
         return devices[0]
     else:
         return None
-
-def list_all_files_with_time(device, base_path):
-    try:
-        find_cmd = f'adb -s {device} shell find "{base_path}" -type f'
-        output = subprocess.check_output(find_cmd, shell=True).decode(errors='ignore')
-        filepaths = output.strip().splitlines()
-        files_with_time = []
-        for f in filepaths:
-            stat_cmd = f'adb -s {device} shell stat -c %Y "{f}"'
-            stat_out = subprocess.check_output(stat_cmd, shell=True).decode(errors='ignore').strip()
-            try:
-                timestamp = int(stat_out)
-            except:
-                timestamp = 0
-            files_with_time.append((f, timestamp))
-        return files_with_time
-    except subprocess.CalledProcessError:
-        return []
-
-def pull_and_rename(device, remote_path, local_path):
-    print(f"Đang tải file {remote_path} về {local_path}")
-    cmd = f'adb -s {device} pull "{remote_path}" "{local_path}"'
-    result = subprocess.run(cmd, shell=True)
-    if result.returncode == 0:
-        print(f"{COLORS['GREEN']}> Tải thành công captcha")
-    else:
-        print("Tải thất bại.")
-
-def watch_and_pull_latest(stop_event):
-    device = DEVICE_SERIAL or get_connected_device()
-    if not device:
-        print(f"{COLORS['RED']}[ERROR] Không tìm thấy thiết bị ADB nào.")
-        return
-    print(f"{COLORS['GREEN']}> Đang tìm file captcha trên thiết bị {device}")
-    last_timestamp = 0
-    while not stop_event.is_set():
-        try:
-            files = list_all_files_with_time(device, WATCH_PATH)
-            if not files:
-                time.sleep(2)
-                continue
-            files.sort(key=lambda x: x[1], reverse=True)
-            latest_file, latest_time = files[0]
-            if latest_time > last_timestamp:
-                local_path = os.path.join(LOCAL_SAVE_DIR, LOCAL_FILENAME)
-                pull_and_rename(device, latest_file, local_path)
-                last_timestamp = latest_time
-            else:
-                time.sleep(2)
-        except Exception as e:
-            print(f"Lỗi tìm file: {e}")
-            time.sleep(5)
 
 def remove_all_files_in_watchpath(device, watch_path):
     try:
@@ -403,6 +340,7 @@ def main():
         return
     device = devices[0]
     print(f"{COLORS['GREEN']}> Đang sử dụng thiết bị : {device}")
+
     macoca_path = 'macoca.txt'
     try:
         with open(macoca_path, 'r', encoding='utf-8') as f:
@@ -414,7 +352,9 @@ def main():
     except Exception as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi xử lý file {macoca_path}: {e}")
         return
+
     auto = Auto(device)
+
     print(f"{COLORS['GREEN']}> Đang mở app zalo trên thiết bị...")
     pos = auto.find_image('zalo.png', threshold=0.95)
     if not pos:
@@ -422,12 +362,15 @@ def main():
         return
     auto.click(555.7, 251.1)
     print(f"{COLORS['GREEN']}> Vào app zalo thành công")
+
     logged_in = input(f"{COLORS['GREEN']}> Bạn đã vào zalo và setup cấu hình nhập mã sẵn chưa rồi nhấn {COLORS['YELLOW']}y {COLORS['GREEN']}để chạy nào? (y/n): ").strip().lower()
     if logged_in != 'y':
         print(f"{COLORS['RED']}[ERROR] Vui lòng setup cấu hình nhập mã sẵn khi chạy.")
         return
+
     print(f"{COLORS['GREEN']}> Xóa tất cả file trong thư mục trên thiết bị trước khi chạy...")
-    remove_all_files_in_watchpath(device, WATCH_PATH)
+    remove_all_files_in_watchpath(device, "/storage/emulated/0/Download/zalo")
+
     print(f"{COLORS['GREEN']}> Đang đợi ảnh mục 3 gạch xuất hiện...")
     pos_luot = wait_for_image(auto, '3gach.png', timeout=60)
     if not pos_luot:
@@ -435,6 +378,7 @@ def main():
         return
     auto.click(62.6, 207.7)
     print(f"{COLORS['GREEN']}> Đã vào mục 3 gạch.")
+
     print(f"{COLORS['GREEN']}> Đang đợi vào trang mục nhập mã")
     pos_nhapma = wait_for_image(auto, 'nhapma.png', timeout=60)
     if not pos_nhapma:
@@ -442,6 +386,7 @@ def main():
         return
     auto.click(390.4, 779.4)
     print(f"{COLORS['GREEN']}> Đã vào mục nhập mã")
+
     try:
         with open(macoca_path, 'r', encoding='utf-8') as f:
             raw_lines = f.readlines()
@@ -452,17 +397,22 @@ def main():
     except Exception as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi đọc file macoca.txt: {e}")
         return
+
     total_points = 0
     code_index = 0
     error_count = 0
     ERROR_LIMIT = 5
     stop_event = threading.Event()
-    watcher_thread = threading.Thread(target=watch_and_pull_latest, args=(stop_event,), daemon=True)
+
+    watcher_thread = threading.Thread(target=lambda ev: None, args=(stop_event,), daemon=True)  # Nếu bạn cần theo dõi file có thể bổ sung sau
     watcher_thread.start()
+
     api_endpoints = ["https://apipro1.ocr.space/parse/image", "https://apipro2.ocr.space/parse/image"]
+
     while code_index < len(codes):
         code = codes[code_index]
         print(f"{COLORS['GREEN']}> Đang xử lý mã thứ {code_index+1}/{len(codes)}: {COLORS['CYAN']}{code}")
+
         pos_dienma = wait_for_image(auto, 'dienma.png', timeout=60)
         if not pos_dienma:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
@@ -526,6 +476,7 @@ def main():
             code_index += 1
             continue
 
+        # --- Phần đổi lại đây ---
         pos_nhapcapcha = wait_for_image(auto, 'nhapmacapcha.png', timeout=60)
         if not pos_nhapcapcha:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập captcha chuyển mã tiếp theo.")
@@ -543,6 +494,7 @@ def main():
             continue
         auto.click(*pos_done)
         print(f"{COLORS['GREEN']}> Đã done với mã {code}.")
+        # --- kết thúc phần đổi ---
 
         error_detected_this_round = 0
         start_check_error = time.time()
@@ -609,6 +561,7 @@ def main():
         else:
             print(f"{COLORS['YELLOW']}> Không phát hiện cảnh báo nào, tiếp tục với mã tiếp theo")
             code_index += 1
+
     stop_event.set()
     watcher_thread.join()
     print(f"{COLORS['CYAN']}> Đã chạy hết mã trong macoca.txt. Tổng điểm nhập mã là: {COLORS['YELLOW']}{total_points}")
