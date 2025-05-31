@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher ZaloCoCa By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -221,7 +221,6 @@ def solve_captcha_from_api(img_path, endpoint, api_key):
 
 def solve_captcha_with_fallback(img_path):
     API_ENDPOINTS = [
-        "https://apipro1.ocr.space/parse/image",
         "https://apipro2.ocr.space/parse/image"
     ]
     api_key = read_api_key_from_file()
