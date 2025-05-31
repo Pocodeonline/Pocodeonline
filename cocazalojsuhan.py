@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher Zalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -220,9 +220,7 @@ def solve_captcha_from_api(img_path, endpoint, api_key):
         return None
 
 def solve_captcha_with_fallback(img_path):
-    API_ENDPOINTS = [
-        "https://apipro2.ocr.space/parse/image"
-    ]
+    API_ENDPOINT = "https://apipro2.ocr.space/parse/image"  # Only use the new API
     api_key = read_api_key_from_file()
     if not api_key:
         return None
@@ -282,10 +280,6 @@ def handle_done_click(auto):
                     return 'repeat_captcha'
                 captcha_text = solve_captcha_with_fallback(captcha_img_path)
                 print(f"{COLORS['GREEN']}> Captcha mới được giải từ ảnh: {COLORS['YELLOW']}{captcha_text}")
-                try:
-                    os.remove(captcha_img_path)
-                except:
-                    pass
                 if not captcha_text:
                     print(f"{COLORS['RED']}[ERROR] Không giải mã được captcha tải về.")
                     return 'repeat_captcha'
