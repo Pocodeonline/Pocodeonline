@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -504,6 +504,7 @@ def main():
     stop_event = threading.Event()
     watcher_thread = threading.Thread(target=watch_and_pull_latest, args=(stop_event,), daemon=True)
     watcher_thread.start()
+
     while code_index < len(codes):
         code = codes[code_index]
         print(f"{COLORS['GREEN']}> Đang xử lý mã thứ {code_index+1}/{len(codes)}: {COLORS['CYAN']}{code}")
@@ -542,52 +543,50 @@ def main():
             code_index += 1
             continue
 
-        # ==== Phần xử lý giải captcha với fallback API và load lại khi lỗi ====
-        captcha_text = solve_captcha_with_fallback(captcha_img_path)
-        if not captcha_text:
-            print(f"{COLORS['YELLOW']}> Chưa giải được captcha, thực hiện load lại captcha...")
-            pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=30)
-            if pos_loadlai:
-                auto.click(*pos_loadlai)
-                print(f"{COLORS['GREEN']}> Đã click load lại captcha.")
-            else:
-                print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại mã captcha.")
-                code_index += 1
-                continue
-            pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=30)
-            if pos_dongy:
-                auto.click(*pos_dongy)
-                print(f"{COLORS['GREEN']}> Đã xác nhận load lại captcha.")
-            else:
-                print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh đồng ý load lại captcha.")
-                code_index += 1
-                continue
-            time.sleep(2)  # chờ load captcha mới
-            pos_dienma = wait_for_image(auto, 'dienma.png', timeout=30)
-            if pos_dienma:
-                auto.click(*pos_dienma)
-                auto.input_text_full(code)
-                time.sleep(1)
-            else:
-                print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã sau khi load lại.")
-                code_index += 1
-                continue
-            wait_time = 0
-            while not os.path.exists(captcha_img_path) and wait_time < 30:
-                time.sleep(1)
-                wait_time += 1
-            if not os.path.exists(captcha_img_path):
-                print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha sau khi load lại.")
-                code_index += 1
-                continue
+        # === Xử lý captcha với vòng lặp retry loadlai và dongyloadlai tối đa 5 lần ===
+        MAX_RETRY_CAPTCHA = 5
+        retry_captcha_count = 0
+        captcha_text = None
+
+        while retry_captcha_count < MAX_RETRY_CAPTCHA:
             captcha_text = solve_captcha_with_fallback(captcha_img_path)
-            if not captcha_text:
-                print(f"{COLORS['RED']}[ERROR] Vẫn không giải được captcha sau khi load lại, chuyển mã tiếp theo.")
-                code_index += 1
-                continue
-            print(f"{COLORS['GREEN']}> Captcha mới được giải là: {COLORS['YELLOW']}{captcha_text}")
-        else:
-            print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
+            if captcha_text:
+                print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
+                break
+            else:
+                print(f"{COLORS['YELLOW']}> Chưa giải được captcha, thực hiện load lại captcha lần {retry_captcha_count+1}...")
+                pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=30)
+                if pos_loadlai:
+                    auto.click(*pos_loadlai)
+                    print(f"{COLORS['GREEN']}> Đã click load lại captcha.")
+                else:
+                    print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại mã captcha.")
+                    break
+
+                pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=30)
+                if pos_dongy:
+                    auto.click(*pos_dongy)
+                    print(f"{COLORS['GREEN']}> Đã xác nhận load lại captcha.")
+                else:
+                    print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh đồng ý load lại captcha.")
+                    break
+
+                time.sleep(2)  # chờ captcha mới load
+
+                wait_time = 0
+                while not os.path.exists(captcha_img_path) and wait_time < 30:
+                    time.sleep(1)
+                    wait_time += 1
+                if not os.path.exists(captcha_img_path):
+                    print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha sau khi load lại.")
+                    break
+
+                retry_captcha_count += 1
+
+        if not captcha_text:
+            print(f"{COLORS['RED']}[ERROR] Vẫn không giải được captcha sau {MAX_RETRY_CAPTCHA} lần thử, chuyển mã tiếp theo.")
+            code_index += 1
+            continue
 
         try:
             os.remove(captcha_img_path)
@@ -610,6 +609,7 @@ def main():
             continue
         auto.click(*pos_done)
         print(f"{COLORS['GREEN']}> Đã done với mã {code}.")
+
         error_detected_this_round = 0
         start_check_error = time.time()
         nhaplaima_detected = False
