@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -359,7 +359,7 @@ LOCAL_SAVE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_FILENAME = "captcha.png"
 
 def get_connected_device():
-    devices_raw = subprocess.check_output("adb devices").decode()
+    devices_raw = subprocess.check_output("adb devices", shell=True).decode()
     devices = []
     for line in devices_raw.splitlines():
         if "\tdevice" in line:
@@ -504,7 +504,6 @@ def main():
     stop_event = threading.Event()
     watcher_thread = threading.Thread(target=watch_and_pull_latest, args=(stop_event,), daemon=True)
     watcher_thread.start()
-
     while code_index < len(codes):
         code = codes[code_index]
         print(f"{COLORS['GREEN']}> Đang xử lý mã thứ {code_index+1}/{len(codes)}: {COLORS['CYAN']}{code}")
@@ -543,7 +542,7 @@ def main():
             code_index += 1
             continue
 
-        # === Xử lý captcha với vòng lặp retry loadlai và dongyloadlai tối đa 5 lần ===
+        # ==== Xử lý giải captcha với vòng lặp retry loadlai và dongyloadlai tối đa 5 lần ====
         MAX_RETRY_CAPTCHA = 5
         retry_captcha_count = 0
         captcha_text = None
@@ -582,11 +581,11 @@ def main():
                 auto.click(*pos_dienma)
                 print(f"{COLORS['GREEN']}> Đã click vào ô nhập mã lại.")
 
-        # 4. Nhập lại mã cũ
+                # 4. Nhập lại mã cũ
                 auto.input_text_full(codes[code_index])
                 time.sleep(0.5)
 
-        # 5. Giữ click tải captcha mới
+                # 5. Giữ click tải captcha mới
                 print(f"{COLORS['GREEN']}> Đang giữ click tìm chỗ tải captcha mới...")
                 start_hold = time.time()
                 captcha_found = False
@@ -612,7 +611,6 @@ def main():
                     break
 
                 retry_captcha_count += 1
-
 
         if not captcha_text:
             print(f"{COLORS['RED']}[ERROR] Vẫn không giải được captcha sau {MAX_RETRY_CAPTCHA} lần thử, chuyển mã tiếp theo.")
