@@ -300,6 +300,8 @@ def handle_done_click(auto):
                 if wait_for_image(auto, 'done.png', timeout=30):
                     auto.click(447.3, 1188.5)
                     print(f"{COLORS['GREEN']}> Đã done được với captcha [{captcha_text}].")
+                    # Xóa dữ liệu trong thư mục giả lập
+                    os.system(f'adb -s {auto.device_id} shell rm -rf /storage/emulated/0/Download/zalo/*')
                     return handle_done_click(auto)
             else:
                 print(f"{COLORS['RED']}[ERROR] Không load lại được thoát vòng kiểm tra.")
