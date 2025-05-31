@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -133,7 +133,6 @@ def read_api_key_from_file():
 
 def get_clipboard_text(device_id):
     try:
-        # Lấy clipboard bằng lệnh cmd clipboard get (Android 10+)
         output = subprocess.check_output(
             f'adb -s {device_id} shell cmd clipboard get',
             shell=True, stderr=subprocess.DEVNULL, timeout=5
@@ -149,16 +148,20 @@ def get_clipboard_text(device_id):
 
 def solve_captcha_from_base64_string(base64_data, endpoint, api_key):
     try:
-        prefix = "data:image/png;base64,"
-        if base64_data.startswith(prefix):
-            base64_str = base64_data[len(prefix):]
-        else:
-            base64_str = base64_data
+        # Loại bỏ khoảng trắng, xuống dòng
+        base64_data = ''.join(base64_data.split())
+
+        # Thêm tiền tố nếu chưa có
+        if not base64_data.startswith("data:image/png;base64,"):
+            base64_data = "data:image/png;base64," + base64_data
+
+        print(f"DEBUG base64 data preview: {base64_data[:50]}...")
+
         headers = {
             "apikey": api_key,
         }
         data = {
-            "base64Image": "data:image/png;base64," + base64_str,
+            "base64Image": base64_data,
             "language": "eng",
             "isOverlayRequired": False,
             "OCREngine": 2,
@@ -491,7 +494,13 @@ def main():
 
         while retry_captcha_count < MAX_RETRY_CAPTCHA:
             endpoint = api_endpoints[code_index % 2]
-            captcha_text = solve_captcha_with_fallback(None, endpoint, read_api_key_from_file(), auto)
+            api_key = read_api_key_from_file()
+            if not api_key:
+                print(f"{COLORS['RED']}[ERROR] Không có API key, thoát.")
+                stop_event.set()
+                watcher_thread.join()
+                return
+            captcha_text = solve_captcha_with_fallback(None, endpoint, api_key, auto)
             if captcha_text:
                 print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
                 break
