@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -436,8 +436,6 @@ def remove_all_files_in_watchpath(device, watch_path):
     except subprocess.CalledProcessError as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi khi xóa file trong thư mục: {e}")
 
-# ==== PHẦN MỚI THÊM THEO YÊU CẦU ====
-
 def get_clipboard_content(device_id):
     try:
         cmd = f'adb -s {device_id} shell "cmd clipboard get"'
@@ -451,11 +449,25 @@ def get_clipboard_content(device_id):
         print(f"{COLORS['RED']}[ERROR] Lỗi lấy clipboard từ thiết bị: {e}")
         return None
 
-def get_captcha_path_from_clipboard(auto):
+def save_base64_image_to_file(data_uri, save_path):
+    try:
+        if ',' in data_uri:
+            _, base64_data = data_uri.split(',', 1)
+        else:
+            base64_data = data_uri
+        img_data = base64.b64decode(base64_data)
+        with open(save_path, 'wb') as f:
+            f.write(img_data)
+        print(f"{COLORS['GREEN']}> Đã lưu ảnh captcha base64 ra file {save_path}")
+        return True
+    except Exception as e:
+        print(f"{COLORS['RED']}[ERROR] Lỗi lưu ảnh từ base64: {e}")
+        return False
+
+def get_captcha_base64_from_clipboard(auto):
     print(f"{COLORS['GREEN']}> Giữ click tìm nút sao chép đường dẫn captcha...")
     start_hold = time.time()
     hold_timeout = 60
-    captcha_path = None
 
     while time.time() - start_hold < hold_timeout:
         auto.click_and_hold(683.0, 1015.1, 600)
@@ -464,12 +476,12 @@ def get_captcha_path_from_clipboard(auto):
             print(f"{COLORS['GREEN']}> Đã phát hiện nút sao chép đường dẫn captcha tại {pos_sao_chep}")
             auto.click(208.9, 795.6)
             time.sleep(0.5)
-            captcha_path = get_clipboard_content(auto.device_id)
-            if captcha_path:
-                print(f"{COLORS['GREEN']}> Đường dẫn ảnh captcha được sao chép: {captcha_path}")
-                return captcha_path
+            clipboard_content = get_clipboard_content(auto.device_id)
+            if clipboard_content and clipboard_content.startswith("data:image/png;base64,"):
+                print(f"{COLORS['GREEN']}> Đã lấy dữ liệu base64 ảnh captcha từ clipboard")
+                return clipboard_content
             else:
-                print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn captcha trong clipboard.")
+                print(f"{COLORS['RED']}[ERROR] Nội dung clipboard không phải dữ liệu base64 hợp lệ.")
                 return None
         time.sleep(0.5)
     print(f"{COLORS['RED']}[ERROR] Timeout không thấy nút sao chép đường dẫn captcha.")
@@ -568,24 +580,21 @@ def main():
         auto.input_text_full(code)
         time.sleep(0.5)
 
-        # ==== THAY ĐỔI Ở ĐÂY ==== #
-        print(f"{COLORS['GREEN']}> Giữ click lấy đường dẫn ảnh captcha...")
-        captcha_path = get_captcha_path_from_clipboard(auto)
-        if not captcha_path:
-            print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn ảnh captcha, chuyển mã tiếp theo.")
+        # ====== PHẦN ĐÃ CHỈNH =======
+        print(f"{COLORS['GREEN']}> Giữ click lấy chuỗi base64 ảnh captcha từ clipboard...")
+        captcha_base64 = get_captcha_base64_from_clipboard(auto)
+        if not captcha_base64:
+            print(f"{COLORS['RED']}[ERROR] Không lấy được base64 ảnh captcha, chuyển mã tiếp theo.")
             code_index += 1
             continue
 
         captcha_img_path = os.path.join(LOCAL_SAVE_DIR, "captcha.png")
-        print(f"{COLORS['GREEN']}> Đang tải ảnh captcha về máy từ đường dẫn {captcha_path}")
-        pull_cmd = f'adb -s {auto.device_id} pull "{captcha_path}" "{captcha_img_path}"'
-        result = subprocess.run(pull_cmd, shell=True)
-        if result.returncode != 0 or not os.path.exists(captcha_img_path):
-            print(f"{COLORS['RED']}[ERROR] Không tải được ảnh captcha về máy.")
+        success = save_base64_image_to_file(captcha_base64, captcha_img_path)
+        if not success:
+            print(f"{COLORS['RED']}[ERROR] Lỗi lưu ảnh captcha từ base64, chuyển mã tiếp theo.")
             code_index += 1
             continue
-
-        # ==== PHẦN XỬ LÝ CAPTCHA GIỮ NGUYÊN ==== #
+        # ====== KẾT THÚC PHẦN CHỈNH ======
 
         MAX_RETRY_CAPTCHA = 5
         retry_captcha_count = 0
@@ -640,15 +649,14 @@ def main():
                 auto.click(208.9, 795.6)
                 time.sleep(0.5)
 
-                captcha_path = get_clipboard_content(auto.device_id)
-                if not captcha_path:
-                    print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn captcha mới trong clipboard.")
+                clipboard_content = get_clipboard_content(auto.device_id)
+                if not clipboard_content or not clipboard_content.startswith("data:image/png;base64,"):
+                    print(f"{COLORS['RED']}[ERROR] Nội dung clipboard không phải base64 hoặc không lấy được.")
                     break
 
-                pull_cmd = f'adb -s {auto.device_id} pull "{captcha_path}" "{captcha_img_path}"'
-                result = subprocess.run(pull_cmd, shell=True)
-                if result.returncode != 0 or not os.path.exists(captcha_img_path):
-                    print(f"{COLORS['RED']}[ERROR] Không tải được ảnh captcha mới về máy.")
+                success = save_base64_image_to_file(clipboard_content, captcha_img_path)
+                if not success:
+                    print(f"{COLORS['RED']}[ERROR] Lỗi lưu ảnh captcha mới từ base64.")
                     break
 
                 retry_captcha_count += 1
