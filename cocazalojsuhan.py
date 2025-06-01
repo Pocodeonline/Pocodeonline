@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -142,7 +142,6 @@ def process_captcha_image(input_path, output_path):
         cv2.imwrite(output_path, rgba)
         print(f"{COLORS['GREEN']}> Ảnh captcha đã được xử lý nền trong suốt, lưu thành {output_path}")
         return True
-
     except Exception as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi xử lý ảnh captcha: {e}")
         return False
@@ -437,6 +436,45 @@ def remove_all_files_in_watchpath(device, watch_path):
     except subprocess.CalledProcessError as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi khi xóa file trong thư mục: {e}")
 
+# ==== PHẦN MỚI THÊM THEO YÊU CẦU ====
+
+def get_clipboard_content(device_id):
+    try:
+        cmd = f'adb -s {device_id} shell "cmd clipboard get"'
+        result = subprocess.check_output(cmd, shell=True).decode().strip()
+        if result:
+            return result
+        else:
+            print(f"{COLORS['YELLOW']}[WARN] Clipboard rỗng hoặc không lấy được dữ liệu clipboard.")
+            return None
+    except Exception as e:
+        print(f"{COLORS['RED']}[ERROR] Lỗi lấy clipboard từ thiết bị: {e}")
+        return None
+
+def get_captcha_path_from_clipboard(auto):
+    print(f"{COLORS['GREEN']}> Giữ click tìm nút sao chép đường dẫn captcha...")
+    start_hold = time.time()
+    hold_timeout = 60
+    captcha_path = None
+
+    while time.time() - start_hold < hold_timeout:
+        auto.click_and_hold(683.0, 1015.1, 600)
+        pos_sao_chep = auto.find_image('saochepduongdancaptcha.png', 0.95)
+        if pos_sao_chep:
+            print(f"{COLORS['GREEN']}> Đã phát hiện nút sao chép đường dẫn captcha tại {pos_sao_chep}")
+            auto.click(208.9, 795.6)
+            time.sleep(0.5)
+            captcha_path = get_clipboard_content(auto.device_id)
+            if captcha_path:
+                print(f"{COLORS['GREEN']}> Đường dẫn ảnh captcha được sao chép: {captcha_path}")
+                return captcha_path
+            else:
+                print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn captcha trong clipboard.")
+                return None
+        time.sleep(0.5)
+    print(f"{COLORS['RED']}[ERROR] Timeout không thấy nút sao chép đường dẫn captcha.")
+    return None
+
 def main():
     out = subprocess.check_output("adb devices", shell=True).decode()
     devices = []
@@ -448,6 +486,7 @@ def main():
         return
     device = devices[0]
     print(f"{COLORS['GREEN']}> Đang sử dụng thiết bị : {device}")
+
     macoca_path = 'macoca.txt'
     try:
         with open(macoca_path, 'r', encoding='utf-8') as f:
@@ -459,7 +498,9 @@ def main():
     except Exception as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi xử lý file {macoca_path}: {e}")
         return
+
     auto = Auto(device)
+
     print(f"{COLORS['GREEN']}> Đang mở app zalo trên thiết bị...")
     pos = auto.find_image('zalo.png', threshold=0.95)
     if not pos:
@@ -467,12 +508,15 @@ def main():
         return
     auto.click(555.7, 251.1)
     print(f"{COLORS['GREEN']}> Vào app zalo thành công")
+
     logged_in = input(f"{COLORS['GREEN']}> Bạn đã vào zalo và setup cấu hình nhập mã sẵn chưa rồi nhấn {COLORS['YELLOW']}y {COLORS['GREEN']}để chạy nào? (y/n): ").strip().lower()
     if logged_in != 'y':
         print(f"{COLORS['RED']}[ERROR] Vui lòng setup cấu hình nhập mã sẵn khi chạy.")
         return
+
     print(f"{COLORS['GREEN']}> Xóa tất cả file trong thư mục trên thiết bị trước khi chạy...")
     remove_all_files_in_watchpath(device, WATCH_PATH)
+
     print(f"{COLORS['GREEN']}> Đang đợi ảnh mục 3 gạch xuất hiện...")
     pos_luot = wait_for_image(auto, '3gach.png', timeout=60)
     if not pos_luot:
@@ -480,6 +524,7 @@ def main():
         return
     auto.click(62.6, 207.7)
     print(f"{COLORS['GREEN']}> Đã vào mục 3 gạch.")
+
     print(f"{COLORS['GREEN']}> Đang đợi vào trang mục nhập mã")
     pos_nhapma = wait_for_image(auto, 'nhapma.png', timeout=60)
     if not pos_nhapma:
@@ -487,6 +532,7 @@ def main():
         return
     auto.click(390.4, 779.4)
     print(f"{COLORS['GREEN']}> Đã vào mục nhập mã")
+
     try:
         with open(macoca_path, 'r', encoding='utf-8') as f:
             raw_lines = f.readlines()
@@ -497,10 +543,12 @@ def main():
     except Exception as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi đọc file macoca.txt: {e}")
         return
+
     total_points = 0
     code_index = 0
     error_count = 0
     ERROR_LIMIT = 5
+
     stop_event = threading.Event()
     watcher_thread = threading.Thread(target=watch_and_pull_latest, args=(stop_event,), daemon=True)
     watcher_thread.start()
@@ -508,6 +556,7 @@ def main():
     while code_index < len(codes):
         code = codes[code_index]
         print(f"{COLORS['GREEN']}> Đang xử lý mã thứ {code_index+1}/{len(codes)}: {COLORS['CYAN']}{code}")
+
         pos_dienma = wait_for_image(auto, 'dienma.png', timeout=60)
         if not pos_dienma:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
@@ -518,32 +567,26 @@ def main():
         time.sleep(0.3)
         auto.input_text_full(code)
         time.sleep(0.5)
-        print(f"{COLORS['GREEN']}> Đang giữ click tìm chỗ tải captcha...")
-        start_hold = time.time()
-        captcha_found = False
-        while time.time() - start_hold < 60:
-            pos_dl = auto.find_image('downloadcaptcha.png', 0.95)
-            if pos_dl:
-                captcha_found = True
-                break
-            auto.click_and_hold(683.0, 1015.1, 600)
-        if not captcha_found:
-            print(f"{COLORS['RED']}[ERROR] Không thấy chỗ tải captcha chuyển sang mã tiếp theo.")
-            code_index += 1
-            continue
-        auto.click(*pos_dl)
-        print(f"{COLORS['GREEN']}> Đã click tải captcha về giả lập")
-        captcha_img_path = os.path.join(LOCAL_SAVE_DIR, "captcha.png")
-        wait_time = 0
-        while not os.path.exists(captcha_img_path) and wait_time < 30:
-            time.sleep(1)
-            wait_time += 1
-        if not os.path.exists(captcha_img_path):
-            print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha để giải, chuyển mã tiếp theo.")
+
+        # ==== THAY ĐỔI Ở ĐÂY ==== #
+        print(f"{COLORS['GREEN']}> Giữ click lấy đường dẫn ảnh captcha...")
+        captcha_path = get_captcha_path_from_clipboard(auto)
+        if not captcha_path:
+            print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn ảnh captcha, chuyển mã tiếp theo.")
             code_index += 1
             continue
 
-        # === Xử lý captcha với vòng lặp retry loadlai và dongyloadlai tối đa 5 lần ===
+        captcha_img_path = os.path.join(LOCAL_SAVE_DIR, "captcha.png")
+        print(f"{COLORS['GREEN']}> Đang tải ảnh captcha về máy từ đường dẫn {captcha_path}")
+        pull_cmd = f'adb -s {auto.device_id} pull "{captcha_path}" "{captcha_img_path}"'
+        result = subprocess.run(pull_cmd, shell=True)
+        if result.returncode != 0 or not os.path.exists(captcha_img_path):
+            print(f"{COLORS['RED']}[ERROR] Không tải được ảnh captcha về máy.")
+            code_index += 1
+            continue
+
+        # ==== PHẦN XỬ LÝ CAPTCHA GIỮ NGUYÊN ==== #
+
         MAX_RETRY_CAPTCHA = 5
         retry_captcha_count = 0
         captcha_text = None
@@ -556,7 +599,6 @@ def main():
             else:
                 print(f"{COLORS['YELLOW']}> Chưa giải được captcha, thực hiện load lại captcha lần {retry_captcha_count+1}...")
 
-                # 1. Click load lại captcha
                 pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=30)
                 if not pos_loadlai:
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại mã captcha.")
@@ -564,7 +606,6 @@ def main():
                 auto.click(*pos_loadlai)
                 print(f"{COLORS['GREEN']}> Đã click load lại captcha.")
 
-                # 2. Click đồng ý load lại captcha
                 pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=30)
                 if not pos_dongy:
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh đồng ý load lại captcha.")
@@ -572,9 +613,8 @@ def main():
                 auto.click(*pos_dongy)
                 print(f"{COLORS['GREEN']}> Đã xác nhận load lại captcha.")
 
-                time.sleep(2)  # đợi captcha mới load
+                time.sleep(2)
 
-                # 3. Đợi nhập mã hiện lại
                 pos_dienma = wait_for_image(auto, 'dienma.png', timeout=30)
                 if not pos_dienma:
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã sau khi load lại captcha.")
@@ -582,37 +622,36 @@ def main():
                 auto.click(*pos_dienma)
                 print(f"{COLORS['GREEN']}> Đã click vào ô nhập mã lại.")
 
-        # 4. Nhập lại mã cũ
                 auto.input_text_full(codes[code_index])
                 time.sleep(0.5)
 
-        # 5. Giữ click tải captcha mới
-                print(f"{COLORS['GREEN']}> Đang giữ click tìm chỗ tải captcha mới...")
+                print(f"{COLORS['GREEN']}> Giữ click tìm chỗ lấy captcha mới...")
                 start_hold = time.time()
                 captcha_found = False
                 while time.time() - start_hold < 60:
-                    pos_dl = auto.find_image('downloadcaptcha.png', 0.95)
-                    if pos_dl:
+                    auto.click_and_hold(683.0, 1015.1, 600)
+                    pos_sao_chep = auto.find_image('saochepduongdancaptcha.png', 0.95)
+                    if pos_sao_chep:
                         captcha_found = True
                         break
-                    auto.click_and_hold(683.0, 1015.1, 600)
                 if not captcha_found:
-                    print(f"{COLORS['RED']}[ERROR] Không thấy chỗ tải captcha mới, thoát vòng retry captcha.")
+                    print(f"{COLORS['RED']}[ERROR] Không thấy nút sao chép đường dẫn captcha mới, thoát vòng retry captcha.")
                     break
-                auto.click(*pos_dl)
-                print(f"{COLORS['GREEN']}> Đã click tải captcha mới về giả lập")
+                auto.click(208.9, 795.6)
+                time.sleep(0.5)
 
-                # 6. Đợi file captcha mới về máy
-                wait_time = 0
-                while not os.path.exists(captcha_img_path) and wait_time < 30:
-                    time.sleep(1)
-                    wait_time += 1
-                if not os.path.exists(captcha_img_path):
-                    print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha mới sau khi load lại.")
+                captcha_path = get_clipboard_content(auto.device_id)
+                if not captcha_path:
+                    print(f"{COLORS['RED']}[ERROR] Không lấy được đường dẫn captcha mới trong clipboard.")
+                    break
+
+                pull_cmd = f'adb -s {auto.device_id} pull "{captcha_path}" "{captcha_img_path}"'
+                result = subprocess.run(pull_cmd, shell=True)
+                if result.returncode != 0 or not os.path.exists(captcha_img_path):
+                    print(f"{COLORS['RED']}[ERROR] Không tải được ảnh captcha mới về máy.")
                     break
 
                 retry_captcha_count += 1
-
 
         if not captcha_text:
             print(f"{COLORS['RED']}[ERROR] Vẫn không giải được captcha sau {MAX_RETRY_CAPTCHA} lần thử, chuyển mã tiếp theo.")
@@ -706,6 +745,7 @@ def main():
         else:
             print(f"{COLORS['YELLOW']}> Không phát hiện cảnh báo nào, tiếp tục với mã tiếp theo")
             code_index += 1
+
     stop_event.set()
     watcher_thread.join()
     print(f"{COLORS['CYAN']}> Đã chạy hết mã trong macoca.txt. Tổng điểm nhập mã là: {COLORS['YELLOW']}{total_points}")
