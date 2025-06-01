@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -289,7 +289,35 @@ def handle_done_click(auto):
                     wait_time += 0.5
                 if not os.path.exists(captcha_img_path):
                     print(f"{COLORS['RED']}[ERROR] Không thấy file captcha để giải.")
-                    return 'repeat_captcha'
+                    # *** Chỉnh lại phần này: tự động load lại captcha ***
+                    print(f"{COLORS['YELLOW']}> Không có file captcha, tự động load lại mã...")
+                    # Click loadlai.png
+                    pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
+                    if pos_loadlai:
+                        auto.click(*pos_loadlai)
+                        print(f"{COLORS['YELLOW']}> Đã click load lại mã captcha.")
+                    else:
+                        print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại mã captcha.")
+                        return 'repeat_captcha'  # Không có ảnh load lại thì thoát
+                    # Click dongyloadlai.png
+                    pos_dongy = wait_for_image(auto, 'dongyloadlai.png', timeout=15)
+                    if pos_dongy:
+                        auto.click(*pos_dongy)
+                        print(f"{COLORS['YELLOW']}> Đã xác nhận load lại mã captcha.")
+                    else:
+                        print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh đồng ý load lại captcha.")
+                        return 'repeat_captcha'
+                    # Quay lại nhập mã
+                    pos_dienma = wait_for_image(auto, 'dienma.png', timeout=15)
+                    if pos_dienma:
+                        auto.click(*pos_dienma)
+                        print(f"{COLORS['YELLOW']}> Đã click vào ô nhập mã để nhập lại.")
+                    else:
+                        print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã để nhập lại captcha.")
+                        return 'repeat_captcha'
+                    # Sau đó gọi lại hàm này hoặc trả về tín hiệu để vòng ngoài gọi lại từ đầu bước nhập mã
+                    return 'reload_captcha_input'
+                # Nếu có file captcha thì tiếp tục bình thường (nhập captcha, done...)
                 captcha_text = solve_captcha_with_fallback(captcha_img_path)
                 print(f"{COLORS['GREEN']}> Captcha mới được giải từ ảnh: {COLORS['YELLOW']}{captcha_text}")
                 try:
@@ -362,7 +390,8 @@ def handle_done_click(auto):
             if wait_for_image(auto, 'tieptucnhaptiepmamoi.png', timeout=10):
                 auto.click(444.6, 649.3)
                 print(f"{COLORS['GREEN']}> Đã done tiếp tục nhập mã mới.")
-                return 'success'
+                time.sleep(2)
+                return 'success'                
             else:
                 print(f"{COLORS['YELLOW']}> Đợi tiếp tục nhập mã mới quá lâu, bỏ qua.")
                 return 'success'
