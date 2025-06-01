@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -89,6 +89,7 @@ class Auto:
         os.system(cmd)
 
     def input_text_full(self, text):
+        # Escape special chars for adb input text
         escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
         safe_text = text.replace(' ', '%s')
         for ch in escape_chars:
@@ -101,6 +102,7 @@ class Auto:
         os.system(cmd)
 
 def adb_paste_text(device, text):
+    # Paste text nhanh qua input text (đã escape)
     escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
     safe_text = text.replace(' ', '%s')
     for ch in escape_chars:
@@ -147,6 +149,7 @@ def process_captcha_image(input_path, output_path):
         return False
 
 def read_api_key_from_file():
+    # Thay thế bằng API key cố định trong code
     API_KEY = "GP8813LDWU05X"  # <-- Thay API key thật vào đây
     if not API_KEY or API_KEY == "API_KEY_HERE":
         print(f"{COLORS['RED']}[ERROR] Bạn chưa nhập API key vào trong code.")
@@ -527,7 +530,8 @@ def main():
 
     total_points = 0
     code_index = 0
-    error_count = 0  # Đếm lỗi nhaplaima.png
+    error_count = 0
+    ERROR_LIMIT = 5
 
     last_timestamp = [0]
 
@@ -542,10 +546,8 @@ def main():
 
         pos_dienma = wait_for_image(auto, 'dienma.png', timeout=60)
         if not pos_dienma:
-            print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã, sẽ thử lại sau 5 giây.")
-            time.sleep(5)
-            continue  # Thử lại chỗ nhập mã, không thoát
-
+            print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
+            break
         auto.click(*pos_dienma)
 
         adb_paste_text(device, code)
@@ -666,16 +668,18 @@ def main():
         except:
             pass
 
+        # Đợi ảnh nhập captcha, click vào ô rồi paste captcha text
         pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=15)
         if pos_nhapcapcha:
             auto.click(*pos_nhapcapcha)
-            time.sleep(0.2)
+            time.sleep(0.2)  # đợi 1 chút cho app ổn định
             adb_paste_text(device, captcha_text)
             print(f"{COLORS['GREEN']}> Đã click vào ô nhập captcha và paste mã captcha: {captcha_text}")
         else:
             print(f"{COLORS['YELLOW']}> Không tìm thấy ô nhập captcha, nhập thẳng mã captcha.")
             adb_paste_text(device, captcha_text)
 
+        # Xóa 2 file captcha.png và ok.png sau khi nhập captcha
         for f_del in ["captcha.png", "ok.png"]:
             fp = os.path.join(LOCAL_SAVE_DIR, f_del)
             if os.path.exists(fp):
@@ -688,7 +692,8 @@ def main():
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
         if not pos_done:
             print(f"{COLORS['RED']}[ERROR] Không tìm chỗ ấn xong để chuyển mã tiếp theo.")
-            code_index += 1
+            # Giữ nguyên code_index để thử lại mã này
+            time.sleep(2)
             continue
         auto.click(*pos_done)
         print(f"{COLORS['GREEN']}> Đã done với mã {code}.")
@@ -699,7 +704,6 @@ def main():
             print(f"{COLORS['GREEN']}> Đã click vào nút tiếp tục nhập mã mới.")
             print(f"{COLORS['GREEN']}Đã nhập mã thành công + 5 điểm{COLORS['RESET']}")
             total_points += 5
-            error_count = 0
 
         print(f"{COLORS['GREEN']}> Đang xóa tất cả file trong thư mục captcha trên thiết bị sau khi done...")
         remove_all_files_in_watchpath(device, WATCH_PATH)
@@ -708,16 +712,20 @@ def main():
         result = handle_done_click(auto)
         if result == 'repeat_captcha':
             print(f"{COLORS['YELLOW']}> Lặp lại bước captcha với mã hiện tại.")
+            # Không tăng code_index, thử lại mã hiện tại
             continue
         elif result == 'reload_captcha_input':
             print(f"{COLORS['YELLOW']}> Reload lại captcha input với mã hiện tại.")
+            # Không tăng code_index, thử lại mã hiện tại
             continue
         elif result == 'code_error':
             print(f"{COLORS['RED']}[ERROR] Mã bị lỗi hoặc captcha sai chuyển sang mã tiếp theo.")
+            error_count += 1
             code_index += 1
             continue
         elif result == 'code_retry_same':
             print(f"{COLORS['RED']}[ERROR] Mã coca bị sai làm lại")
+            # Không tăng code_index, thử lại mã hiện tại
             continue
         elif result == 'success':
             print(f"{COLORS['GREEN']}> Chúc mừng bạn +5 điểm nhập mã thành công!")
@@ -726,23 +734,10 @@ def main():
             code_index += 1
             continue
         else:
-            pos_nhaplaima = auto.find_image('nhaplaima.png', 0.95)
-            if pos_nhaplaima:
-                error_count += 1
-                print(f"{COLORS['RED']}[LỖI] Phát hiện nhaplaima.png (lỗi nhập mã) lần {error_count}/5")
-                if error_count >= 5:
-                    while True:
-                        inp = input(f"{COLORS['YELLOW']}Bạn đã nhập sai mã 5 lần. Vui lòng nhập đúng 1 mã để không bị khóa tài khoản. Nếu đã nhập đúng, nhấn 'y' để tiếp tục chạy mã tiếp theo: {COLORS['RESET']}")
-                        if inp.strip().lower() == 'y':
-                            error_count = 0
-                            break
-                else:
-                    print(f"{COLORS['YELLOW']}Tiếp tục chạy, chưa đủ 5 lỗi.")
-                code_index += 1
-                continue
-            else:
-                print(f"{COLORS['YELLOW']}> Không phát hiện cảnh báo nào, tiếp tục với mã tiếp theo")
-                code_index += 1
+            # Không phát hiện cảnh báo, giữ nguyên code_index chờ tiếp
+            print(f"{COLORS['YELLOW']}> Không phát hiện cảnh báo nào, đợi thêm...")
+            time.sleep(2)
+            continue
 
     stop_event.set()
     print(f"{COLORS['CYAN']}> Đã chạy hết mã trong macoca.txt. Tổng điểm nhập mã là: {COLORS['YELLOW']}{total_points}{COLORS['RESET']}")
