@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -747,6 +747,7 @@ def main():
         time.sleep(0.3)
         auto.input_text_full(captcha_text)
         time.sleep(0.3)
+
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
         if not pos_done:
             print(f"{COLORS['RED']}[ERROR] Không tìm chỗ ấn xong để chuyển mã tiếp theo.")
@@ -754,6 +755,15 @@ def main():
             continue
         auto.click(*pos_done)
         print(f"{COLORS['GREEN']}> Đã done với mã {code}.")
+
+        # Xóa file ok.png sau khi đã nhập xong captcha
+        ok_img_path = os.path.join(LOCAL_SAVE_DIR, "ok.png")
+        if os.path.exists(ok_img_path):
+            try:
+                os.remove(ok_img_path)
+                print(f"{COLORS['GREEN']}> Đã xóa file {ok_img_path} sau khi nhập captcha.")
+            except:
+                pass
 
         # --- Phần xử lý mới bổ sung: check và click tieptucnhaptiepmamoi.png ---
         pos_tiep_tuc = wait_for_image(auto, 'tieptucnhaptiepmamoi.png', timeout=10)
