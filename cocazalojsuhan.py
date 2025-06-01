@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -88,20 +88,27 @@ class Auto:
         cmd = f"adb -s {self.device_id} shell input tap {x_int} {y_int}"
         os.system(cmd)
 
-    def escape_adb_input_text(self, text):
+    def input_text_full(self, text):
+        # Escape special chars for adb input text
         escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
         safe_text = text.replace(' ', '%s')
         for ch in escape_chars:
             safe_text = safe_text.replace(ch, f"\\{ch}")
-        return safe_text
-
-    def input_text_full(self, text):
-        safe_text = self.escape_adb_input_text(text)
-        os.system(f'adb -s {self.device_id} shell input text "{safe_text}"')
+        cmd = f'adb -s {self.device_id} shell input text "{safe_text}"'
+        os.system(cmd)
 
     def click_and_hold(self, x, y, duration_ms=600):
         cmd = f'adb -s {self.device_id} shell input swipe {round(x)} {round(y)} {round(x)} {round(y)} {duration_ms}'
         os.system(cmd)
+
+def adb_paste_text(device, text):
+    # Paste text vào ô nhập nhanh (dùng input text đã escape)
+    escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
+    safe_text = text.replace(' ', '%s')
+    for ch in escape_chars:
+        safe_text = safe_text.replace(ch, f"\\{ch}")
+    cmd = f'adb -s {device} shell input text "{safe_text}"'
+    os.system(cmd)
 
 def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
     start = time.time()
@@ -295,7 +302,7 @@ def handle_done_click(auto):
 
             pos_dienma = wait_for_image(auto, 'dienma.png', timeout=15)
             if pos_dienma:
-                time.sleep(1.0)
+                time.sleep(0.5)
                 auto.click(*pos_dienma)
                 print(f"{COLORS['YELLOW']}> Đã click vào ô nhập mã để nhập lại captcha.")
             else:
@@ -342,7 +349,7 @@ def handle_done_click(auto):
 
             pos_dienma = wait_for_image(auto, 'dienma.png', timeout=15)
             if pos_dienma:
-                time.sleep(1.0)
+                time.sleep(0.5)
                 auto.click(*pos_dienma)
                 print(f"{COLORS['YELLOW']}> Đã click vào ô nhập mã để nhập lại captcha.")
             else:
@@ -380,17 +387,6 @@ DEVICE_SERIAL = None
 WATCH_PATH = "/storage/emulated/0/Download/zalo"
 LOCAL_SAVE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_FILENAME = "captcha.png"
-
-def get_connected_device():
-    devices_raw = subprocess.check_output("adb devices").decode()
-    devices = []
-    for line in devices_raw.splitlines():
-        if "\tdevice" in line:
-            devices.append(line.split("\t")[0])
-    if devices:
-        return devices[0]
-    else:
-        return None
 
 def list_all_files_with_time(device, base_path):
     try:
@@ -572,7 +568,9 @@ def main():
         if not pos_dienma:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
             break
-        auto.input_text_full(code)
+        auto.click(*pos_dienma)
+
+        adb_paste_text(device, code)
 
         print(f"{COLORS['GREEN']}> Giữ click tìm chỗ tải captcha...")
         start_hold = time.time()
@@ -612,8 +610,6 @@ def main():
         while retry_captcha_count < 5:
             captcha_text = solve_captcha_with_fallback(captcha_img_path)
             if captcha_text:
-                # So sánh text đã lọc với ảnh ok.png đã xử lý (tức là text đã fix_ocr_text rồi)
-                # Ở đây coi như đã fix xong trong hàm fix_ocr_text(), nên dùng luôn captcha_text đã fix
                 print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
                 break
             else:
@@ -638,16 +634,16 @@ def main():
                 auto.click(*pos_dongy)
                 print(f"{COLORS['GREEN']}> Đã xác nhận load lại captcha.")
 
-                pos_dienma = wait_for_image(auto, 'dienma.png', timeout=30)
-                if not pos_dienma:
+                pos_dienma2 = wait_for_image(auto, 'dienma.png', timeout=30)
+                if not pos_dienma2:
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã sau khi load lại captcha.")
                     retry_captcha_count += 1
                     continue
-                # Bỏ click ô, nhập thẳng
-                auto.input_text_full(code)
-                print(f"{COLORS['GREEN']}> Đã nhập lại mã sau khi load lại captcha.")
+                auto.click(*pos_dienma2)
 
-                print(f"{COLORS['GREEN']}> Giữ click tìm chỗ tải captcha mới...")
+                adb_paste_text(device, code)
+                print(f"{COLORS['GREEN']}> Đã dán lại mã sau khi load lại captcha.")
+
                 start_hold = time.time()
                 captcha_found = False
                 pos_dl = None
@@ -687,25 +683,27 @@ def main():
             continue
 
         try:
-            # Xóa file captcha.png sau khi xử lý xong
-            captcha_file_path = os.path.join(LOCAL_SAVE_DIR, "captcha.png")
-            if os.path.exists(captcha_file_path):
-                os.remove(captcha_file_path)
-            # Không xóa các file khác ở đây, để chờ xóa ok.png sau khi nhập mã
+            if os.path.exists(captcha_img_path):
+                os.remove(captcha_img_path)
         except:
             pass
 
-        # Bỏ click ô nhập captcha, nhập thẳng
-        auto.input_text_full(captcha_text)
+        pos_dienma3 = wait_for_image(auto, 'dienma.png', timeout=10)
+        if pos_dienma3:
+            auto.click(*pos_dienma3)
+            adb_paste_text(device, captcha_text)
+        else:
+            auto.input_text_full(captcha_text)
 
-        # Xóa file ok.png ngay sau khi nhập captcha
-        ok_img_path = os.path.join(LOCAL_SAVE_DIR, "ok.png")
-        if os.path.exists(ok_img_path):
-            try:
-                os.remove(ok_img_path)
-                print(f"{COLORS['GREEN']}> Đã xóa file {ok_img_path} sau khi nhập captcha.")
-            except Exception as e:
-                print(f"{COLORS['RED']}[ERROR] Không xóa được file {ok_img_path}: {e}")
+        # Xóa 2 file captcha.png và ok.png sau khi nhập captcha
+        for f_del in ["captcha.png", "ok.png"]:
+            fp = os.path.join(LOCAL_SAVE_DIR, f_del)
+            if os.path.exists(fp):
+                try:
+                    os.remove(fp)
+                    print(f"{COLORS['GREEN']}> Đã xóa file {fp} sau khi nhập captcha.")
+                except Exception as e:
+                    print(f"{COLORS['RED']}[ERROR] Không xóa được file {fp}: {e}")
 
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
         if not pos_done:
