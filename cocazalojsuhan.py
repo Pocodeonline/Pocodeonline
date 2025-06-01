@@ -6,7 +6,6 @@ import time
 import threading
 import requests
 import base64
-import re
 from colorama import init
 
 COLORS = {
@@ -211,14 +210,18 @@ def fix_ocr_text(text):
     for ch in text:
         if ch in mapping:
             ch = mapping[ch]
+        # Giữ ký tự chữ (a-zA-Z) và số (0-9)
         if re.match(r'[a-zA-Z0-9]', ch):
             corrected_chars.append(ch)
+        else:
+            # Bỏ ký tự khác
+            pass
     corrected = ''.join(corrected_chars)
 
+    # Kiểm tra độ dài hợp lệ, tối thiểu 4 ký tự (bạn có thể chỉnh)
     if len(corrected) < 4:
         return None
     return corrected
-
 def solve_captcha_from_api(img_path, endpoint, api_key):
     img_base64 = get_image_base64_from_file(img_path)
     if not img_base64:
@@ -265,7 +268,7 @@ def solve_captcha_with_fallback(img_path):
             print(f"{COLORS['YELLOW']}API {endpoint} lỗi, sẽ load lại captcha và đổi API...")
             attempt += 1
             api_index = 1 - api_index
-            return None
+            return None  # thoát để caller xử lý load lại captcha
     print(f"{COLORS['RED']}Không thể giải captcha qua các API OCR đã cung cấp sau {max_attempts} lần thử.")
     return None
 
@@ -365,6 +368,7 @@ def handle_done_click(auto):
                 print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ xác nhận load lại mã.")
             return 'code_error'
 
+        # ==== Phần được chỉnh sửa theo yêu cầu bạn ====
         if auto.find_image('nhapkhongdungma.png', 0.95):
             print(f"{COLORS['YELLOW']}> Phát hiện nhập không đúng mã, sẽ load lại mã mới ngay.")
             pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
@@ -393,6 +397,7 @@ def handle_done_click(auto):
                 return 'repeat_captcha'
 
             return 'reload_captcha_input'
+        # ==== Hết phần chỉnh sửa ====
 
         if auto.find_image('macocasai.png', 0.95):
             print(f"{COLORS['YELLOW']}> Mã coca sai chạy mã mới thôi...")
@@ -421,6 +426,17 @@ WATCH_PATH = "/storage/emulated/0/Download/zalo"
 LOCAL_SAVE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_FILENAME = "captcha.png"
 
+def get_connected_device():
+    devices_raw = subprocess.check_output("adb devices").decode()
+    devices = []
+    for line in devices_raw.splitlines():
+        if "\tdevice" in line:
+            devices.append(line.split("\t")[0])
+    if devices:
+        return devices[0]
+    else:
+        return None
+
 def list_all_files_with_time(device, base_path):
     try:
         find_cmd = f'adb -s {device} shell find "{base_path}" -type f'
@@ -444,11 +460,15 @@ def pull_and_rename(device, remote_path, local_path):
     cmd = f'adb -s {device} pull "{remote_path}" "{local_path}"'
     result = subprocess.run(cmd, shell=True)
     if result.returncode == 0:
-        print(f"{COLORS['GREEN']}> Tải thành công captcha và đổi tên thành {local_path}")
+        print(f"{COLORS['GREEN']}> Tải thành công captcha")
     else:
-        print(f"{COLORS['RED']}[ERROR] Tải captcha không thành công.")
+        print("Tải thất bại.")
 
 def watch_and_pull_latest(stop_event, device, last_timestamp):
+    """
+    Theo dõi folder trên thiết bị, chỉ tải file mới có timestamp > last_timestamp.
+    Trả về (local_path, new_timestamp) khi tải file mới thành công, hoặc (None, last_timestamp) nếu chưa có file mới.
+    """
     try:
         files = list_all_files_with_time(device, WATCH_PATH)
         if not files:
@@ -480,13 +500,6 @@ def remove_all_files_in_watchpath(device, watch_path):
         print(f"{COLORS['GREEN']}> Đã xóa hết file trong thư mục thiết bị.")
     except subprocess.CalledProcessError as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi khi xóa file trong thư mục: {e}")
-
-def watch_pull_loop(stop_event, device, last_timestamp_container):
-    while not stop_event.is_set():
-        local_file, new_time = watch_and_pull_latest(stop_event, device, last_timestamp_container[0])
-        if local_file:
-            last_timestamp_container[0] = new_time
-        time.sleep(1)
 
 def main():
     out = subprocess.check_output("adb devices", shell=True).decode()
@@ -586,12 +599,7 @@ def main():
     error_count = 0
     ERROR_LIMIT = 5
 
-    last_timestamp = [0]
-
-    stop_event = threading.Event()
-    watcher_thread = threading.Thread(target=watch_pull_loop, args=(stop_event, device, last_timestamp), daemon=True)
-    watcher_thread.start()
-    print(f"{COLORS['GREEN']}> Đã bật luồng theo dõi và kéo file captcha tự động.")
+    last_timestamp = 0
 
     while code_index < len(codes):
         code = codes[code_index]
@@ -600,7 +608,7 @@ def main():
         pos_dienma = wait_for_image(auto, 'dienma.png', timeout=60)
         if not pos_dienma:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
-            break
+            return
         time.sleep(1.5)
         auto.click(*pos_dienma)
         time.sleep(0.3)
@@ -627,9 +635,10 @@ def main():
         captcha_img_path = None
         wait_time = 0
         while wait_time < 30:
-            local_path = os.path.join(LOCAL_SAVE_DIR, LOCAL_FILENAME)
-            if os.path.exists(local_path):
+            local_path, new_time = watch_and_pull_latest(stop_event=None, device=device, last_timestamp=last_timestamp)
+            if local_path:
                 captcha_img_path = local_path
+                last_timestamp = new_time
                 break
             time.sleep(1)
             wait_time += 1
@@ -701,9 +710,10 @@ def main():
                 captcha_img_path = None
                 wait_time = 0
                 while wait_time < 30:
-                    local_path = os.path.join(LOCAL_SAVE_DIR, LOCAL_FILENAME)
-                    if os.path.exists(local_path):
+                    local_path, new_time = watch_and_pull_latest(stop_event=None, device=device, last_timestamp=last_timestamp)
+                    if local_path:
                         captcha_img_path = local_path
+                        last_timestamp = new_time
                         break
                     time.sleep(1)
                     wait_time += 1
@@ -744,7 +754,7 @@ def main():
 
         print(f"{COLORS['GREEN']}> Đang xóa tất cả file trong thư mục captcha trên thiết bị sau khi done...")
         remove_all_files_in_watchpath(device, WATCH_PATH)
-        last_timestamp[0] = 0
+        last_timestamp = 0
 
         result = handle_done_click(auto)
         if result == 'repeat_captcha':
@@ -771,7 +781,6 @@ def main():
             print(f"{COLORS['YELLOW']}> Không phát hiện cảnh báo nào, tiếp tục với mã tiếp theo")
             code_index += 1
 
-    stop_event.set()
     print(f"{COLORS['CYAN']}> Đã chạy hết mã trong macoca.txt. Tổng điểm nhập mã là: {COLORS['YELLOW']}{total_points}")
 
 if __name__ == "__main__":
