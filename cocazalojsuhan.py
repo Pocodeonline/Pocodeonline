@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -87,7 +87,6 @@ class Auto:
         y_int = round(y)
         cmd = f"adb -s {self.device_id} shell input tap {x_int} {y_int}"
         os.system(cmd)
-        time.sleep(0.1)
 
     def escape_adb_input_text(self, text):
         escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
@@ -99,12 +98,10 @@ class Auto:
     def input_text_full(self, text):
         safe_text = self.escape_adb_input_text(text)
         os.system(f'adb -s {self.device_id} shell input text "{safe_text}"')
-        time.sleep(0.2)
 
     def click_and_hold(self, x, y, duration_ms=600):
         cmd = f'adb -s {self.device_id} shell input swipe {round(x)} {round(y)} {round(x)} {round(y)} {duration_ms}'
         os.system(cmd)
-        time.sleep(duration_ms / 1000 + 0.1)
 
 def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
     start = time.time()
@@ -112,7 +109,7 @@ def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
         pos = auto.find_image(img_path, threshold)
         if pos:
             return pos
-        time.sleep(0.5)
+        time.sleep(0.1)
     return None
 
 def process_captcha_image(input_path, output_path):
@@ -136,7 +133,6 @@ def process_captcha_image(input_path, output_path):
         mask_clean = cv2.erode(mask_clean, kernel_dilate_erode, iterations=1)
 
         _, mask_clean = cv2.threshold(mask_clean, 127, 255, cv2.THRESH_BINARY)
-        black_background = np.zeros_like(img)
         result = cv2.bitwise_and(img, img, mask=mask_clean)
         cv2.imwrite(output_path, result)
         print(f"{COLORS['GREEN']}> Ảnh captcha đã được xử lý nền đen chuẩn, lưu thành {output_path}")
@@ -576,11 +572,7 @@ def main():
         if not pos_dienma:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
             break
-        time.sleep(1.5)
-        auto.click(*pos_dienma)
-        time.sleep(0.3)
         auto.input_text_full(code)
-        time.sleep(0.2)
 
         print(f"{COLORS['GREEN']}> Giữ click tìm chỗ tải captcha...")
         start_hold = time.time()
@@ -606,8 +598,8 @@ def main():
             if os.path.exists(local_path):
                 captcha_img_path = local_path
                 break
-            time.sleep(1)
-            wait_time += 1
+            time.sleep(0.3)
+            wait_time += 0.3
 
         if not captcha_img_path or not os.path.exists(captcha_img_path):
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha mới để giải, chuyển mã tiếp theo.")
@@ -649,12 +641,9 @@ def main():
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã sau khi load lại captcha.")
                     retry_captcha_count += 1
                     continue
-                time.sleep(2)
-                auto.click(*pos_dienma)
-                print(f"{COLORS['GREEN']}> Đã click vào ô nhập mã lại.")
-
+                # Bỏ click ô, nhập thẳng
                 auto.input_text_full(code)
-                time.sleep(0.5)
+                print(f"{COLORS['GREEN']}> Đã nhập lại mã sau khi load lại captcha.")
 
                 print(f"{COLORS['GREEN']}> Giữ click tìm chỗ tải captcha mới...")
                 start_hold = time.time()
@@ -680,8 +669,8 @@ def main():
                     if os.path.exists(local_path):
                         captcha_img_path = local_path
                         break
-                    time.sleep(1)
-                    wait_time += 1
+                    time.sleep(0.3)
+                    wait_time += 0.3
 
                 if not captcha_img_path or not os.path.exists(captcha_img_path):
                     print(f"{COLORS['RED']}[ERROR] Không tìm thấy file captcha mới sau khi load lại.")
@@ -700,17 +689,10 @@ def main():
         except:
             pass
 
-        pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=60)
-        if not pos_nhapcapcha:
-            print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập captcha chuyển mã tiếp theo.")
-            code_index += 1
-            continue
-        auto.click(*pos_nhapcapcha)
-        time.sleep(0.2)
+        # Bỏ click ô nhập captcha, nhập thẳng
         auto.input_text_full(captcha_text)
-        time.sleep(0.2)
 
-        # Xóa file ok.png ngay sau khi nhập captcha
+        # Xóa ngay file ok.png sau khi nhập captcha
         ok_img_path = os.path.join(LOCAL_SAVE_DIR, "ok.png")
         if os.path.exists(ok_img_path):
             try:
@@ -727,10 +709,9 @@ def main():
         auto.click(*pos_done)
         print(f"{COLORS['GREEN']}> Đã done với mã {code}.")
 
-        # --- Phần xử lý mới bổ sung: check và click tieptucnhaptiepmamoi.png ---
         pos_tiep_tuc = wait_for_image(auto, 'tieptucnhaptiepmamoi.png', timeout=10)
         if pos_tiep_tuc:
-            auto.click(444.6, 649.3)
+            auto.click(*pos_tiep_tuc)
             print(f"{COLORS['GREEN']}> Đã click vào nút tiếp tục nhập mã mới.")
 
         print(f"{COLORS['GREEN']}> Đang xóa tất cả file trong thư mục captcha trên thiết bị sau khi done...")
