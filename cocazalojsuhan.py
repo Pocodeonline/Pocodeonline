@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -203,27 +203,40 @@ def call_ocr_api(img_base64, endpoint, api_key):
 
 def fix_ocr_text(text):
     mapping = {
-        'q': 'a',
-        'Q': 'O',
+        'a': 'q',
+        'O': 'Q',
     }
-    corrected = []
+    corrected_chars = []
     for ch in text:
-        corrected.append(mapping.get(ch, ch))
-    return ''.join(corrected)
+        if ch in mapping:
+            ch = mapping[ch]
+        # Giữ ký tự chữ (a-zA-Z) và số (0-9)
+        if re.match(r'[a-zA-Z0-9]', ch):
+            corrected_chars.append(ch)
+        else:
+            # Bỏ ký tự khác
+            pass
+    corrected = ''.join(corrected_chars)
 
+    # Kiểm tra độ dài hợp lệ, tối thiểu 4 ký tự (bạn có thể chỉnh)
+    if len(corrected) < 4:
+        return None
+    return corrected
 def solve_captcha_from_api(img_path, endpoint, api_key):
     img_base64 = get_image_base64_from_file(img_path)
     if not img_base64:
         print(f"{COLORS['RED']}Không lấy được ảnh base64 từ file captcha.")
         return None
     print(f"{COLORS['GREEN']}Đang gọi API OCR: {endpoint}")
-    text = call_ocr_api(img_base64, endpoint, api_key)
-    if text:
-        print(f"{COLORS['GREEN']}Kết quả captcha đọc được (gốc): {COLORS['YELLOW']}{text}")
-        fixed_text = fix_ocr_text(text)
-        print(f"{COLORS['GREEN']}Kết quả captcha sau khi fix lỗi nhận dạng: {COLORS['YELLOW']}{fixed_text}")
-        cleaned_text = ''.join(ch for ch in fixed_text if ch.isalnum())
-        return cleaned_text.strip()
+    raw_text = call_ocr_api(img_base64, endpoint, api_key)
+    if raw_text:
+        print(f"{COLORS['GREEN']}Kết quả captcha đọc được (gốc): {COLORS['YELLOW']}{raw_text}")
+        fixed_text = fix_ocr_text(raw_text)
+        if not fixed_text:
+            print(f"{COLORS['RED']}[ERROR] Mã captcha sau khi lọc không hợp lệ hoặc quá ngắn.")
+            return None
+        print(f"{COLORS['GREEN']}Mã captcha sau khi fix và lọc ký tự: {COLORS['YELLOW']}{fixed_text}")
+        return fixed_text.strip()
     else:
         print(f"{COLORS['YELLOW']}API {endpoint} không trả về kết quả.")
         return None
