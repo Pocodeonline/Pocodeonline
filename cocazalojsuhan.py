@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -102,12 +102,13 @@ class Auto:
         os.system(cmd)
 
 def adb_paste_text(device, text):
-    escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']  # '?' đã loại ra khỏi đây
+    escape_chars = ['&', '|', '<', '>', '*', '^', '"', "'", '\\', '/']  # '?' đã loại ra khỏi đây
     safe_text = text.replace(' ', '%s')
     for ch in escape_chars:
         safe_text = safe_text.replace(ch, f"\\{ch}")
     cmd = f'adb -s {device} shell input text "{safe_text}"'
     os.system(cmd)
+
 import time
 
 def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
@@ -118,17 +119,6 @@ def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
             return pos
         time.sleep(0.1)
     return None
-
-
-def adb_paste_text(device, text):
-    # Paste text nhanh qua input text (đã escape), **loại trừ dấu '?' không escape**
-    escape_chars = ['&', '|', '<', '>', '*', '^', '"', "'", '\\', '/']  # đã loại bỏ '?'
-    safe_text = text.replace(' ', '%s')
-    for ch in escape_chars:
-        safe_text = safe_text.replace(ch, f"\\{ch}")
-    cmd = f'adb -s {device} shell input text "{safe_text}"'
-    os.system(cmd)
-
 
 def process_captcha_image(input_path, output_path):
     try:
@@ -268,7 +258,18 @@ def solve_captcha_with_fallback(img_path):
     print(f"{COLORS['RED']}Không thể giải captcha qua các API OCR đã cung cấp sau {max_attempts} lần thử.")
     return None
 
-def handle_done_click(auto):
+def remove_code_from_file(code, filepath):
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        lines = [line for line in lines if line.strip() != code]
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+        print(f"{COLORS['GREEN']}> Đã loại bỏ mã '{code}' khỏi file {filepath} do nhập sai mã.")
+    except Exception as e:
+        print(f"{COLORS['RED']}[ERROR] Không xóa được mã '{code}' khỏi file {filepath}: {e}")
+
+def handle_done_click(auto, current_code=None):
     start = time.time()
     timeout_check = 5
     while time.time() - start < timeout_check:
@@ -331,11 +332,14 @@ def handle_done_click(auto):
             return 'code_error'
 
         if auto.find_image('nhapkhongdungma.png', 0.95):
-            print(f"{COLORS['YELLOW']}> Phát hiện nhập không đúng mã, sẽ load lại mã mới ngay.")
+            print(f"{COLORS['YELLOW']}> Phát hiện nhập không đúng mã, bỏ qua mã này và chuyển sang mã tiếp theo.")
+            if current_code:
+                remove_code_from_file(current_code, os.path.join(LOCAL_SAVE_DIR, 'macoca.txt'))
+
             pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
             if pos_loadlai:
                 auto.click(*pos_loadlai)
-                print(f"{COLORS['YELLOW']}> Đang load lại mã...")
+                print(f"{COLORS['YELLOW']}> Đang load lại mã mới...")
             else:
                 print(f"{COLORS['RED']}[ERROR] Không tìm thấy ảnh load lại mã.")
                 return 'repeat_captcha'
@@ -352,17 +356,16 @@ def handle_done_click(auto):
             if pos_dienma:
                 time.sleep(0.5)
                 auto.click(*pos_dienma)
-                print(f"{COLORS['YELLOW']}> Đã click vào ô nhập mã để nhập lại captcha.")
+                print(f"{COLORS['YELLOW']}> Đã click vào ô nhập mã để nhập mã mới.")
             else:
                 print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã captcha.")
                 return 'repeat_captcha'
 
-            return 'reload_captcha_input'
+            return 'skip_code'
 
         if auto.find_image('macocasai.png', 0.95):
             print(f"{COLORS['YELLOW']}> Mã coca sai chạy mã mới thôi...")
 
-            # Xóa file ok.png và captcha.png khi phát hiện mã coca sai
             for f_del in ["captcha.png", "ok.png"]:
                 fp = os.path.join(LOCAL_SAVE_DIR, f_del)
                 if os.path.exists(fp):
@@ -394,7 +397,6 @@ def handle_done_click(auto):
 
         time.sleep(0.07)
     return None
-
 
 DEVICE_SERIAL = None
 WATCH_PATH = "/storage/emulated/0/Download/zalo"
@@ -701,18 +703,16 @@ def main():
         except:
             pass
 
-        # Đợi ảnh nhập captcha, click vào ô rồi paste captcha text
         pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=15)
         if pos_nhapcapcha:
             auto.click(*pos_nhapcapcha)
-            time.sleep(0.2)  # đợi 1 chút cho app ổn định
+            time.sleep(0.2)
             adb_paste_text(device, captcha_text)
             print(f"{COLORS['GREEN']}> Đã click vào ô nhập captcha và paste mã captcha: {captcha_text}")
         else:
             print(f"{COLORS['YELLOW']}> Không tìm thấy ô nhập captcha, nhập thẳng mã captcha.")
             adb_paste_text(device, captcha_text)
 
-        # Xóa 2 file captcha.png và ok.png sau khi nhập captcha
         for f_del in ["captcha.png", "ok.png"]:
             fp = os.path.join(LOCAL_SAVE_DIR, f_del)
             if os.path.exists(fp):
@@ -725,7 +725,6 @@ def main():
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
         if not pos_done:
             print(f"{COLORS['RED']}[ERROR] Không tìm chỗ ấn xong để chuyển mã tiếp theo.")
-            # Giữ nguyên code_index để thử lại mã này
             time.sleep(2)
             continue
         auto.click(*pos_done)
@@ -742,14 +741,12 @@ def main():
         remove_all_files_in_watchpath(device, WATCH_PATH)
         last_timestamp[0] = 0
 
-        result = handle_done_click(auto)
+        result = handle_done_click(auto, current_code=code)
         if result == 'repeat_captcha':
             print(f"{COLORS['YELLOW']}> Lặp lại bước captcha với mã hiện tại.")
-            # Không tăng code_index, thử lại mã hiện tại
             continue
         elif result == 'reload_captcha_input':
             print(f"{COLORS['YELLOW']}> Reload lại captcha input với mã hiện tại.")
-            # Không tăng code_index, thử lại mã hiện tại
             continue
         elif result == 'code_error':
             print(f"{COLORS['RED']}[ERROR] Mã bị lỗi hoặc captcha sai chuyển sang mã tiếp theo.")
@@ -758,7 +755,10 @@ def main():
             continue
         elif result == 'code_retry_same':
             print(f"{COLORS['RED']}[ERROR] Mã coca bị sai làm lại")
-            # Không tăng code_index, thử lại mã hiện tại
+            continue
+        elif result == 'skip_code':
+            print(f"{COLORS['YELLOW']}> Bỏ qua mã hiện tại do nhập không đúng mã, chuyển mã tiếp theo.")
+            code_index += 1
             continue
         elif result == 'success':
             print(f"{COLORS['GREEN']}> Chúc mừng bạn +5 điểm nhập mã thành công!")
@@ -767,7 +767,6 @@ def main():
             code_index += 1
             continue
         else:
-            # Không phát hiện cảnh báo, giữ nguyên code_index chờ tiếp
             print(f"{COLORS['YELLOW']}> Không phát hiện cảnh báo nào, đợi thêm...")
             time.sleep(2)
             continue
