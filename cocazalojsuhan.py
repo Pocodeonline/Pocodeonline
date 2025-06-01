@@ -7,7 +7,6 @@ import threading
 import requests
 import base64
 import re
-import pytesseract
 from colorama import init
 
 COLORS = {
@@ -24,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -182,12 +181,11 @@ def call_ocr_api(img_base64, endpoint, api_key):
         "OCREngine": 2,
     }
     try:
-        response = requests.post(endpoint, json=data, headers=headers, timeout=30)
+        response = requests.post(endpoint, data=data, headers=headers, timeout=30)
         if response.status_code == 200:
             result = response.json()
             if result.get("IsErroredOnProcessing"):
                 print(f"{COLORS['RED']}Lỗi API: {result.get('ErrorMessage')}")
-                print(f"Full response: {result}")
                 return None
             else:
                 parsed_results = result.get("ParsedResults")
@@ -198,7 +196,7 @@ def call_ocr_api(img_base64, endpoint, api_key):
                     print(f"{COLORS['YELLOW']}Không có kết quả phân tích từ API.")
                     return None
         else:
-            print(f"{COLORS['RED']}Lỗi HTTP: {response.status_code}, Nội dung: {response.text}")
+            print(f"{COLORS['RED']}Lỗi HTTP: {response.status_code}")
             return None
     except Exception as e:
         print(f"{COLORS['RED']}Lỗi gọi API: {e}")
@@ -213,9 +211,15 @@ def fix_ocr_text(text):
     for ch in text:
         if ch in mapping:
             ch = mapping[ch]
+        # Giữ ký tự chữ (a-zA-Z) và số (0-9)
         if re.match(r'[a-zA-Z0-9]', ch):
             corrected_chars.append(ch)
+        else:
+            # Bỏ ký tự khác
+            pass
     corrected = ''.join(corrected_chars)
+
+    # Kiểm tra độ dài hợp lệ, tối thiểu 4 ký tự (bạn có thể chỉnh)
     if len(corrected) < 4:
         return None
     return corrected
@@ -239,34 +243,6 @@ def solve_captcha_from_api(img_path, endpoint, api_key):
         print(f"{COLORS['YELLOW']}API {endpoint} không trả về kết quả.")
         return None
 
-def solve_captcha_tesseract(img_path):
-    """
-    Dùng pytesseract để đọc ảnh captcha khi API OCR lỗi
-    """
-    try:
-        img = cv2.imread(img_path)
-        if img is None:
-            print(f"{COLORS['RED']}[ERROR] Không đọc được ảnh captcha cho Tesseract.")
-            return None
-
-        # Xử lý ảnh grayscale, threshold để rõ chữ
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
-
-        config = "--psm 7 -c tessedit_char_whitelist=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-        text = pytesseract.image_to_string(thresh, config=config)
-
-        text = text.strip()
-        print(f"{COLORS['GREEN']}Kết quả đọc captcha qua Tesseract: {COLORS['YELLOW']}{text}")
-        fixed = fix_ocr_text(text)
-        if not fixed:
-            print(f"{COLORS['RED']}[ERROR] Mã captcha Tesseract đọc không hợp lệ.")
-            return None
-        return fixed
-    except Exception as e:
-        print(f"{COLORS['RED']}Lỗi khi dùng Tesseract OCR: {e}")
-        return None
-
 def solve_captcha_with_fallback(img_path):
     API_ENDPOINTS = [
         "https://apipro1.ocr.space/parse/image",
@@ -274,14 +250,12 @@ def solve_captcha_with_fallback(img_path):
     ]
     api_key = read_api_key_from_file()
     if not api_key:
-        print(f"{COLORS['YELLOW']}Không tìm thấy API key, sẽ dùng Tesseract để giải captcha.")
-        return solve_captcha_tesseract(img_path)
+        return None
 
     ok_img_path = os.path.join(os.path.dirname(img_path), "ok.png")
     success = process_captcha_image(img_path, ok_img_path)
     if not success:
-        print(f"{COLORS['YELLOW']}Xử lý ảnh captcha lỗi, dùng ảnh gốc để giải.")
-        ok_img_path = img_path  # fallback ảnh gốc
+        return None
 
     api_index = 0
     max_attempts = 4
@@ -293,12 +267,12 @@ def solve_captcha_with_fallback(img_path):
         if captcha_text:
             return captcha_text
         else:
-            print(f"{COLORS['YELLOW']}API {endpoint} lỗi, sẽ thử lại với API khác hoặc fallback.")
+            print(f"{COLORS['YELLOW']}API {endpoint} lỗi, sẽ load lại captcha và đổi API...")
             attempt += 1
             api_index = 1 - api_index
-
-    print(f"{COLORS['YELLOW']}API OCR lỗi nhiều lần, chuyển sang giải bằng Tesseract OCR không cần API.")
-    return solve_captcha_tesseract(ok_img_path)
+            return None  # thoát để caller xử lý load lại captcha
+    print(f"{COLORS['RED']}Không thể giải captcha qua các API OCR đã cung cấp sau {max_attempts} lần thử.")
+    return None
 
 def handle_done_click(auto):
     start = time.time()
