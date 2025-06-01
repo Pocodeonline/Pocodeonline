@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -102,7 +102,7 @@ class Auto:
         os.system(cmd)
 
 def adb_paste_text(device, text):
-    # Paste text vào ô nhập nhanh (dùng input text đã escape)
+    # Paste text nhanh qua input text (đã escape)
     escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
     safe_text = text.replace(' ', '%s')
     for ch in escape_chars:
@@ -688,12 +688,15 @@ def main():
         except:
             pass
 
-        pos_dienma3 = wait_for_image(auto, 'dienma.png', timeout=10)
-        if pos_dienma3:
-            auto.click(*pos_dienma3)
+        # Đợi ảnh nhập captcha, click vào ô rồi paste captcha text
+        pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=15)
+        if pos_nhapcapcha:
+            auto.click(*pos_nhapcapcha)
             adb_paste_text(device, captcha_text)
+            print(f"{COLORS['GREEN']}> Đã click vào ô nhập captcha và paste mã captcha: {captcha_text}")
         else:
             auto.input_text_full(captcha_text)
+            print(f"{COLORS['YELLOW']}> Không tìm thấy ô nhập captcha, nhập thẳng mã captcha.")
 
         # Xóa 2 file captcha.png và ok.png sau khi nhập captcha
         for f_del in ["captcha.png", "ok.png"]:
