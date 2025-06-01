@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -264,6 +264,16 @@ def handle_done_click(auto):
         if auto.find_image('loicapcha.png', 0.95):
             print(f"{COLORS['RED']}[ERROR] Nhập lỗi captcha, làm captcha mới")
 
+            # Xóa file ok.png và captcha.png khi phát hiện lỗi captcha
+            for f_del in ["captcha.png", "ok.png"]:
+                fp = os.path.join(LOCAL_SAVE_DIR, f_del)
+                if os.path.exists(fp):
+                    try:
+                        os.remove(fp)
+                        print(f"{COLORS['GREEN']}> Đã xóa file {fp} do phát hiện lỗi captcha.")
+                    except Exception as e:
+                        print(f"{COLORS['RED']}[ERROR] Không xóa được file {fp}: {e}")
+
             pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
             if pos_loadlai:
                 auto.click(*pos_loadlai)
@@ -340,6 +350,17 @@ def handle_done_click(auto):
 
         if auto.find_image('macocasai.png', 0.95):
             print(f"{COLORS['YELLOW']}> Mã coca sai chạy mã mới thôi...")
+
+            # Xóa file ok.png và captcha.png khi phát hiện mã coca sai
+            for f_del in ["captcha.png", "ok.png"]:
+                fp = os.path.join(LOCAL_SAVE_DIR, f_del)
+                if os.path.exists(fp):
+                    try:
+                        os.remove(fp)
+                        print(f"{COLORS['GREEN']}> Đã xóa file {fp} do phát hiện mã coca sai.")
+                    except Exception as e:
+                        print(f"{COLORS['RED']}[ERROR] Không xóa được file {fp}: {e}")
+
             if wait_for_image(auto, 'loadlai.png', timeout=15):
                 auto.click(859.1, 94.0)
                 if wait_for_image(auto, 'dongyloadlai.png', timeout=15):
@@ -362,6 +383,7 @@ def handle_done_click(auto):
 
         time.sleep(0.07)
     return None
+
 
 DEVICE_SERIAL = None
 WATCH_PATH = "/storage/emulated/0/Download/zalo"
