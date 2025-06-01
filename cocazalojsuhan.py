@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -612,6 +612,8 @@ def main():
         while retry_captcha_count < 5:
             captcha_text = solve_captcha_with_fallback(captcha_img_path)
             if captcha_text:
+                # So sánh text đã lọc với ảnh ok.png đã xử lý (tức là text đã fix_ocr_text rồi)
+                # Ở đây coi như đã fix xong trong hàm fix_ocr_text(), nên dùng luôn captcha_text đã fix
                 print(f"{COLORS['GREEN']}> Captcha được giải là: {COLORS['YELLOW']}{captcha_text}")
                 break
             else:
@@ -685,14 +687,18 @@ def main():
             continue
 
         try:
-            os.remove(captcha_img_path)
+            # Xóa file captcha.png sau khi xử lý xong
+            captcha_file_path = os.path.join(LOCAL_SAVE_DIR, "captcha.png")
+            if os.path.exists(captcha_file_path):
+                os.remove(captcha_file_path)
+            # Không xóa các file khác ở đây, để chờ xóa ok.png sau khi nhập mã
         except:
             pass
 
         # Bỏ click ô nhập captcha, nhập thẳng
         auto.input_text_full(captcha_text)
 
-        # Xóa ngay file ok.png sau khi nhập captcha
+        # Xóa file ok.png ngay sau khi nhập captcha
         ok_img_path = os.path.join(LOCAL_SAVE_DIR, "ok.png")
         if os.path.exists(ok_img_path):
             try:
