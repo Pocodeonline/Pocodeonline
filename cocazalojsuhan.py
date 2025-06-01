@@ -6,7 +6,6 @@ import time
 import threading
 import requests
 import base64
-import re
 from colorama import init
 
 COLORS = {
@@ -23,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -112,7 +111,7 @@ def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
         pos = auto.find_image(img_path, threshold)
         if pos:
             return pos
-        time.sleep(0.1)  # giảm delay để nhanh hơn
+        time.sleep(0.5)
     return None
 
 def process_captcha_image(input_path, output_path):
@@ -472,13 +471,39 @@ def main():
     print(f"{COLORS['GREEN']}> Đang sử dụng thiết bị : {device}")
 
     macoca_path = 'macoca.txt'
+    maloikitu_path = 'maloikitu.txt'
+
     try:
         with open(macoca_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
-        filtered_lines = [line for line in lines if line.strip()]
+
+        valid_codes = []
+        invalid_codes = []
+
+        for line in lines:
+            code = line.strip()
+            if len(code) == 12:
+                valid_codes.append(code + '\n')
+            else:
+                if code:  # bỏ qua dòng trống
+                    invalid_codes.append(code + '\n')
+
+        # Ghi lại file macoca.txt chỉ chứa mã đúng 12 ký tự
         with open(macoca_path, 'w', encoding='utf-8') as f:
-            f.writelines(filtered_lines)
-        print(f"{COLORS['GREEN']}> Đã xóa các dòng trống trong {macoca_path}, còn lại {len(filtered_lines)} dòng mã.")
+            f.writelines(valid_codes)
+
+        # Ghi lại file maloikitu.txt chứa mã sai
+        with open(maloikitu_path, 'w', encoding='utf-8') as f:
+            f.writelines(invalid_codes)
+
+        print(f"{COLORS['GREEN']}> Đã lọc file {macoca_path}:")
+        print(f"  - Số mã hợp lệ (12 ký tự): {len(valid_codes)}")
+        print(f"  - Số mã không đủ hoặc thừa ký tự đã chuyển sang {maloikitu_path}: {len(invalid_codes)}")
+
+        if len(valid_codes) == 0:
+            print(f"{COLORS['RED']}[ERROR] Không còn mã hợp lệ nào trong {macoca_path} để chạy.")
+            return
+
     except Exception as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi xử lý file {macoca_path}: {e}")
         return
@@ -538,31 +563,19 @@ def main():
     watcher_thread.start()
 
     while code_index < len(codes):
-        code = codes[code_index].strip()
-        # Kiểm tra đủ 12 ký tự, chỉ gồm a-zA-Z0-9
-        if not re.fullmatch(r'[A-Za-z0-9]{12}', code):
-            print(f"{COLORS['YELLOW']}> Mã không hợp lệ hoặc không đủ 12 ký tự, bỏ qua: {COLORS['CYAN']}{code}")
-            code_index += 1
-            continue
-
+        code = codes[code_index]
         print(f"{COLORS['GREEN']}> Đang xử lý mã thứ {code_index+1}/{len(codes)}: {COLORS['CYAN']}{code}")
 
-        pos_dienma = wait_for_image(auto, 'dienma.png', timeout=30)  # giảm timeout để nhanh hơn
+        pos_dienma = wait_for_image(auto, 'dienma.png', timeout=60)
         if not pos_dienma:
             print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
             stop_event.set()
             watcher_thread.join()
             return
         auto.click(*pos_dienma)
-        time.sleep(0.1)  # giảm delay
-
-        # Trước khi nhập mã, xóa ô nhập mã nhanh, không chờ lâu
-        for _ in range(12):
-            os.system(f'adb -s {device} shell input keyevent 67')  # xóa từng ký tự trong ô nhập mã
-            time.sleep(0.02)
-        
+        time.sleep(0.3)
         auto.input_text_full(code)
-        time.sleep(0.3)  # vẫn giữ delay nhỏ để app nhận đúng mã
+        time.sleep(0.5)
 
         print(f"{COLORS['GREEN']}> Giữ click tìm chỗ tải captcha...")
         start_hold = time.time()
@@ -632,13 +645,8 @@ def main():
                 auto.click(*pos_dienma)
                 print(f"{COLORS['GREEN']}> Đã click vào ô nhập mã lại.")
 
-                # Xóa ô nhập mã cũ nhanh
-                for _ in range(12):
-                    os.system(f'adb -s {device} shell input keyevent 67')
-                    time.sleep(0.02)
-
                 auto.input_text_full(code)
-                time.sleep(0.3)
+                time.sleep(0.5)
 
                 print(f"{COLORS['GREEN']}> Giữ click tìm chỗ tải captcha mới...")
                 start_hold = time.time()
@@ -683,13 +691,7 @@ def main():
             code_index += 1
             continue
         auto.click(*pos_nhapcapcha)
-        time.sleep(0.2)
-
-        # Xóa ô nhập captcha nhanh trước khi nhập
-        for _ in range(12):
-            os.system(f'adb -s {device} shell input keyevent 67')
-            time.sleep(0.02)
-
+        time.sleep(0.3)
         auto.input_text_full(captcha_text)
         time.sleep(0.3)
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
