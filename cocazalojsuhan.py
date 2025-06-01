@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -275,13 +275,12 @@ def handle_done_click(auto):
         if auto.find_image('loicapcha.png', 0.95):
             print(f"{COLORS['RED']}[ERROR] Nhập lỗi captcha, làm captcha mới")
             auto.click(168.2, 1007.0)
-            time.sleep(0.2)
+            time.sleep(0.15)
             for _ in range(7):
                 os.system(f'adb -s {auto.device_id} shell input keyevent 67')
-                time.sleep(0.03)
+                time.sleep(0.02)
             print(f"{COLORS['GREEN']}> Đã xóa captcha cũ trong ô nhập captcha.")
 
-            # Thay đổi xử lý: thay vì loadlaicapcha.png, dùng loadlai.png + dongyloadlai.png + dienma.png
             pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
             if pos_loadlai:
                 auto.click(*pos_loadlai)
@@ -300,7 +299,7 @@ def handle_done_click(auto):
 
             pos_dienma = wait_for_image(auto, 'dienma.png', timeout=15)
             if pos_dienma:
-                time.sleep(1.5)
+                time.sleep(1.0)
                 auto.click(*pos_dienma)
                 print(f"{COLORS['YELLOW']}> Đã click vào ô nhập mã để nhập lại captcha.")
             else:
@@ -312,7 +311,7 @@ def handle_done_click(auto):
         if auto.find_image('nhaplaima.png', 0.95):
             print(f"{COLORS['YELLOW']}> Phát hiện mã đã nhập rồi, sẽ click xóa và load lại mã mới.")
             auto.click(450.0, 551.8)
-            time.sleep(0.2)
+            time.sleep(0.15)
             pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
             if pos_loadlai:
                 auto.click(*pos_loadlai)
@@ -347,7 +346,7 @@ def handle_done_click(auto):
 
             pos_dienma = wait_for_image(auto, 'dienma.png', timeout=15)
             if pos_dienma:
-                time.sleep(1.5)
+                time.sleep(1.0)
                 auto.click(*pos_dienma)
                 print(f"{COLORS['YELLOW']}> Đã click vào ô nhập mã để nhập lại captcha.")
             else:
@@ -362,7 +361,7 @@ def handle_done_click(auto):
                 auto.click(859.1, 94.0)
                 if wait_for_image(auto, 'dongyloadlai.png', timeout=15):
                     auto.click(683.0, 110.2)
-                    time.sleep(0.5)
+                    time.sleep(0.3)
                     return 'code_retry_same'
 
         if auto.find_image('chucmung.png', 0.95):
@@ -378,7 +377,7 @@ def handle_done_click(auto):
                 print(f"{COLORS['YELLOW']}> Đợi tiếp tục nhập mã mới quá lâu, bỏ qua.")
             return 'success'
 
-        time.sleep(0.1)
+        time.sleep(0.07)
     return None
 
 DEVICE_SERIAL = None
@@ -707,9 +706,19 @@ def main():
             code_index += 1
             continue
         auto.click(*pos_nhapcapcha)
-        time.sleep(0.3)
+        time.sleep(0.2)
         auto.input_text_full(captcha_text)
-        time.sleep(0.3)
+        time.sleep(0.2)
+
+        # Xóa file ok.png ngay sau khi nhập captcha
+        ok_img_path = os.path.join(LOCAL_SAVE_DIR, "ok.png")
+        if os.path.exists(ok_img_path):
+            try:
+                os.remove(ok_img_path)
+                print(f"{COLORS['GREEN']}> Đã xóa file {ok_img_path} sau khi nhập captcha.")
+            except Exception as e:
+                print(f"{COLORS['RED']}[ERROR] Không xóa được file {ok_img_path}: {e}")
+
         pos_done = wait_for_image(auto, 'done.png', timeout=60)
         if not pos_done:
             print(f"{COLORS['RED']}[ERROR] Không tìm chỗ ấn xong để chuyển mã tiếp theo.")
