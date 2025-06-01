@@ -701,6 +701,10 @@ def main():
         if pos_tiep_tuc:
             auto.click(*pos_tiep_tuc)
             print(f"{COLORS['GREEN']}> Đã click vào nút tiếp tục nhập mã mới.")
+            
+            # --- PHẦN BỔ SUNG ĐỂ IN RA DÒNG "Đã nhập mã thành công + 5 điểm" MÀU XANH LÁ ---
+            print(f"{COLORS['GREEN']}Đã nhập mã thành công + 5 điểm{COLORS['RESET']}")
+            total_points += 5
 
         print(f"{COLORS['GREEN']}> Đang xóa tất cả file trong thư mục captcha trên thiết bị sau khi done...")
         remove_all_files_in_watchpath(device, WATCH_PATH)
@@ -732,7 +736,7 @@ def main():
             code_index += 1
 
     stop_event.set()
-    print(f"{COLORS['CYAN']}> Đã chạy hết mã trong macoca.txt. Tổng điểm nhập mã là: {COLORS['YELLOW']}{total_points}")
+    print(f"{COLORS['CYAN']}> Đã chạy hết mã trong macoca.txt. Tổng điểm nhập mã là: {COLORS['YELLOW']}{total_points}{COLORS['RESET']}")
 
 if __name__ == "__main__":
     main()
