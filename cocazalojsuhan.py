@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -102,23 +102,23 @@ class Auto:
         os.system(cmd)
 
 def adb_paste_text(device, text):
-    # Gửi text vào clipboard
-    escaped_text = text.replace('"', '\\"')
-    os.system(f'adb -s {device} shell am broadcast -a clipper.set -e text "{escaped_text}"')
-    time.sleep(0.5)
-    # Giả lập click vào ô nhập liệu trước, nên gọi trước khi gọi hàm này
-    # Gửi keyevent paste (279)
-    os.system(f'adb -s {device} shell input keyevent 279')
-    time.sleep(0.5)
+    escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']  # '?' đã loại ra khỏi đây
+    safe_text = text.replace(' ', '%s')
+    for ch in escape_chars:
+        safe_text = safe_text.replace(ch, f"\\{ch}")
+    cmd = f'adb -s {device} shell input text "{safe_text}"'
+    os.system(cmd)
 
-def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
-    start = time.time()
-    while time.time() - start < timeout:
-        pos = auto.find_image(img_path, threshold)
-        if pos:
-            return pos
-        time.sleep(0.1)
-    return None
+
+def adb_paste_text(device, text):
+    # Paste text nhanh qua input text (đã escape), **loại trừ dấu '?' không escape**
+    escape_chars = ['&', '|', '<', '>', '*', '^', '"', "'", '\\', '/']  # đã loại bỏ '?'
+    safe_text = text.replace(' ', '%s')
+    for ch in escape_chars:
+        safe_text = safe_text.replace(ch, f"\\{ch}")
+    cmd = f'adb -s {device} shell input text "{safe_text}"'
+    os.system(cmd)
+
 
 def process_captcha_image(input_path, output_path):
     try:
