@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -412,13 +412,16 @@ def handle_done_click(auto):
 
         if auto.find_image('chucmung.png', 0.95):
             print(f"{COLORS['GREEN']}> Nhập mã coca thành công ")
-            if wait_for_image(auto, 'tieptucnhaptiepmamoi.png', timeout=10):
-                auto.click(444.6, 649.3)
-                print(f"{COLORS['GREEN']}> Đã done tiếp tục nhập mã mới.")
-                return 'success'                
+            if wait_for_image(auto, 'tieptucnhaptiepmamoi.png', timeout=30):
+                pos_continue = auto.find_image('tieptucnhaptiepmamoi.png', 0.95)
+                if pos_continue:
+                    auto.click(*pos_continue)
+                    print(f"{COLORS['GREEN']}> Đã click vào nút tiếp tục nhập mã mới.")
+                else:
+                    print(f"{COLORS['YELLOW']}> Không thấy nút tiếp tục nhập mã mới, bỏ qua.")
             else:
                 print(f"{COLORS['YELLOW']}> Đợi tiếp tục nhập mã mới quá lâu, bỏ qua.")
-                return 'success'
+            return 'success'
 
         time.sleep(0.1)
     return None
@@ -609,7 +612,6 @@ def main():
     error_count = 0
     ERROR_LIMIT = 5
 
-    # Dùng list để mutable biến last_timestamp chia sẻ giữa thread và main
     last_timestamp = [0]
 
     stop_event = threading.Event()
@@ -651,7 +653,6 @@ def main():
         captcha_img_path = None
         wait_time = 0
         while wait_time < 30:
-            # Vì watcher thread chạy liên tục nên file captcha mới sẽ được kéo về nhanh chóng
             local_path = os.path.join(LOCAL_SAVE_DIR, LOCAL_FILENAME)
             if os.path.exists(local_path):
                 captcha_img_path = local_path
@@ -723,7 +724,6 @@ def main():
                 auto.click(*pos_dl)
                 print(f"{COLORS['GREEN']}> Đã click tải captcha mới về giả lập")
 
-                # Chờ file mới được watcher thread kéo về
                 captcha_img_path = None
                 wait_time = 0
                 while wait_time < 30:
@@ -772,6 +772,7 @@ def main():
         remove_all_files_in_watchpath(device, WATCH_PATH)
         last_timestamp[0] = 0
 
+        # ==== Phần xử lý bạn yêu cầu thêm ====        
         result = handle_done_click(auto)
         if result == 'repeat_captcha':
             print(f"{COLORS['YELLOW']}> Lặp lại bước captcha với mã hiện tại.")
@@ -797,7 +798,7 @@ def main():
             print(f"{COLORS['YELLOW']}> Không phát hiện cảnh báo nào, tiếp tục với mã tiếp theo")
             code_index += 1
 
-    stop_event.set()  # Dừng luồng watcher khi kết thúc
+    stop_event.set()
     print(f"{COLORS['CYAN']}> Đã chạy hết mã trong macoca.txt. Tổng điểm nhập mã là: {COLORS['YELLOW']}{total_points}")
 
 if __name__ == "__main__":
