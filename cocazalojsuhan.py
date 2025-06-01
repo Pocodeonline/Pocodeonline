@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -271,6 +271,12 @@ def handle_done_click(auto):
     while time.time() - start < timeout_check:
         if auto.find_image('loicapcha.png', 0.95):
             print(f"{COLORS['RED']}[ERROR] Nhập lỗi captcha, làm captcha mới")
+            auto.click(168.2, 1007.0)
+            time.sleep(0.15)
+            for _ in range(7):
+                os.system(f'adb -s {auto.device_id} shell input keyevent 67')
+                time.sleep(0.02)
+            print(f"{COLORS['GREEN']}> Đã xóa captcha cũ trong ô nhập captcha.")
 
             pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
             if pos_loadlai:
@@ -680,11 +686,12 @@ def main():
         pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=15)
         if pos_nhapcapcha:
             auto.click(*pos_nhapcapcha)
+            time.sleep(0.2)  # đợi 1 chút cho app ổn định
             adb_paste_text(device, captcha_text)
             print(f"{COLORS['GREEN']}> Đã click vào ô nhập captcha và paste mã captcha: {captcha_text}")
         else:
-            auto.input_text_full(captcha_text)
             print(f"{COLORS['YELLOW']}> Không tìm thấy ô nhập captcha, nhập thẳng mã captcha.")
+            adb_paste_text(device, captcha_text)
 
         # Xóa 2 file captcha.png và ok.png sau khi nhập captcha
         for f_del in ["captcha.png", "ok.png"]:
