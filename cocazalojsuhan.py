@@ -22,7 +22,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -121,29 +121,45 @@ def process_captcha_image(input_path, output_path):
             print(f"{COLORS['RED']}[ERROR] Không đọc được file ảnh {input_path}")
             return False
 
-        # Chuyển sang không gian màu HSV để lọc màu dễ hơn
+        # Chuyển sang HSV
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        # Định nghĩa khoảng màu vàng sáng (các chữ vàng captcha)
-        lower_yellow = np.array([15, 80, 150])  # H, S, V thấp hơn để bắt chữ vàng
+        # Khoảng màu vàng chữ captcha chuẩn xác hơn
+        lower_yellow = np.array([20, 100, 100])  # H từ 20, S và V cao để lấy màu vàng sáng rõ
         upper_yellow = np.array([40, 255, 255])
 
-        # Tạo mask chỉ lấy vùng chữ vàng
+        # Tạo mask vùng chữ vàng
         mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
 
-        # Đảo mask để lấy vùng nền không phải chữ vàng
-        mask_background = cv2.bitwise_not(mask_yellow)
+        # Áp dụng morphologic để loại bỏ nhiễu nhỏ (noise) - mở rộng vùng chữ và loại vùng nhỏ lẻ
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))  # Tăng kích thước kernel
+        mask_clean = cv2.morphologyEx(mask_yellow, cv2.MORPH_CLOSE, kernel_close, iterations=2)
+        
+        kernel_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+        mask_clean = cv2.morphologyEx(mask_clean, cv2.MORPH_OPEN, kernel_open, iterations=2)
+        
+        # Thực hiện dilate rồi erode để làm mịn biên vùng chữ
+        kernel_dilate_erode = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+        mask_clean = cv2.dilate(mask_clean, kernel_dilate_erode, iterations=1)
+        mask_clean = cv2.erode(mask_clean, kernel_dilate_erode, iterations=1)
 
-        # Tô vùng nền thành đen
-        img[mask_background == 255] = (0, 0, 0)
+        # Đảm bảo mask chỉ có giá trị 0 hoặc 255
+        _, mask_clean = cv2.threshold(mask_clean, 127, 255, cv2.THRESH_BINARY)
 
-        # Lưu ảnh mới
-        cv2.imwrite(output_path, img)
-        print(f"{COLORS['GREEN']}> Ảnh captcha đã được tô đen nền, lưu thành {output_path}")
+        # Tạo ảnh nền đen
+        black_background = np.zeros_like(img)
+
+        # Lấy vùng chữ vàng trên ảnh gốc dựa trên mask đã xử lý
+        result = cv2.bitwise_and(img, img, mask=mask_clean)
+
+        # Lưu ảnh kết quả
+        cv2.imwrite(output_path, result)
+        print(f"{COLORS['GREEN']}> Ảnh captcha đã được xử lý nền đen chuẩn, lưu thành {output_path}")
         return True
     except Exception as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi xử lý ảnh captcha: {e}")
         return False
+
 
 def read_api_key_from_file():
     key_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "key.txt")
