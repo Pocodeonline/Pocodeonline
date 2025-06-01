@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -102,13 +102,16 @@ class Auto:
         os.system(cmd)
 
 def adb_paste_text(device, text):
-    # Paste text nhanh qua input text (đã escape)
-    escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
-    safe_text = text.replace(' ', '%s')
-    for ch in escape_chars:
-        safe_text = safe_text.replace(ch, f"\\{ch}")
-    cmd = f'adb -s {device} shell input text "{safe_text}"'
-    os.system(cmd)
+    # Escape dấu " trong text để không lỗi command
+    escaped_text = text.replace('"', '\\"')
+    # Gửi nội dung text vào clipboard trên thiết bị Android
+    cmd_clipboard = f'adb -s {device} shell am broadcast -a clipper.set -e text "{escaped_text}"'
+    os.system(cmd_clipboard)
+    time.sleep(0.3)  # Đợi clipboard set xong
+    # Gửi lệnh keyevent 279 (Paste) để dán nội dung clipboard vào ô đang focus
+    cmd_paste = f'adb -s {device} shell input keyevent 279'
+    os.system(cmd_paste)
+    time.sleep(0.3)
 
 def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
     start = time.time()
@@ -567,12 +570,13 @@ def main():
         print(f"{COLORS['GREEN']}> Đang xử lý mã thứ {code_index+1}/{len(codes)}: {COLORS['CYAN']}{code}")
 
         pos_dienma = wait_for_image(auto, 'dienma.png', timeout=60)
-        if not pos_dienma:
-            print(f"{COLORS['RED']}[ERROR] Không tìm thấy chỗ nhập mã thoát chương trình.")
-            break
-        auto.click(*pos_dienma)
-
-        adb_paste_text(device, code)
+        if pos_dienma:
+            auto.click(*pos_dienma)
+            time.sleep(0.2)  # Đợi ô nhập liệu focus
+            adb_paste_text(device, code)
+        else:
+            print("Không tìm thấy ô nhập mã, sẽ gửi lệnh paste thẳng (không đảm bảo).")
+            adb_paste_text(device, code)
 
         print(f"{COLORS['GREEN']}> Giữ click tìm chỗ tải captcha...")
         start_hold = time.time()
