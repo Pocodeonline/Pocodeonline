@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -102,7 +102,7 @@ class Auto:
         os.system(cmd)
 
 def adb_paste_text(device, text):
-    # Paste text nhanh qua input text (đã escape)
+    # Paste text vào ô nhập nhanh (dùng input text đã escape)
     escape_chars = ['&','|','<','>','*','^','"',"'",'\\','/']
     safe_text = text.replace(' ', '%s')
     for ch in escape_chars:
@@ -206,14 +206,8 @@ def call_ocr_api(img_base64, endpoint, api_key):
         return None
 
 def fix_ocr_text(text):
-    mapping = {
-        'a': 'q',
-        'O': 'Q',
-    }
     corrected_chars = []
     for ch in text:
-        if ch in mapping:
-            ch = mapping[ch]
         if re.match(r'[a-zA-Z0-9]', ch):
             corrected_chars.append(ch)
     corrected = ''.join(corrected_chars)
@@ -276,14 +270,8 @@ def handle_done_click(auto):
     timeout_check = 5
     while time.time() - start < timeout_check:
         if auto.find_image('loicapcha.png', 0.95):
-            print(f"{COLORS['RED']}[ERROR] Nhập lỗi captcha, làm captcha mới")
-            auto.click(168.2, 1007.0)
-            time.sleep(0.15)
-            for _ in range(7):
-                os.system(f'adb -s {auto.device_id} shell input keyevent 67')
-                time.sleep(0.02)
-            print(f"{COLORS['GREEN']}> Đã xóa captcha cũ trong ô nhập captcha.")
-
+            print(f"{COLORS['RED']}[ERROR] Nhập lỗi captcha, chuyển thẳng load lại captcha mới")
+            # Bỏ phần xóa captcha cũ trong ô nhập, làm ngay bước load lại
             pos_loadlai = wait_for_image(auto, 'loadlai.png', timeout=15)
             if pos_loadlai:
                 auto.click(*pos_loadlai)
@@ -311,6 +299,7 @@ def handle_done_click(auto):
 
             return 'reload_captcha_input'
 
+        # Các phần còn lại giữ nguyên
         if auto.find_image('nhaplaima.png', 0.95):
             print(f"{COLORS['YELLOW']}> Phát hiện mã đã nhập rồi, sẽ click xóa và load lại mã mới.")
             auto.click(450.0, 551.8)
@@ -688,15 +677,12 @@ def main():
         except:
             pass
 
-        # Đợi ảnh nhập captcha, click vào ô rồi paste captcha text
-        pos_nhapcapcha = wait_for_image(auto, 'nhapcapcha.png', timeout=15)
-        if pos_nhapcapcha:
-            auto.click(*pos_nhapcapcha)
+        pos_dienma3 = wait_for_image(auto, 'dienma.png', timeout=10)
+        if pos_dienma3:
+            auto.click(*pos_dienma3)
             adb_paste_text(device, captcha_text)
-            print(f"{COLORS['GREEN']}> Đã click vào ô nhập captcha và paste mã captcha: {captcha_text}")
         else:
             auto.input_text_full(captcha_text)
-            print(f"{COLORS['YELLOW']}> Không tìm thấy ô nhập captcha, nhập thẳng mã captcha.")
 
         # Xóa 2 file captcha.png và ok.png sau khi nhập captcha
         for f_del in ["captcha.png", "ok.png"]:
