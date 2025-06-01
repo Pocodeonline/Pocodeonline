@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool CocaZalo By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool Send Voucher CocaZalo By SoHan JVS {COLORS['RESET']}")
 
 def image_path(filename):
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -108,6 +108,16 @@ def adb_paste_text(device, text):
         safe_text = safe_text.replace(ch, f"\\{ch}")
     cmd = f'adb -s {device} shell input text "{safe_text}"'
     os.system(cmd)
+import time
+
+def wait_for_image(auto, img_path, timeout=30, threshold=0.95):
+    start = time.time()
+    while time.time() - start < timeout:
+        pos = auto.find_image(img_path, threshold)
+        if pos:
+            return pos
+        time.sleep(0.1)
+    return None
 
 
 def adb_paste_text(device, text):
