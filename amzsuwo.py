@@ -521,7 +521,7 @@ def run_profile(profile_number):
             x, y = get_position_for_profile(profile_number)
             with sync_playwright() as playwright:
                 browser = playwright.chromium.launch(
-                    headless=False,
+                    headless=True,
                     args=[
                         f'--window-size={window_width},{window_height}',
                         f'--window-position={x},{y}',
