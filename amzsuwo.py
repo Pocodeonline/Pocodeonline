@@ -35,7 +35,9 @@ def log_to_file(filename, *args):
         f.write("|".join(args) + '\n')
 
 def remove_account_from_mailadd(email, password, code_2fa):
-    target_line = f"{email}|{password}|{code_2fa}"
+    target_line = f"{email}|{password}"
+    if code_2fa:
+        target_line += f"|{code_2fa}"
     with threading.Lock():
         with open('mailadd.txt', 'r', encoding='utf-8') as f:
             lines = f.readlines()
@@ -56,7 +58,12 @@ def read_credentials(file_path='mailadd.txt'):
             parts = line.strip().split('|')
             if len(parts) == 3:
                 email, password, code_2fa = parts
-                creds.append({'email': email, 'password': password, '2fa': code_2fa})
+            elif len(parts) == 2:
+                email, password = parts
+                code_2fa = ''
+            else:
+                continue
+            creds.append({'email': email, 'password': password, '2fa': code_2fa})
     return creds
 
 credentials = read_credentials()
@@ -159,7 +166,7 @@ def login_amz(page, profile_number, credentials_list):
     cred = credentials_list[profile_number - 1]
     email = cred['email']
     password = cred['password']
-    code_2fa = cred['2fa']
+    code_2fa = cred.get('2fa', '')
 
     page.fill('input#ap_email', email)
     page.click('input#continue')
@@ -173,18 +180,20 @@ def login_amz(page, profile_number, credentials_list):
     page.fill('input#ap_password', password)
     page.click('input#signInSubmit')
 
-    try:
-        otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
-        otp_code = pyotp.TOTP(code_2fa).now()
-        otp_input.fill(otp_code)
+    # Chỉ nhập 2FA nếu có
+    if code_2fa:
+        try:
+            otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
+            otp_code = pyotp.TOTP(code_2fa).now()
+            otp_input.fill(otp_code)
 
-        remember_device_checkbox = page.query_selector('input#auth-mfa-remember-device')
-        if remember_device_checkbox:
-            remember_device_checkbox.click()
+            remember_device_checkbox = page.query_selector('input#auth-mfa-remember-device')
+            if remember_device_checkbox:
+                remember_device_checkbox.click()
 
-        page.click('input#auth-signin-button')
-    except TimeoutError:
-        pass
+            page.click('input#auth-signin-button')
+        except TimeoutError:
+            pass
 
     try:
         if page.query_selector('//h4[text()="Account on hold temporarily"]'):
