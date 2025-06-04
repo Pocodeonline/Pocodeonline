@@ -35,9 +35,7 @@ def log_to_file(filename, *args):
         f.write("|".join(args) + '\n')
 
 def remove_account_from_mailadd(email, password, code_2fa):
-    target_line = f"{email}|{password}"
-    if code_2fa:
-        target_line += f"|{code_2fa}"
+    target_line = f"{email}|{password}|{code_2fa}"
     with threading.Lock():
         with open('mailadd.txt', 'r', encoding='utf-8') as f:
             lines = f.readlines()
@@ -58,12 +56,7 @@ def read_credentials(file_path='mailadd.txt'):
             parts = line.strip().split('|')
             if len(parts) == 3:
                 email, password, code_2fa = parts
-            elif len(parts) == 2:
-                email, password = parts
-                code_2fa = ''
-            else:
-                continue
-            creds.append({'email': email, 'password': password, '2fa': code_2fa})
+                creds.append({'email': email, 'password': password, '2fa': code_2fa})
     return creds
 
 credentials = read_credentials()
@@ -166,7 +159,7 @@ def login_amz(page, profile_number, credentials_list):
     cred = credentials_list[profile_number - 1]
     email = cred['email']
     password = cred['password']
-    code_2fa = cred.get('2fa', '')
+    code_2fa = cred.get('2fa', None)  # Check if 2FA exists
 
     page.fill('input#ap_email', email)
     page.click('input#continue')
@@ -180,7 +173,7 @@ def login_amz(page, profile_number, credentials_list):
     page.fill('input#ap_password', password)
     page.click('input#signInSubmit')
 
-    # Chỉ nhập 2FA nếu có
+    # If there is no 2FA, skip the OTP step
     if code_2fa:
         try:
             otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
@@ -229,6 +222,7 @@ def login_amz(page, profile_number, credentials_list):
     print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[96mSoHan \x1b[93m] \x1b[32m>Login thành công cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
     time.sleep(2)
     return True
+
 
 def add_card(page, credentials_list, profile_number, cards_to_add):
     retry_limit = 3
