@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZ By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SoHan JVS {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: {COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( khuyên 2 nhé ): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -159,7 +159,8 @@ def login_amz(page, profile_number, credentials_list):
     cred = credentials_list[profile_number - 1]
     email = cred['email']
     password = cred['password']
-    code_2fa = cred['2fa'] if len(cred) > 2 else None  # Kiểm tra nếu có 2FA
+    # Kiểm tra tài khoản có 2fa hay không (nếu có 3 phần, có 2fa, nếu không có 3 phần, không có 2fa)
+    code_2fa = cred['2fa'] if len(cred) > 2 else None
 
     page.fill('input#ap_email', email)
     page.click('input#continue')
@@ -173,7 +174,7 @@ def login_amz(page, profile_number, credentials_list):
     page.fill('input#ap_password', password)
     page.click('input#signInSubmit')
 
-    # Nếu có 2FA thì điền OTP, nếu không thì chỉ cần login
+    # Nếu tài khoản có 2fa thì điền OTP
     if code_2fa:
         try:
             otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
@@ -188,6 +189,7 @@ def login_amz(page, profile_number, credentials_list):
         except TimeoutError:
             pass
     else:
+        # Nếu không có 2FA, in thông báo và bỏ qua bước OTP
         print(f"{COLORS['GREEN']}Không có 2FA cho tài khoản {email}, bỏ qua bước nhập OTP.{COLORS['RESET']}")
 
     try:
