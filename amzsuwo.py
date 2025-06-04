@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZ By SoHan JVS {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: {COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( khuyên 2 nhé ): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -176,7 +176,7 @@ def login_amz(page, profile_number, credentials_list):
     page.fill('input#ap_password', password)
     page.click('input#signInSubmit')
 
-    # Nếu tài khoản có 2fa thì điền OTP
+    # Nếu tài khoản có 2fa thì điền OTP, nếu không có 2FA thì bỏ qua
     if code_2fa:
         try:
             otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
@@ -191,7 +191,6 @@ def login_amz(page, profile_number, credentials_list):
         except TimeoutError:
             pass
     else:
-        # Nếu không có 2FA, bỏ qua bước nhập OTP
         print(f"{COLORS['GREEN']}Không có 2FA cho tài khoản {email}, bỏ qua bước nhập OTP.{COLORS['RESET']}")
 
     try:
@@ -210,6 +209,27 @@ def login_amz(page, profile_number, credentials_list):
             return False
     except Exception:
         pass
+
+    # Kiểm tra xem có vào được trang "Add Card" không
+    try:
+        page.goto('https://www.amazon.com/cpe/yourpayments/settings/manageoneclick')
+        time.sleep(5)  # Chờ một chút để trang tải
+
+        # Kiểm tra xem có thể thấy nút thêm thẻ không
+        if page.query_selector('input.pmts-link-button[type="submit"][name^="ppw-widgetEvent:ChangeAddressPreferredPaymentMethodEvent:"]'):
+            print(f"{COLORS['GREEN']}Tài khoản {email} vào được trang Add Card{COLORS['RESET']}")
+        else:
+            # Nếu không thấy nút thêm thẻ, có thể tài khoản bị captcha hoặc die
+            print(f"{COLORS['RED']}Tài khoản {email} không vào được trang Add Card, có thể bị captcha hoặc die.{COLORS['RESET']}")
+            log_to_file('die.txt', email, password, code_2fa)  # Ghi vào die.txt
+            remove_account_from_mailadd(email, password, code_2fa)
+            return False
+
+    except Exception as e:
+        print(f"{COLORS['RED']}Lỗi khi kiểm tra trang Add Card cho tài khoản {email}: {e}{COLORS['RESET']}")
+        log_to_file('die.txt', email, password, code_2fa)  # Ghi vào die.txt
+        remove_account_from_mailadd(email, password, code_2fa)
+        return False
 
     try:
         skip_link = page.query_selector('a#ap-account-fixup-phone-skip-link')
