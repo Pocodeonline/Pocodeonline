@@ -219,7 +219,7 @@ def login_amz(page, profile_number, credentials_list):
     except Exception:
         pass
 
-    print(f"{COLORS['GREEN']}\x1b[93m[ \x1b[96mSoHan \x1b[93m] \x1b[32m>Login thành công cho tài khoản \x1b[93m{email}{COLORS['RESET']}")
+    print(f"{COLORS['GREEN']}[ SoHan ] > Login thành công cho tài khoản {email}{COLORS['RESET']}")
     time.sleep(2)
     return True
 
