@@ -162,8 +162,7 @@ def login_amz(page, profile_number, credentials_list):
     cred = credentials_list[profile_number - 1]
     email = cred['email']
     password = cred['password']
-    # Kiểm tra tài khoản có 2fa hay không (nếu có 3 phần, có 2fa, nếu không có 3 phần, không có 2fa)
-    code_2fa = cred['2fa'] if len(cred) > 2 else None
+    code_2fa = cred['2fa']  # Nếu có 2FA, giá trị sẽ là mã 2FA, nếu không có sẽ là None
 
     page.fill('input#ap_email', email)
     page.click('input#continue')
@@ -192,7 +191,7 @@ def login_amz(page, profile_number, credentials_list):
         except TimeoutError:
             pass
     else:
-        # Nếu không có 2FA, in thông báo và bỏ qua bước OTP
+        # Nếu không có 2FA, bỏ qua bước nhập OTP
         print(f"{COLORS['GREEN']}Không có 2FA cho tài khoản {email}, bỏ qua bước nhập OTP.{COLORS['RESET']}")
 
     try:
