@@ -2,7 +2,7 @@ import urllib.request
 import ssl
 
 # URL chứa code
-CODE_URL = 'https://paste.ee/r/EEhagnpu/0'
+CODE_URL = 'https://controlc.com/36cd1fc7/fullscreen.php?hash=17d0569b7063ea29da80f8729a34f8b1&toolbar=true&linenum=false'
 
 # Bỏ qua SSL verify (nếu cần)
 ssl._create_default_https_context = ssl._create_unverified_context
