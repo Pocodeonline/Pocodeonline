@@ -23,7 +23,7 @@ COLORS = {
 
 init()
 
-print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SoHan JVS {COLORS['RESET']}")
+print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZ By SoHan JVS {COLORS['RESET']}")
 number_of_profiles = int(input(f"{COLORS['GREEN']} Vui Lòng nhập số luồng bạn muốn chạy chứ nhỉ \x1b[93m: {COLORS['RESET']}"))
 retries = int(input(f"{COLORS['GREEN']} Số lần sẽ chạy lại nhầm khuyến khích bị lỗi mạng \x1b[93m( khuyên 2 nhé ): {COLORS['RESET']}"))
 card_file_path = 'card.txt'
@@ -159,7 +159,7 @@ def login_amz(page, profile_number, credentials_list):
     cred = credentials_list[profile_number - 1]
     email = cred['email']
     password = cred['password']
-    code_2fa = cred.get('2fa', None)  # Check if 2FA exists
+    code_2fa = cred['2fa'] if len(cred) > 2 else None  # Kiểm tra nếu có 2FA
 
     page.fill('input#ap_email', email)
     page.click('input#continue')
@@ -173,7 +173,7 @@ def login_amz(page, profile_number, credentials_list):
     page.fill('input#ap_password', password)
     page.click('input#signInSubmit')
 
-    # If there is no 2FA, skip the OTP step
+    # Nếu có 2FA thì điền OTP, nếu không thì chỉ cần login
     if code_2fa:
         try:
             otp_input = page.wait_for_selector('input#auth-mfa-otpcode', timeout=8000)
@@ -187,6 +187,8 @@ def login_amz(page, profile_number, credentials_list):
             page.click('input#auth-signin-button')
         except TimeoutError:
             pass
+    else:
+        print(f"{COLORS['GREEN']}Không có 2FA cho tài khoản {email}, bỏ qua bước nhập OTP.{COLORS['RESET']}")
 
     try:
         if page.query_selector('//h4[text()="Account on hold temporarily"]'):
@@ -200,7 +202,7 @@ def login_amz(page, profile_number, credentials_list):
             log_to_file('AccDie.txt', email, password, code_2fa)
             remove_account_from_mailadd(email, password, code_2fa)
             log_to_file('die.txt', email, password, code_2fa)
-            print(f"{COLORS['RED']}\x1b[93m[ \x1b[96mSoHan \x1b[93m] \x1b[32m> \x1b[31mTài khoản \x1b[93m{email} \x1b[31mbị khóa ghi vào \x1b[31mdie.txt.{COLORS['RESET']}")
+            print(f"{COLORS['RED']}Tài khoản {email} bị khóa ghi vào die.txt.{COLORS['RESET']}")
             return False
     except Exception:
         pass
@@ -219,10 +221,9 @@ def login_amz(page, profile_number, credentials_list):
     except Exception:
         pass
 
-    print(f"{COLORS['GREEN']}[ SoHan ] > Login thành công cho tài khoản {email}{COLORS['RESET']}")
+    print(f"{COLORS['GREEN']}Login thành công cho tài khoản {email}{COLORS['RESET']}")
     time.sleep(2)
     return True
-
 
 def add_card(page, credentials_list, profile_number, cards_to_add):
     retry_limit = 3
