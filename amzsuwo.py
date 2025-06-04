@@ -213,7 +213,7 @@ def login_amz(page, profile_number, credentials_list):
     # Kiểm tra xem có vào được trang "Add Card" không
     try:
         page.goto('https://www.amazon.com/cpe/yourpayments/settings/manageoneclick')
-        time.sleep(5)  # Chờ một chút để trang tải
+        time.sleep(2)  # Chờ một chút để trang tải
 
         # Kiểm tra xem có thể thấy nút thêm thẻ không
         if page.query_selector('input.pmts-link-button[type="submit"][name^="ppw-widgetEvent:ChangeAddressPreferredPaymentMethodEvent:"]'):
@@ -248,6 +248,7 @@ def login_amz(page, profile_number, credentials_list):
     print(f"{COLORS['GREEN']}Login thành công cho tài khoản {email}{COLORS['RESET']}")
     time.sleep(2)
     return True
+
 
 def add_card(page, credentials_list, profile_number, cards_to_add):
     retry_limit = 3
