@@ -54,7 +54,10 @@ def read_credentials(file_path='mailadd.txt'):
     with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
             parts = line.strip().split('|')
-            if len(parts) == 3:
+            if len(parts) == 2:  # Tài khoản không có 2FA
+                email, password = parts
+                creds.append({'email': email, 'password': password, '2fa': None})
+            elif len(parts) == 3:  # Tài khoản có 2FA
                 email, password, code_2fa = parts
                 creds.append({'email': email, 'password': password, '2fa': code_2fa})
     return creds
