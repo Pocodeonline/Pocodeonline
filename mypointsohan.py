@@ -109,7 +109,7 @@ class Auto:
 
     def input_text(self, text):
         # Directly replace spaces with %20 for url encoding
-        safe_text = text.replace(' ', '%20')
+        safe_text = text.replace(' ', ' ')
 
         # Danh sách các ký tự đặc biệt cần thoát
         escape_chars = ['&', '|', '<', '>', '*', '^', '"', "'", '\\', '/', '$']
