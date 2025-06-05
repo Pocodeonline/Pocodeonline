@@ -169,8 +169,8 @@ class Auto:
             minutes = remaining_seconds // 60
             seconds = remaining_seconds % 60
             time_str = f"{minutes:01}:{seconds:02}"
-            print(f"\r{COLORS['CYAN']}Đếm ngược trên {self.device_id}: {time_str}", end="")
-            time.sleep(1)  # Delay 1 second for each decrement
+            print(f"\r{COLORS['CYAN']}Đếm ngược trên {self.device_id}: {time_str}", end="")  # Delay 1 second for each decrement
+            time.sleep(1)  
 
         # After countdown is over, perform the next actions
         print(f"\n{COLORS['CYAN']}Đếm ngược hoàn thành cho {self.device_id}")
