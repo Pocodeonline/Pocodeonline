@@ -69,7 +69,7 @@ def capture_screen(device_id):
         return None
 
 # Function to wait for an image on the emulator screen
-def wait_for_image(auto, img_name, timeout==3, threshold=0.95):
+def wait_for_image(auto, img_name, timeout=3, threshold=0.95):
     start = time.time()
     while time.time() - start < timeout:
         pos = auto.find_image(img_name, threshold)
