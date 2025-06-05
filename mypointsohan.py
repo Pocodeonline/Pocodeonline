@@ -200,9 +200,7 @@ class Auto:
         wait_for_image(self, 'nhapten.png')
         self.click(157.4, 367.6)
         self.input_text(name)
-        
-        self.click(436.5, 595.2)
-        time.sleep(1)
+    
         # Click to input Email
         wait_for_image(self, 'email.png')
         self.click(135.7, 787.5)
