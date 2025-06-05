@@ -69,7 +69,7 @@ def capture_screen(device_id):
         return None
 
 # Function to wait for an image on the emulator screen
-def wait_for_image(auto, img_name, timeout=2, threshold=0.55):
+def wait_for_image(auto, img_name, timeout==3, threshold=0.95):
     start = time.time()
     while time.time() - start < timeout:
         pos = auto.find_image(img_name, threshold)
@@ -88,7 +88,7 @@ class Auto:
         cmd = f"adb -s {self.device_id} shell input tap {round(x)} {round(y)}"
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
 
-    def find_image(self, template_filename, threshold=0.55):
+    def find_image(self, template_filename, threshold=0.95):
         screen = capture_screen(self.device_id)
         if screen is None:
             print(f"{COLORS['RED']}[ERROR] Không có ảnh màn hình từ {self.device_id}")
@@ -198,7 +198,7 @@ class Auto:
         
         # Click to input Name
         wait_for_image(self, 'nhapten.png')
-        self.click(157.4, 373.0)
+        self.click(157.4, 367.6)
         self.input_text(name)
         
         self.click(436.5, 595.2)
