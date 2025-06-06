@@ -69,7 +69,7 @@ def capture_screen(device_id):
         return None
 
 # Function to wait for an image on the emulator screen
-def wait_for_image(auto, img_name, timeout=2, threshold=0.55):
+def wait_for_image(auto, img_name, timeout=30, threshold=0.95):
     start = time.time()
     while time.time() - start < timeout:
         pos = auto.find_image(img_name, threshold)
@@ -177,8 +177,8 @@ class Auto:
         self.click(750.7, 85.8)
         # Perform the final action in the last 3 seconds
         wait_for_image(self, 'tailaitrang.png')
-        self.click(737.2, 1356.4)
-
+        self.click(734.5, 1323.9)
+        time.sleep(1)
         wait_for_image(self, 'luot.png')
 
         # Now proceed to swipe action, but hide the log messages
@@ -195,11 +195,14 @@ class Auto:
 
     def input_information(self):
         name, email, phone = self.line_data.split('|')
+        time.sleep(1.5)
         # Click to input Name
         wait_for_image(self, 'nhapten.png')
         self.click(157.4, 367.6)
         self.input_text(name)
-    
+        
+        self.click(436.5, 595.2)
+        time.sleep(1)
         # Click to input Email
         wait_for_image(self, 'email.png')
         self.click(135.7, 787.5)
