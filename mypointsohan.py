@@ -88,7 +88,7 @@ class Auto:
         cmd = f"adb -s {self.device_id} shell input tap {round(x)} {round(y)}"
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
 
-    def find_image(self, template_filename, threshold=0.55):
+    def find_image(self, template_filename, threshold=0.95):
         screen = capture_screen(self.device_id)
         if screen is None:
             print(f"{COLORS['RED']}[ERROR] Không có ảnh màn hình từ {self.device_id}")
@@ -177,7 +177,7 @@ class Auto:
         self.click(750.7, 85.8)
         # Perform the final action in the last 3 seconds
         wait_for_image(self, 'tailaitrang.png')
-        self.click(734.5, 1323.9)
+        self.click(737.2, 1356.4)
         time.sleep(1)
         wait_for_image(self, 'luot.png')
 
