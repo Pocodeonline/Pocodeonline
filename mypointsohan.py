@@ -177,7 +177,7 @@ class Auto:
         self.click(750.7, 85.8)
         # Perform the final action in the last 3 seconds
         wait_for_image(self, 'tailaitrang.png')
-        self.click(742,3, 1326,9)
+        self.click(742.3, 1326.9)
         time.sleep(1)
         wait_for_image(self, 'luot.png')
 
