@@ -217,6 +217,9 @@ class Auto:
 
 # Main function to coordinate the process
 def main():
+    # Print the logo
+    print_logo()  # Add this line to display the logo at the beginning
+    
     devices = get_connected_devices()
     if not devices:
         print(f"{COLORS['RED']}[ERROR] Không tìm thấy thiết bị adb nào.")
