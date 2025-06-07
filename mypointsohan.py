@@ -216,20 +216,15 @@ class Auto:
         wait_for_image(self, 'chontinhthanh.png')
         self.click(184.5, 424.5)
         
-        # Select city
-        wait_for_image(self, 'hcm.png')
         self.click(141.2, 513.9)
         
         # Select store
         wait_for_image(self, 'choncuahang.png')
         self.click(623.4, 424.5)
         
-        # Confirm store
-        wait_for_image(self, 'cuahang.png')
         self.click(211.6, 559.9)
         
         # Select working hours
-        wait_for_image(self, 'chongio.png')
         self.click(157.4, 706.2)
         
         # Final registration step
