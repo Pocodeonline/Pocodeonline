@@ -29,7 +29,7 @@ def get_connected_devices():
     return devices
 
 # Function to capture screen of the emulator
-def capture_screen(device_id):
+def capture_screen(device_id, retries=6, wait_time=4):
     try:
         tmp_path = "/sdcard/temp_screencap.png"
         local_tmp = "temp_screencap.png"
@@ -37,28 +37,31 @@ def capture_screen(device_id):
         # Capture screenshot on device and save it (suppress output)
         subprocess.Popen(["adb", "-s", device_id, "shell", "screencap", "-p", tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
         
-        # Pull the screenshot to the local machine (suppress output)
-        pull_result = subprocess.Popen(["adb", "-s", device_id, "pull", tmp_path, local_tmp], stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+        for attempt in range(retries):
+            # Pull the screenshot to the local machine (suppress output)
+            pull_result = subprocess.Popen(["adb", "-s", device_id, "pull", tmp_path, local_tmp], stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+            
+            if pull_result == 0 and os.path.exists(local_tmp):
+                # Check if the image was pulled correctly
+                img = cv2.imread(local_tmp)
+                if img is not None:
+                    # Image read successfully, proceed
+                    if os.path.exists(local_tmp):
+                        os.remove(local_tmp)
+                    # Remove the temporary screenshot file on the device
+                    subprocess.Popen(["adb", "-s", device_id, "shell", "rm", tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
+                    return img
+                else:
+                    print(f"{COLORS['RED']}[ERROR] Không thể đọc file ảnh {local_tmp} lần {attempt + 1}")
+            else:
+                print(f"{COLORS['YELLOW']}[WARNING] Không thể tải ảnh màn hình từ {device_id} lần {attempt + 1}, thử lại...")
+
+            time.sleep(wait_time)  # Wait before retrying
         
-        # Check if the pull was successful
-        if pull_result != 0:
-            print(f"{COLORS['RED']}[ERROR] Không thể tải ảnh màn hình từ {device_id}. Lỗi: {pull_result.stderr.decode()}")
-            return None
-        
-        # Read the image using OpenCV
-        img = cv2.imread(local_tmp)
-        if img is None:
-            print(f"{COLORS['RED']}[ERROR] Không thể đọc file ảnh {local_tmp}")
-            return None
-        
-        # Delete the temporary local image file
-        if os.path.exists(local_tmp):
-            os.remove(local_tmp)
-        
-        # Remove the temporary screenshot file on the device (suppress output)
-        subprocess.Popen(["adb", "-s", device_id, "shell", "rm", tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
-        
-        return img
+        # If all attempts fail
+        print(f"{COLORS['RED']}[ERROR] Không thể tải ảnh màn hình từ {device_id} sau {retries} lần thử.")
+        return None
+
     except subprocess.CalledProcessError as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi khi chụp màn hình của {device_id}: {e}")
         return None
@@ -86,35 +89,16 @@ class Auto:
         cmd = f"adb -s {self.device_id} shell input tap {round(x)} {round(y)}"
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
 
-    def find_image(self, template_filename, threshold=0.55):
-        screen = capture_screen(self.device_id)
-        if screen is None:
-            print(f"{COLORS['RED']}[ERROR] Không có ảnh màn hình từ {self.device_id}")
-            return None
-        
-        template_path = os.path.join("image", template_filename)
-        template = cv2.imread(template_path)
-        if template is None:
-            print(f"{COLORS['RED']}[ERROR] Không tìm thấy file ảnh mẫu: {template_path}")
-            return None
-        
-        res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
-        loc = np.where(res >= threshold)
-        points = list(zip(*loc[::-1]))
-        if points:
-            return points[0]
-        return None
-
     def input_text(self, text):
-        # Directly replace spaces with %20 for url encoding
-        safe_text = text.replace(' ', ' ')
-        
-        # Danh sách các ký tự đặc biệt cần thoát
+        # Use the adb command to input the text directly without delay
+        safe_text = text.replace(' ', ' ')  # URL encode spaces as %20
+    
+        # Escape special characters
         escape_chars = ['&', '|', '<', '>', '*', '^', '"', "'", '\\', '/', '$']
         for ch in escape_chars:
             safe_text = safe_text.replace(ch, f"\\{ch}")
-        
-        # Mã hóa các ký tự đặc biệt cho tiếng Việt, nếu cần
+
+        # URL encode Vietnamese characters as well
         vietnamese_map = {
             'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
             'ă': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
@@ -130,14 +114,33 @@ class Auto:
             'ỳ': 'y', 'ý': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
             'đ': 'd'
         }
-        
-        # Thay thế các ký tự tiếng Việt có dấu thành không dấu
+    
         for key, value in vietnamese_map.items():
             safe_text = safe_text.replace(key, value)
-        
-        # Lệnh để nhập văn bản vào thiết bị
+    
+        # Use adb to input the entire text at once, skipping typing individual characters
         cmd = f'adb -s {self.device_id} shell input text "{safe_text}"'
         subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+
+    def find_image(self, template_filename, threshold=0.55):
+        # Capture the screen from the device
+        screen = capture_screen(self.device_id)
+        if screen is None:
+            print(f"{COLORS['RED']}[ERROR] Không có ảnh màn hình từ {self.device_id}")
+            return None
+        
+        template_path = os.path.join("image", template_filename)
+        template = cv2.imread(template_path)
+        if template is None:
+            print(f"{COLORS['RED']}[ERROR] Không tìm thấy file ảnh mẫu: {template_path}")
+            return None
+        
+        res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(res >= threshold)
+        points = list(zip(*loc[::-1]))  # Get the coordinates where the image is found
+        if points:
+            return points[0]
+        return None
 
     def perform_actions(self):
         # Start by opening Zalo
@@ -173,23 +176,29 @@ class Auto:
         # After countdown is over, perform the next actions
         print(f"\n{COLORS['CYAN']}Đếm ngược hoàn thành cho {self.device_id}")
         self.click(750.7, 85.8)
-        wait_for_image(self, 'tailaitrang.png')  # Still waiting for "Nhập tên" image to appear
-        self.click(743.3, 1322.1)
-        # Perform the swipe actions (skip image recognition)
-        self.swipe(447.3, 1429.6, 447.3, 15.4)
-        self.swipe(447.3, 1429.6, 447.3, 15.4)
+        # Wait for "tailaitrang.png" image to appear
+        wait_for_image(self, 'tailaitrang.png')
+        self.click(734.5, 1321.2)  # Click at the required position after 'tailaitrang.png' appears
+        time.sleep(2)
+        # Wait for the "luot.png" image and swipe down
+        wait_for_image(self, 'luot.png')
         
-        # Now perform the next steps for filling information quickly without image recognition
-        wait_for_image(self, 'nhapten.png')  # Still waiting for "Nhập tên" image to appear
-        self.click(241.0, 372.5)  # Click on the "Tên" input field
+        # Perform swipe immediately after the image appears
+        self.swipe(447.3, 1429.6, 447.3, 15.4)
+        time.sleep(0.1)    # Swipe down quickly
+        
+        # Continue after swipe
+        wait_for_image(self, 'nhapten.png')  # Wait for "Nhập tên" image to appear
+        self.click(157.4, 362.2)  # Click on the "Tên" input field
         self.input_text("Hà Ngọc Hưng")  # Paste the name directly
         
-        self.click(302.5, 716.0)  # Click on the "Email" input field
+        self.click(179.1, 730.6)  # Click on the "Email" input field
         self.input_text("hunghung1416@gmail.com")  # Paste the email directly
         
-        self.click(325.2, 904.0)  # Click on the "Số điện thoại" input field
-        self.input_text("066204009139")  # Paste the phone number directly
-        
+        self.click(206.2, 901.3)  # Click on the "Số điện thoại" input field
+        self.input_text("066204009139") 
+         # Paste the phone number directly
+        self.click(265.8, 559.9)
         # Click the final registration button (skip image recognition)
         self.click(72.4, 1020.7)
         
@@ -201,29 +210,22 @@ class Auto:
         self.continue_registration()
 
     def swipe(self, x1, y1, x2, y2):
-        # Perform swipe action with 100 ms duration
-        subprocess.Popen(f"adb -s {self.device_id} shell input touchscreen swipe {x1} {y1} {x2} {y2} 100", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+        # Perform swipe action immediately without delay
+        subprocess.Popen(f"adb -s {self.device_id} shell input touchscreen swipe {x1} {y1} {x2} {y2}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
 
     def continue_registration(self):
-        wait_for_image(self, 'toidadoc.png')
-        self.click(59.9, 1028.6)
-        
-        # Click next and complete the registration process
-        wait_for_image(self, 'next.png')
-        self.click(417.5, 1505.4)
         
         # Wait for city selection
         wait_for_image(self, 'chontinhthanh.png')
         self.click(184.5, 424.5)
-        
+        time.sleep(0.3)
         self.click(141.2, 513.9)
-        
+        time.sleep(0.2)
         # Select store
-        wait_for_image(self, 'choncuahang.png')
         self.click(623.4, 424.5)
-        
+        time.sleep(0.3)
         self.click(211.6, 559.9)
-        
+        time.sleep(0.2)
         # Select working hours
         self.click(157.4, 706.2)
         
