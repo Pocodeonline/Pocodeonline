@@ -152,8 +152,8 @@ class Auto:
         self.click(72.4, 1020.7)
         
         # Wait for "next.png" image to appear and click it
-        if self.wait_for_image('next.png'):  # Sửa lại đây
-            self.click(417.5, 1505.4)  # Click on "Next"
+        time.sleep(0.1)
+        self.click(417.5, 1505.4)  # Click on "Next"
         
         # Continue with the rest of the registration process
         self.continue_registration()
