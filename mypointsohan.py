@@ -4,7 +4,7 @@ import subprocess
 import time
 import cv2
 import numpy as np
-from colorama import init
+from colorama import init  # Colors for console output
 
 # Colors for console output
 COLORS = {
@@ -19,7 +19,7 @@ COLORS = {
     'RESET': '\x1b[0m'
 }
 
-init()
+init()  # Initialize colorama
 
 # Function to get connected devices
 def get_connected_devices():
@@ -35,13 +35,13 @@ def capture_screen(device_id):
     try:
         tmp_path = "/sdcard/temp_screencap.png"
         local_tmp = "temp_screencap.png"
-        
+
         # Capture screenshot on device and save it (suppress output)
         subprocess.Popen(["adb", "-s", device_id, "shell", "screencap", "-p", tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
-        
+
         # Pull the screenshot to the local machine (suppress output)
         pull_result = subprocess.Popen(["adb", "-s", device_id, "pull", tmp_path, local_tmp], stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
-        
+
         # Check if the pull was successful
         if pull_result != 0:
             print(f"{COLORS['RED']}[ERROR] Không thể tải ảnh màn hình từ {device_id}. Lỗi: {pull_result.stderr.decode()}")
@@ -52,14 +52,14 @@ def capture_screen(device_id):
         if img is None:
             print(f"{COLORS['RED']}[ERROR] Không thể đọc file ảnh {local_tmp}")
             return None
-        
+
         # Delete the temporary local image file
         if os.path.exists(local_tmp):
             os.remove(local_tmp)
-        
+
         # Remove the temporary screenshot file on the device (suppress output)
         subprocess.Popen(["adb", "-s", device_id, "shell", "rm", tmp_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
-        
+
         return img
     except subprocess.CalledProcessError as e:
         print(f"{COLORS['RED']}[ERROR] Lỗi khi chụp màn hình của {device_id}: {e}")
@@ -82,7 +82,7 @@ class Auto:
         self.device_id = device_id
         self.line_data = line_data  # Holds the line of data from dulieu.txt (name|email|phone)
         self.verbose = verbose  # To control whether we print detailed actions like clicking
-    
+
     def click(self, x, y):
         # Simulate a tap on the screen at the given coordinates (x, y)
         cmd = f"adb -s {self.device_id} shell input tap {round(x)} {round(y)}"
@@ -118,7 +118,7 @@ class Auto:
 
         # Mã hóa các ký tự đặc biệt cho tiếng Việt, nếu cần
         vietnamese_map = {
-            'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a', 
+            'à': 'a', 'á': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
             'ă': 'a', 'ắ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
             'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
             'è': 'e', 'é': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
@@ -169,82 +169,47 @@ class Auto:
             minutes = remaining_seconds // 60
             seconds = remaining_seconds % 60
             time_str = f"{minutes:01}:{seconds:02}"
-            print(f"\r{COLORS['CYAN']}Đếm ngược trên {self.device_id}: {time_str}", end="")  # Delay 1 second for each decrement
-            time.sleep(1)  
+            print(f"\r{COLORS['CYAN']}Đếm ngược trên {self.device_id}: {time_str}", end="")
+            time.sleep(1)
 
         # After countdown is over, perform the next actions
         print(f"\n{COLORS['CYAN']}Đếm ngược hoàn thành cho {self.device_id}")
         self.click(750.7, 85.8)
-        # Perform the final action in the last 3 seconds
+
+        # Wait for the images and perform the swipe actions
         wait_for_image(self, 'tailaitrang.png')
         self.click(742.3, 1326.9)
         time.sleep(1)
         wait_for_image(self, 'luot.png')
 
-        # Now proceed to swipe action, but hide the log messages
+        # Now proceed to swipe action
         self.swipe(447.3, 1429.6, 447.3, 15.4)
         self.swipe(447.3, 1429.6, 447.3, 15.4)
 
-        # Now proceed to the next step after swiping
-        wait_for_image(self, 'nhapten.png')
-        self.input_information()
+        # After swiping down 2 times, proceed with the new instructions
+        print(f"{COLORS['CYAN']}Lướt xuống xong 2 lần, bắt đầu thực hiện nhập dữ liệu.")
 
-    def swipe(self, x1, y1, x2, y2):
-        # Perform swipe action with 100 ms duration
-        subprocess.Popen(f"adb -s {self.device_id} shell input touchscreen swipe {x1} {y1} {x2} {y2} 100", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait()
+        # Click vào tọa độ và paste text vào 'Hà Ngọc Hưng'
+        self.click(241.0, 372.5)
+        self.input_text('Hà Ngọc Hưng')  # Paste the name directly
 
-    def input_information(self):
-        name, email, phone = self.line_data.split('|')
-        time.sleep(1.5)
-        # Click to input Name
-        self.click(157.4, 367.6)
-        self.input_text(name)
-        
-        self.click(436.5, 595.2)
-        time.sleep(1)
-        # Click to input Email
-        self.click(135.7, 787.5)
-        self.input_text(email)
+        # Click vào tọa độ và paste email vào 'hunghung1416@gmail.com'
+        self.click(302.5, 716.0)
+        self.input_text('hunghung1416@gmail.com')  # Paste the email directly
 
-        # Click to input Phone
-        self.click(184.5, 904.0)
-        self.input_text(phone)
+        # Click vào tọa độ và paste phone vào '066204009139'
+        self.click(325.2, 904.0)
+        self.input_text('066204009139')  # Paste the phone number directly
 
-        # Continue registration steps
-        self.continue_registration()
-
-    def continue_registration(self):
-        self.click(59.9, 1028.6)
-
-        # Click next and complete the registration process
+        # Click vào tọa độ tiếp theo và đợi ảnh next.png xuất hiện
+        self.click(72.4, 1020.7)
         wait_for_image(self, 'next.png')
-        self.click(417.5, 1505.4)
 
-        # Wait for city selection
-        wait_for_image(self, 'chontinhthanh.png')
-        self.click(184.5, 424.5)
+        # Click vào tọa độ tiếp theo như các bước trước
+        self.click(441.9, 1503.6)
 
-        # Select city
-        self.click(141.2, 513.9)
-
-        # Select store
-        self.click(623.4, 424.5)
-
-        # Confirm store
-        self.click(211.6, 559.9)
-
-        # Select working hours
-        self.click(157.4, 706.2)
-
-        # Final registration step
-        wait_for_image(self, 'dangki.png')
-        self.click(341.6, 1508.2)
-
-        # Check registration success
-        if wait_for_image(self, 'thanhcong.png'):
-            print(f"{COLORS['GREEN']}Đăng ký thông tin {self.line_data.split('|')[0]} thành công trên {self.device_id}")
-        else:
-            print(f"{COLORS['RED']}Đăng ký thất bại cho {self.line_data.split('|')[0]} vì đăng kí QR này rồi")
+        # Continue with the rest of the registration steps
+        self.continue_registration()
 
 # Main function to coordinate the whole process
 def main():
@@ -255,7 +220,7 @@ def main():
 
     print(f"{COLORS['GREEN']}> Có {len(devices)} thiết bị giả lập đang mở và đã kết nối.")
     devices_data = []
-    
+
     # Read data from dulieu.txt and split each line into two parts
     with open('dulieu.txt', 'r', encoding='utf-8') as f:
         lines = f.readlines()
