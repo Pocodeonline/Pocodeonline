@@ -173,7 +173,7 @@ class Auto:
         # After countdown is over, perform the next actions
         print(f"\n{COLORS['CYAN']}Đếm ngược hoàn thành cho {self.device_id}")
         self.click(750.7, 85.8)
-        wait_for_image(self, 'loadlaitrang.png')  # Still waiting for "Nhập tên" image to appear
+        wait_for_image(self, 'tailaitrang.png')  # Still waiting for "Nhập tên" image to appear
         self.click(743.3, 1322.1)
         # Perform the swipe actions (skip image recognition)
         self.swipe(447.3, 1429.6, 447.3, 15.4)
