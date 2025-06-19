@@ -215,6 +215,7 @@ def login_amz(page, profile_number, credentials_list):
                 remember_device_checkbox.click()
 
             page.click('input#auth-signin-button')
+            time.sleep(100000000)
         except TimeoutError:
             pass
     else:
