@@ -21,7 +21,7 @@ COLORS = {
     'BRIGHT_CYAN': '\x1b[96m',
     'RESET': '\x1b[0m'
 }
-
+number_of_profiles = 0
 init()
 
 print(f"{COLORS['YELLOW']} {COLORS['BRIGHT_CYAN']}Tool AMZV1 By SoHan JVS {COLORS['RESET']}")
