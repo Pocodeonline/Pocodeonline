@@ -1,0 +1,16 @@
+[
+  {
+    "code": "viptool1",
+    "name": "Lux",
+    "raw_url": "https://raw.githubusercontent.com/yourrepo/modules/viptool1.py",
+    "need_key": false,
+    "device_file": "deviceslux.txt"
+  },
+  {
+    "code": "freefunc",
+    "name": "Free Function",
+    "raw_url": "https://raw.githubusercontent.com/yourrepo/modules/freefunc.py",
+    "need_key": false,
+    "device_file": "freefunc_devices.txt"
+  }
+]
