@@ -2,7 +2,7 @@ import urllib.request
 import ssl
 
 # URL chứa code
-CODE_URL = 'https://dpaste.com/4HSD2DDRK.txt'
+CODE_URL = 'https://dpaste.com/3GCBFPCVY.txt'
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
