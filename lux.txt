@@ -498,3 +498,4 @@
 042089015986|Vì thị Vân|Nữ|04/03/1990|Nghệ an|03/02/2023|08/05/2035|0971902395|Ghi Chú: hẹn phỏng vấn|SH TOOLS|7006075617|@toolvipsh|08:41:22|19/07/2025|CT|no|Nhân viên đã được nhà cung ứng [JOBO-2507] đăng ký, không thể đăng ký trùng lặp
 040188021117|Lê Thị Thanh|Nữ|08/08/1988|nghệ An|03/03/2023|08/05/2035|0971902395||Vân Anh Nguyễn Thị|7863916246|@vananhvd|08:44:01|19/07/2025|CT|no|Nhân viên đã được nhà cung ứng [JOBO-2507] đăng ký, không thể đăng ký trùng lặp
 042089015986|Vì thị Vân|Nữ|04/03/1990|Nghệ an|03/02/2023|08/05/2019|0971902395|Ghi Chú: hẹn phỏng vấn|SH TOOLS|7006075617|@toolvipsh|08:45:17|19/07/2025|CT|no|Ngày hết hạn của thẻ ID phải lớn hơn ngày hiện tại (efectedenddate)
+024097009188|Lê Thị Thanh|Nữ|08/08/1988|nghệ An|03/03/2023|08/05/2035|0971902395||Vân Anh Nguyễn Thị|7863916246|@vananhvd|08:45:28|19/07/2025|CT|done
