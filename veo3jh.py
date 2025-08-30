@@ -958,6 +958,7 @@ class VeoApp:
                     
                     # Update UI on main thread
                     self.root.after(0, self.update_credits_display)
+                    self.root.after(0, self.update_user_display)  # Update username display to show pro status
                     self.root.after(0, lambda: self.status_bar.configure(text="Đã lấy thông tin điểm thành công!"))
                     
                 except json.JSONDecodeError as e:
@@ -1718,12 +1719,13 @@ class VeoApp:
                 self.root.after(0, lambda: self.status_bar.configure(text="❌ Chưa có project! Vui lòng tạo project trước khi tạo video"))
                 return False
             
-            # Create the full payload using current project ID
+            # Create the full payload using current project ID and actual user paygate tier
+            user_paygate_tier = self.user_info.get("paygate_tier", "PAYGATE_TIER_ONE")
             payload = {
                 "clientContext": {
                     "projectId": self.current_project_id,
                     "tool": "PINHOLE",
-                    "userPaygateTier": "PAYGATE_TIER_ONE"
+                    "userPaygateTier": user_paygate_tier
                 },
                 "requests": requests_list
             }
@@ -1738,6 +1740,13 @@ class VeoApp:
     
     def get_video_model_key(self, selected_model):
         """Get the correct videoModelKey based on selected model"""
+        # Check if user is pro account
+        is_pro_account = self.user_info.get("paygate_tier", "") == "PAYGATE_TIER_TWO"
+        
+        # For pro accounts using Veo 3 - Fast, use the ultra version (free for pro)
+        if is_pro_account and selected_model == "Veo 3 - Fast":
+            return "veo_3_0_t2v_fast_ultra"
+        
         model_mapping = {
             "Veo 3 - Quality": "veo_3_0_t2v_pro",
             "Veo 2 - Quality": "veo_2_0_t2v",  # This is the key for veo2-quality
@@ -2138,8 +2147,15 @@ class VeoApp:
     def update_user_display(self):
         """Update user display in UI"""
         if self.user_info["name"] and self.user_info["email"]:
+            # Check if user is pro account and add "tài khoản pro" text
+            paygate_tier = self.user_info.get("paygate_tier", "")
+            username_display = self.user_info["name"]
+            
+            if paygate_tier == "PAYGATE_TIER_TWO":
+                username_display += " - tài khoản pro"
+            
             # Update user info directly on labels
-            self.user_name_label.configure(text=self.user_info["name"], fg="#00ff00")
+            self.user_name_label.configure(text=username_display, fg="#00ff00")
             self.user_email_label.configure(text=self.user_info["email"], fg="#00ff00")
             
             # Show message to create project
@@ -2834,12 +2850,13 @@ class VeoApp:
                 }
                 requests_list.append(request_data)
             
-            # Create the full payload
+            # Create the full payload with actual user paygate tier
+            user_paygate_tier = self.user_info.get("paygate_tier", "PAYGATE_TIER_ONE")
             payload = {
                 "clientContext": {
                     "projectId": self.current_project_id,
                     "tool": "PINHOLE",
-                    "userPaygateTier": "PAYGATE_TIER_ONE"
+                    "userPaygateTier": user_paygate_tier
                 },
                 "requests": requests_list
             }
@@ -3281,6 +3298,13 @@ class VeoApp:
     
     def get_image_video_model_key(self, selected_model):
         """Get the correct videoModelKey for image-to-video based on selected model"""
+        # Check if user is pro account
+        is_pro_account = self.user_info.get("paygate_tier", "") == "PAYGATE_TIER_TWO"
+        
+        # For pro accounts using Veo 3 - Fast, use the ultra version (free for pro)
+        if is_pro_account and selected_model == "Veo 3 - Fast":
+            return "veo_3_i2v_s_fast_ultra"
+        
         model_mapping = {
             "Veo 3 - Quality": "veo_3_0_t2v_pro",
             "Veo 2 - Quality": "veo_2_0_i2v",
@@ -4130,12 +4154,13 @@ class VeoApp:
                 self.root.after(0, lambda: self.status_bar.configure(text="❌ Chưa có project! Vui lòng tạo project trước khi tạo video"))
                 return False
             
-            # Create the full payload using current project ID
+            # Create the full payload using current project ID and actual user paygate tier
+            user_paygate_tier = self.user_info.get("paygate_tier", "PAYGATE_TIER_ONE")
             payload = {
                 "clientContext": {
                     "projectId": self.current_project_id,
                     "tool": "PINHOLE",
-                    "userPaygateTier": "PAYGATE_TIER_ONE"
+                    "userPaygateTier": user_paygate_tier
                 },
                 "requests": requests_list
             }
@@ -5179,12 +5204,13 @@ class VeoApp:
                 }
                 requests_list.append(request_data)
             
-            # Create the full payload
+            # Create the full payload with actual user paygate tier
+            user_paygate_tier = self.user_info.get("paygate_tier", "PAYGATE_TIER_ONE")
             payload = {
                 "clientContext": {
                     "projectId": self.current_project_id,
                     "tool": "PINHOLE",
-                    "userPaygateTier": "PAYGATE_TIER_ONE"
+                    "userPaygateTier": user_paygate_tier
                 },
                 "requests": requests_list
             }
