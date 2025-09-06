@@ -119,9 +119,12 @@ class VeoApp:
                 with open(settings_file, 'r', encoding='utf-8') as f:
                     settings = json.load(f)
                 
-                # Load folder name setting
-                if 'folder_name' in settings:
-                    self.folder_name.set(settings['folder_name'])
+                # Load selected output folder setting
+                if 'selected_output_folder' in settings:
+                    self.selected_output_folder = settings['selected_output_folder']
+                    if self.selected_output_folder and os.path.exists(self.selected_output_folder):
+                        # Show the selected folder in UI
+                        self.show_selected_folder()
                 
                 # Load countdown seconds setting
                 if 'countdown_seconds' in settings:
@@ -149,7 +152,7 @@ class VeoApp:
         """Save current settings to file"""
         try:
             settings = {
-                'folder_name': self.folder_name.get(),
+                'selected_output_folder': self.selected_output_folder,
                 'countdown_seconds': int(self.countdown_seconds.get()) if self.countdown_seconds.get().isdigit() else 50,
                 'output_count': int(self.output_count.get()),
                 'model_selection': self.model_selection.get()
@@ -161,6 +164,42 @@ class VeoApp:
             
         except Exception as e:
             pass
+    
+    def choose_output_folder(self):
+        """Open folder selection dialog"""
+        folder_path = filedialog.askdirectory(title="Chọn folder lưu video")
+        
+        if folder_path:
+            self.selected_output_folder = folder_path
+            self.show_selected_folder()
+            self.save_settings()
+            self.status_bar.configure(text=f"Đã chọn folder: {os.path.basename(folder_path)}")
+    
+    def show_selected_folder(self):
+        """Show the selected folder with red X button"""
+        if self.selected_output_folder:
+            # Hide the choose folder button
+            self.choose_folder_button.pack_forget()
+            
+            # Show the selected folder frame
+            self.selected_folder_frame.pack()
+            
+            # Update folder name label with just the folder name (not full path)
+            folder_name = os.path.basename(self.selected_output_folder)
+            self.selected_folder_label.configure(text=folder_name)
+    
+    def remove_selected_folder(self):
+        """Remove the selected folder and show choose button again"""
+        self.selected_output_folder = None
+        
+        # Hide the selected folder frame
+        self.selected_folder_frame.pack_forget()
+        
+        # Show the choose folder button again
+        self.choose_folder_button.pack()
+        
+        self.save_settings()
+        self.status_bar.configure(text="Đã xóa folder đã chọn")
     
     def on_closing(self):
         """Handle application closing - properly close browser and save settings"""
@@ -458,40 +497,42 @@ class VeoApp:
         self.model_combo.pack(pady=5)
         self.model_combo.bind('<<ComboboxSelected>>', lambda event: self.save_settings())
         
-        # Folder name input (editable for all functions)
-        tk.Label(settings_frame, text="Tên folder:", 
+        # Folder selection (choose folder button)
+        tk.Label(settings_frame, text="Chọn folder:", 
                 fg='#00bfff', bg='#1a1a2e', font=('Arial', 9)).pack(pady=(20, 5))
         
-        self.folder_entry = tk.Entry(settings_frame, textvariable=self.folder_name,
-                                    bg='#0a0a0a', fg='#00bfff', 
-                                    font=('Arial', 9), width=18,
-                                    insertbackground='#00bfff',
-                                    relief='solid', bd=1,
-                                    highlightthickness=1,
-                                    highlightcolor='#00bfff',
-                                    highlightbackground='#333333')
-        self.folder_entry.pack(pady=5)
+        # Container for folder selection UI
+        self.folder_container = tk.Frame(settings_frame, bg='#1a1a2e')
+        self.folder_container.pack(pady=5)
         
-        # Enable proper text editing for folder entry
-        def on_folder_entry_click(event):
-            self.folder_entry.focus_set()
-            self.folder_entry.selection_range(0, tk.END)
+        # Choose folder button (initially visible)
+        self.choose_folder_button = tk.Button(self.folder_container, text="📁 Chọn folder", 
+                                            command=self.choose_output_folder,
+                                            bg='#16213e', fg='#00bfff', 
+                                            font=('Arial', 9, 'bold'), relief='flat',
+                                            width=18)
+        self.choose_folder_button.pack()
         
-        def on_folder_entry_focus(event):
-            self.folder_entry.configure(highlightbackground='#00bfff')
-            
-        def on_folder_entry_unfocus(event):
-            self.folder_entry.configure(highlightbackground='#333333')
+        # Selected folder display frame (initially hidden)
+        self.selected_folder_frame = tk.Frame(self.folder_container, bg='#1a1a2e')
         
-        self.folder_entry.bind('<Button-1>', on_folder_entry_click)
-        self.folder_entry.bind('<FocusIn>', on_folder_entry_focus)
-        self.folder_entry.bind('<FocusOut>', on_folder_entry_unfocus)
+        # Folder name label
+        self.selected_folder_label = tk.Label(self.selected_folder_frame, text="", 
+                                            bg='#0a0a0a', fg='#00bfff', 
+                                            font=('Arial', 9), width=14,
+                                            relief='solid', bd=1)
+        self.selected_folder_label.pack(side='left', padx=(0, 2))
         
-        # Add change handler for folder name
-        def on_folder_name_change(*args):
-            self.save_settings()
+        # Red X button
+        self.remove_folder_button = tk.Button(self.selected_folder_frame, text="✕", 
+                                            command=self.remove_selected_folder,
+                                            bg='#ff4444', fg='#ffffff', 
+                                            font=('Arial', 9, 'bold'), relief='flat',
+                                            width=2, height=1)
+        self.remove_folder_button.pack(side='left')
         
-        self.folder_name.trace('w', on_folder_name_change)
+        # Initialize folder selection variables
+        self.selected_output_folder = None
         
         # Seconds input field (countdown timer between prompts)
         tk.Label(settings_frame, text="Đếm ngược (giây):", 
@@ -1606,13 +1647,14 @@ class VeoApp:
                 self.process_two_images_to_video()
             else:
                 # Process regular prompt-to-video function with countdown timer
-                total_prompts = len(self.prompts)
+                # Check if user has selected an output folder
+                if not self.selected_output_folder:
+                    self.root.after(0, lambda: messagebox.showwarning("Cảnh báo", "Vui lòng chọn folder lưu video trước!"))
+                    return
                 
-                # Create main folder structure based on user input
-                folder_name = self.folder_name.get().strip() or "auto1"
-                main_folder = os.path.join(os.getcwd(), folder_name)
-                os.makedirs(main_folder, exist_ok=True)
-                self.root.after(0, lambda: self.status_bar.configure(text=f"Đã tạo folder chính: {folder_name}"))
+                # Use the selected folder directly (no subfolder creation)
+                main_folder = self.selected_output_folder
+                self.root.after(0, lambda: self.status_bar.configure(text=f"Sử dụng folder: {os.path.basename(main_folder)}"))
                 
                 # Get current prompts from text area in real-time order
                 current_prompts = self.get_current_prompts_from_text()
@@ -1631,14 +1673,8 @@ class VeoApp:
                     
                     self.root.after(0, lambda p=prompt_text, idx=i: self.status_bar.configure(text=f"Đang xử lý prompt {idx}/{total_prompts}: {p[:50]}..."))
                     
-                    # Create subfolder using original prompt index (not enumeration index)
-                    # This ensures folder "2" is created for prompt 2 even if prompt 1 is skipped
-                    subfolder = os.path.join(main_folder, str(i))
-                    os.makedirs(subfolder, exist_ok=True)
-                    
-                    # Generate videos for this prompt (send clean prompt without numbering)
-                    # Use original prompt index for proper tracking
-                    success = self.generate_videos_for_prompt_with_folder(prompt_text, i, total_prompts, subfolder)
+                    # Generate videos for this prompt and save directly to selected folder with new naming
+                    success = self.generate_videos_for_prompt_direct(prompt_text, i, total_prompts, main_folder)
                     if not success:
                         self.root.after(0, lambda idx=i: self.status_bar.configure(text=f"Lỗi xử lý prompt {idx}"))
                         # Check stop flag after failed prompt
@@ -4116,6 +4152,63 @@ class VeoApp:
         except Exception as e:
             self.root.after(0, lambda: self.status_bar.configure(text=f"Lỗi đếm ngược: {str(e)}"))
     
+    def generate_videos_for_prompt_direct(self, prompt, prompt_index, total_prompts, output_folder):
+        """Generate videos for a single prompt and save directly to selected folder with new naming"""
+        try:
+            self.root.after(0, lambda: self.status_bar.configure(text=f"Đang tạo video cho prompt {prompt_index}/{total_prompts}..."))
+            
+            # Create the API payload based on the provided structure
+            output_count = int(self.output_count.get())
+            
+            # Get selected model and determine the correct videoModelKey
+            selected_model = self.model_selection.get()
+            video_model_key = self.get_video_model_key(selected_model)
+            
+            # Generate random seeds for each video
+            import random
+            requests_list = []
+            
+            for i in range(output_count):
+                seed = random.randint(1000, 99999)
+                scene_id = f"{random.randint(10000000, 99999999):08x}-{random.randint(1000, 9999):04x}-{random.randint(1000, 9999):04x}-{random.randint(1000, 9999):04x}-{random.randint(100000000000, 999999999999):012x}"
+                
+                request_data = {
+                    "aspectRatio": "VIDEO_ASPECT_RATIO_LANDSCAPE",
+                    "seed": seed,
+                    "textInput": {
+                        "prompt": prompt + "\n"  # Add newline as shown in the API example
+                    },
+                    "videoModelKey": video_model_key,
+                    "metadata": {
+                        "sceneId": scene_id
+                    }
+                }
+                requests_list.append(request_data)
+            
+            # Check if we have a project ID
+            if not self.current_project_id:
+                self.root.after(0, lambda: self.status_bar.configure(text="❌ Chưa có project! Vui lòng tạo project trước khi tạo video"))
+                return False
+            
+            # Create the full payload using current project ID and actual user paygate tier
+            user_paygate_tier = self.user_info.get("paygate_tier", "PAYGATE_TIER_ONE")
+            payload = {
+                "clientContext": {
+                    "projectId": self.current_project_id,
+                    "tool": "PINHOLE",
+                    "userPaygateTier": user_paygate_tier
+                },
+                "requests": requests_list
+            }
+            
+            
+            # Make the API call with direct folder support
+            return self.make_video_api_call_direct(payload, prompt_index, prompt, output_folder)
+                
+        except Exception as e:
+            self.root.after(0, lambda: self.status_bar.configure(text=f"Lỗi tạo video cho prompt {prompt_index}: {str(e)}"))
+            return False
+
     def generate_videos_for_prompt_with_folder(self, prompt, prompt_index, total_prompts, output_folder):
         """Generate videos for a single prompt and save to specific folder"""
         try:
@@ -4173,8 +4266,8 @@ class VeoApp:
             self.root.after(0, lambda: self.status_bar.configure(text=f"Lỗi tạo video cho prompt {prompt_index}: {str(e)}"))
             return False
     
-    def make_video_api_call_with_folder(self, payload, prompt_index, prompt, output_folder):
-        """Make API call to generate videos and save to specific folder"""
+    def make_video_api_call_direct(self, payload, prompt_index, prompt, output_folder):
+        """Make API call to generate videos and save directly to selected folder with new naming"""
         try:
             output_count = len(payload['requests'])
             
@@ -4248,8 +4341,8 @@ class VeoApp:
                     if not operations_data:
                         return False
                     
-                    # Poll for completion and download videos to specific folder
-                    return self.poll_and_download_videos_with_folder(operations_data, prompt_index, prompt, output_folder)
+                    # Poll for completion and download videos directly to selected folder with new naming
+                    return self.poll_and_download_videos_direct(operations_data, prompt_index, prompt, output_folder)
                     
                 except json.JSONDecodeError as e:
                     self.root.after(0, lambda: self.status_bar.configure(text=f"Lỗi phân tích JSON cho prompt {prompt_index}"))
@@ -4274,6 +4367,240 @@ class VeoApp:
                 
         except Exception as e:
             self.root.after(0, lambda: self.status_bar.configure(text=f"❌ Lỗi kết nối trình duyệt cho prompt {prompt_index}"))
+            return False
+    
+    def poll_and_download_videos_direct(self, operations_data, prompt_index, prompt_text, output_folder):
+        """Poll for video generation completion and download directly to selected folder with new naming"""
+        try:
+            output_count = int(self.output_count.get())
+            self.root.after(0, lambda: self.status_bar.configure(text=f"Đang chờ {output_count} video hoàn thành cho prompt {prompt_index}..."))
+            
+            # Get cookies and headers for polling
+            cookies = self.driver.get_cookies()
+            cookie_dict = {cookie['name']: cookie['value'] for cookie in cookies}
+            
+            headers = {
+                'accept': '*/*',
+                'accept-encoding': 'gzip, deflate, br, zstd',
+                'accept-language': 'en-US,en;q=0.9',
+                'authorization': f'Bearer {self.access_token}',
+                'content-type': 'text/plain;charset=UTF-8',
+                'origin': 'https://labs.google',
+                'priority': 'u=1, i',
+                'referer': 'https://labs.google/',
+                'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'cross-site',
+                'user-agent': self.driver.execute_script("return navigator.userAgent;"),
+                'x-browser-channel': 'stable',
+                'x-browser-copyright': 'Copyright 2025 Google LLC. All rights reserved.',
+                'x-browser-validation': '6h3XF8YcD8syi2FF2BbuE2KllQo=',
+                'x-browser-year': '2025',
+                'x-client-data': 'CIe2yQEIorbJAQipncoBCKzyygEIkqHLAQiFoM0BCP2FzwEY4eLOARiX7s4B'
+            }
+            
+            # Create polling payload based on user's successful example
+            polling_payload = {
+                "operations": []
+            }
+            
+            for op_data in operations_data:
+                operation = op_data.get('operation', {})
+                if operation and 'name' in operation:
+                    polling_payload["operations"].append({
+                        "operation": {"name": operation['name']},
+                        "sceneId": op_data.get('sceneId', ''),
+                        "status": op_data.get('status', 'MEDIA_GENERATION_STATUS_PENDING')
+                    })
+            
+            max_polling_attempts = 120  # 10 minutes max
+            polling_interval = 5
+            all_video_urls = []  # Collect ALL video URLs before downloading
+            
+            for attempt in range(max_polling_attempts):
+                # Check stop flag before each polling attempt
+                if self.stop_requested:
+                    self.root.after(0, lambda: self.status_bar.configure(text="Đã dừng theo yêu cầu"))
+                    return False
+                
+                self.root.after(0, lambda a=attempt+1: self.status_bar.configure(text=f"Kiểm tra {a}/{max_polling_attempts} - Chờ đủ {output_count} video cho prompt {prompt_index}"))
+                
+                # Make status check API call
+                status_url = 'https://aisandbox-pa.googleapis.com/v1/video:batchCheckAsyncVideoGenerationStatus'
+                
+                try:
+                    status_response = requests.post(
+                        status_url,
+                        headers=headers,
+                        cookies=cookie_dict,
+                        json=polling_payload,
+                        timeout=15
+                    )
+                    
+                    if status_response.status_code == 400:
+                        time.sleep(polling_interval)
+                        continue
+                    
+                    if status_response.status_code == 200:
+                        try:
+                            status_data = status_response.json()
+                            operations = status_data.get('operations', [])
+                            if not operations:
+                                time.sleep(polling_interval)
+                                continue
+                            
+                            completed_operations = []
+                            failed_operations = []
+                            pending_operations = []
+                            
+                            # Categorize operations by status
+                            for op in operations:
+                                status = op.get('status', '')
+                                if status == 'MEDIA_GENERATION_STATUS_SUCCESSFUL':
+                                    completed_operations.append(op)
+                                elif status == 'MEDIA_GENERATION_STATUS_FAILED':
+                                    failed_operations.append(op)
+                                elif status in ['MEDIA_GENERATION_STATUS_PENDING', 'MEDIA_GENERATION_STATUS_ACTIVE']:
+                                    pending_operations.append(op)
+                            
+                            # Collect video URLs from completed operations but DON'T download until ALL are ready
+                            if completed_operations:
+                                for op in completed_operations:
+                                    operation = op.get('operation', {})
+                                    metadata = operation.get('metadata', {})
+                                    
+                                    if metadata:
+                                        video_data = metadata.get('video', {})
+                                        fife_url = video_data.get('fifeUrl', '')
+                                        
+                                        if fife_url and fife_url not in all_video_urls:
+                                            all_video_urls.append(fife_url)
+                            
+                            # ONLY download when ALL videos are ready (no pending operations)
+                            if not pending_operations and not failed_operations:
+                                if len(all_video_urls) >= output_count:
+                                    self.root.after(0, lambda: self.status_bar.configure(text=f"Tất cả {output_count} video đã sẵn sàng! Đang tải xuống..."))
+                                    
+                                    # Download all videos with new naming convention
+                                    success = self.download_videos_direct(all_video_urls[:output_count], prompt_index, prompt_text, output_folder)
+                                    if success:
+                                        # Mark prompt as done and update display immediately
+                                        self.prompt_status[prompt_index]["done"] = True
+                                        self.update_prompt_display_with_status()
+                                        self.save_prompt_status_to_file()
+                                    return success
+                            
+                            # Check if any operation failed
+                            if failed_operations:
+                                # If some completed and some failed, but we have enough completed videos
+                                if len(all_video_urls) >= output_count:
+                                    success = self.download_videos_direct(all_video_urls[:output_count], prompt_index, prompt_text, output_folder)
+                                    if success:
+                                        # Mark prompt as done and update display immediately
+                                        self.prompt_status[prompt_index]["done"] = True
+                                        self.update_prompt_display_with_status()
+                                        self.save_prompt_status_to_file()
+                                    return success
+                                
+                                # If not enough videos, continue waiting
+                                if pending_operations:
+                                    time.sleep(polling_interval)
+                                    continue
+                                else:
+                                    return False
+                            
+                            # Continue polling if there are pending operations
+                            if pending_operations:
+                                time.sleep(polling_interval)
+                                continue
+                            
+                            # If no operations at all, something is wrong
+                            if not operations:
+                                time.sleep(polling_interval)
+                                continue
+                                
+                        except json.JSONDecodeError as e:
+                            time.sleep(polling_interval)
+                            continue
+                            
+                    else:
+                        time.sleep(polling_interval)
+                        continue
+                        
+                except requests.RequestException as e:
+                    time.sleep(polling_interval)
+                    continue
+            
+            # Timeout reached
+            self.root.after(0, lambda: self.status_bar.configure(text=f"Timeout chờ video cho prompt {prompt_index}"))
+            return False
+            
+        except Exception as e:
+            self.root.after(0, lambda: self.status_bar.configure(text=f"Lỗi polling cho prompt {prompt_index}: {str(e)}"))
+            return False
+    
+    def download_videos_direct(self, video_urls, prompt_index, prompt_text, output_folder):
+        """Download videos directly to selected folder with new naming convention"""
+        try:
+            self.root.after(0, lambda: self.status_bar.configure(text=f"Đang tải {len(video_urls)} video cho prompt {prompt_index}..."))
+            
+            output_count = int(self.output_count.get())
+            downloaded_count = 0
+            
+            for i, video_url in enumerate(video_urls, 1):
+                try:
+                    self.root.after(0, lambda v=i: self.status_bar.configure(text=f"Đang tải video {v}/{len(video_urls)} cho prompt {prompt_index}..."))
+                    
+                    # Create filename with new naming convention
+                    if output_count == 1:
+                        # Single output: "1 prompt 1", "1 prompt 2"
+                        filename = f"{prompt_index} prompt {prompt_index}.mp4"
+                    else:
+                        # Multiple outputs: "1.1 prompt 1", "1.2 prompt 1", etc.
+                        filename = f"{prompt_index}.{i} prompt {prompt_index}.mp4"
+                    
+                    filepath = os.path.join(output_folder, filename)
+                    
+                    # Skip if file already exists
+                    if os.path.exists(filepath):
+                        downloaded_count += 1
+                        continue
+                    
+                    # Download video
+                    headers = {
+                        'user-agent': self.driver.execute_script("return navigator.userAgent;"),
+                        'referer': VEO_URL
+                    }
+                    
+                    video_response = requests.get(video_url, headers=headers, stream=True, timeout=60)
+                    
+                    if video_response.status_code == 200:
+                        with open(filepath, 'wb') as f:
+                            for chunk in video_response.iter_content(chunk_size=8192):
+                                if chunk:
+                                    f.write(chunk)
+                        
+                        file_size = os.path.getsize(filepath)
+                        downloaded_count += 1
+                        
+                    else:
+                        pass
+                        
+                except Exception as download_error:
+                    continue
+            
+            if downloaded_count > 0:
+                self.root.after(0, lambda: self.status_bar.configure(text=f"Đã tải {downloaded_count}/{len(video_urls)} video cho prompt {prompt_index}"))
+                return True
+            else:
+                self.root.after(0, lambda: self.status_bar.configure(text=f"Không tải được video nào cho prompt {prompt_index}"))
+                return False
+                
+        except Exception as e:
+            self.root.after(0, lambda: self.status_bar.configure(text=f"Lỗi tải video cho prompt {prompt_index}: {str(e)}"))
             return False
     
     def poll_and_download_videos_with_folder(self, operations_data, prompt_index, prompt_text, output_folder):
