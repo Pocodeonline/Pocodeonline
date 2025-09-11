@@ -4547,10 +4547,6 @@ class VeoApp:
         try:
             self.root.after(0, lambda: self.status_bar.configure(text=f"Đang tải {len(video_urls)} video cho prompt {prompt_index}..."))
             
-            # Tạo folder con theo số thứ tự prompt
-            prompt_folder = os.path.join(output_folder, str(prompt_index))
-            os.makedirs(prompt_folder, exist_ok=True)
-            
             output_count = int(self.output_count.get())
             downloaded_count = 0
             
@@ -4566,8 +4562,7 @@ class VeoApp:
                         # Multiple outputs: "1.1 prompt 1", "1.2 prompt 1", etc.
                         filename = f"{prompt_index}.{i} prompt {prompt_index}.mp4"
                     
-                    # Lưu vào folder con của prompt
-                    filepath = os.path.join(prompt_folder, filename)
+                    filepath = os.path.join(output_folder, filename)
                     
                     # Skip if file already exists
                     if os.path.exists(filepath):
